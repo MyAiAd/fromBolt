@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Affiliate Service</title>
+    <style>
+        body { font-family: monospace; background: #1a1a1a; color: #fff; padding: 20px; }
+        .log { margin: 5px 0; padding: 5px; background: #2a2a2a; border-radius: 3px; }
+        .error { background: #4a1a1a; }
+        .success { background: #1a4a1a; }
+        button { padding: 10px 20px; margin: 10px; background: #4a4a4a; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #5a5a5a; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Affiliate Service Debug</h1>
+    <button onclick="testAffiliateService()">Test Affiliate Service</button>
+    <button onclick="clearLogs()">Clear Logs</button>
+    
+    <div id="logs"></div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.skypack.dev/@supabase/supabase-js';
+
+        const supabase = createClient(
+            'http://localhost:54321',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0'
+        );
+
+        function log(message, type = 'info') {
+            const logsDiv = document.getElementById('logs');
+            const logDiv = document.createElement('div');
+            logDiv.className = `log ${type}`;
+            logDiv.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
+            logsDiv.appendChild(logDiv);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+            console.log(message);
+        }
+
+        class AffiliateAggregationService {
+            constructor(supabaseClient) {
+                this.supabase = supabaseClient;
+                log('🔧 AffiliateAggregationService: Constructor called');
+            }
+
+            async getAllAffiliates() {
+                log('🔍 Starting getAllAffiliates...');
+                const affiliates = [];
+
+                try {
+                    log('📊 Fetching GoAffPro affiliates...');
+                    const goaffproAffiliates = await this.getGoAffProAffiliates();
+                    log(`✅ Found ${goaffproAffiliates.length} GoAffPro affiliates`, 'success');
+                    affiliates.push(...goaffproAffiliates);
+
+                    log(`🎉 Total aggregated affiliates: ${affiliates.length}`, 'success');
+                    return affiliates;
+                } catch (error) {
+                    log(`❌ Error aggregating affiliates: ${error.message}`, 'error');
+                    throw error;
+                }
+            }
+
+            async getGoAffProAffiliates() {
+                try {
+                    log('🔍 Querying goaffpro_affiliates table...');
+                    const { data: goaffproData, error } = await this.supabase
+                        .from('goaffpro_affiliates')
+                        .select('*')
+                        .eq('data_source', 'goaffpro');
+
+                    if (error) {
+                        log(`❌ Error fetching GoAffPro affiliates: ${error.message}`, 'error');
+                        log(`❌ Error code: ${error.code}`, 'error');
+                        return [];
+                    }
+
+                    log(`📊 Raw GoAffPro data: ${goaffproData?.length || 0} records`);
+                    
+                    if (goaffproData && goaffproData.length > 0) {
+                        log(`📋 Sample record: ${goaffproData[0].email} - ${goaffproData[0].first_name} ${goaffproData[0].last_name}`);
+                    }
+
+                    const processed = (goaffproData || []).map(affiliate => ({
+                        id: `goaffpro_${affiliate.id}`,
+                        name: `${affiliate.first_name || ''} ${affiliate.last_name || ''}`.trim() || affiliate.email?.split('@')[0] || 'Unknown',
+                        email: affiliate.email,
+                        source: 'goaffpro',
+                        level: 'ReAction',
+                        referrals: affiliate.total_orders || 0,
+                        commission: `$${(affiliate.total_earnings || 0).toFixed(2)}`,
+                        dateJoined: new Date(affiliate.created_at).toISOString().split('T')[0],
+                        status: affiliate.status === 'approved' ? 'Active' : 'Pending',
+                        originalData: affiliate
+                    }));
+
+                    log(`✅ Processed ${processed.length} GoAffPro affiliates`);
+                    return processed;
+                } catch (error) {
+                    log(`❌ Error processing GoAffPro affiliates: ${error.message}`, 'error');
+                    return [];
+                }
+            }
+        }
+
+        window.testAffiliateService = async function() {
+            log('🧪 Starting browser test...');
+            
+            const service = new AffiliateAggregationService(supabase);
+            
+            try {
+                const affiliates = await service.getAllAffiliates();
+                
+                if (affiliates.length > 0) {
+                    log(`🎉 SUCCESS: Found ${affiliates.length} affiliates!`, 'success');
+                    log(`📋 First affiliate: ${affiliates[0].name} (${affiliates[0].email})`, 'success');
+                } else {
+                    log('⚠️ No affiliates found - this explains the web app issue', 'error');
+                }
+                
+            } catch (error) {
+                log(`💥 ERROR: ${error.message}`, 'error');
+            }
+        };
+
+        window.clearLogs = function() {
+            document.getElementById('logs').innerHTML = '';
+        };
+
+        // Auto-run test on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                log('🚀 Page loaded, running auto-test...');
+                testAffiliateService();
+            }, 1000);
+        });
+    </script>
+</body>
+</html> 

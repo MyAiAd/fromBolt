@@ -1,0 +1,29 @@
+Project name
+affiliate-platform
+
+Project ID
+qnruorhzdxkyfhdgtkqp
+
+Project URL
+https://qnruorhzdxkyfhdgtkqp.supabase.co
+
+anon public key
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFucnVvcmh6ZHhreWZoZGd0a3FwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgwMDU1MTAsImV4cCI6MjA2MzU4MTUxMH0.d42EFmjURUJ2aLFeAyFQsWwFmbnL7L_ObfAIlpv8McM
+
+service_role secret
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFucnVvcmh6ZHhreWZoZGd0a3FwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0ODAwNTUxMCwiZXhwIjoyMDYzNTgxNTEwfQ.YLZe38q0F1cl-eBTM5yXDha59JjISzA1eGmtmra7e4o
+
+direct connection
+postgresql://postgres:[YOUR-PASSWORD]@db.qnruorhzdxkyfhdgtkqp.supabase.co:5432/postgres
+
+Please verify but I think the passowrd is 
+T3sla12e!
+
+User UID
+92130a87-34d1-4eed-9f06-1b224a6690ae
+
+User email
+sage@myai.ad
+
+JWT Secret
+aQtXMPAzuh4EL5vefeP865WDBRZ7d2v3JwvNP8ClqVwgtBeIHKYL0nwySBMoXl15zuWJY1I3GyUVd0YwH0y+LQ==
