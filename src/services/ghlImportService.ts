@@ -132,7 +132,7 @@ export class GHLImportService {
     
     do {
       try {
-        const endpoint = `/contacts/?locationId=${this.config.locationId}&limit=100${
+        const endpoint = `/contacts/?locationId=${this.config.locationId}&limit=1000${
           nextCursor ? `&cursor=${nextCursor}` : ''
         }`;
         

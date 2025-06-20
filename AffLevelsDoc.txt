@@ -1,0 +1,69 @@
+Here are the **key locations** where the levels/ranks and their calculations need to be updated to match the new referral program structure:
+
+## **🎯 Main Areas That Need Updates:**
+
+### **1. Core Rank Calculation Functions:**
+- **`src/pages/Dashboard.tsx`** (Lines 245-258):
+  - `calculateRank()` function using Bronze/Silver/Gold/Platinum/Diamond based on team size
+  - `calculateNextRankProgress()` function with team size thresholds
+  - `getAffiliateRank()` function based on referrals count
+
+- **`src/pages/UserDashboard.tsx`** (Lines 31-45):
+  - `calculateRank()` function (duplicate of Dashboard logic)
+  - `calculateNextRankProgress()` function (duplicate logic)
+
+### **2. Rank Display & UI Components:**
+- **`src/pages/Dashboard.tsx`** (Lines 281-296):
+  - `getRankColor()` function for rank styling
+  - `getRankIcon()` function for rank emojis
+  - Rank progress display logic and "Next rank" calculations
+
+- **`src/pages/UserDashboard.tsx`** (Lines 48-64):
+  - `getRankIcon()` function 
+  - `getNextRankName()` function
+
+- **`src/pages/Team.tsx`** (Lines 158-170):
+  - `getRankColor()` and `getRankIcon()` functions
+
+- **`src/pages/Leaderboard.tsx`** (Lines 125-137):
+  - `getRankBadge()` function for leaderboard display
+
+### **3. Hardcoded Rank References:**
+- **`src/components/Sidebar.tsx`** (Line 176): 
+  - Hardcoded "Diamond Partner" text display
+
+- **Mock/Sample Data** in various files with hardcoded ranks like "Bronze"
+
+### **4. Documentation Files:**
+- **`AFFILIATE_RANKING_SYSTEM.md`**: Complete current rank system documentation
+- **`docs/USER_GUIDE.md`**: Already updated with new system
+
+### **5. Calculation Logic Changes Needed:**
+
+**Current System (Team Size Based):**
+- Bronze: 0-4 team members
+- Silver: 5-9 team members  
+- Gold: 10-24 team members
+- Platinum: 25-49 team members
+- Diamond: 50+ team members
+
+**New System (Monthly Referral Volume Based):**
+- Aligned: $0-$1,000 monthly
+- Activated: $1,000-$5,000 monthly
+- Ascended: $5,000-$10,000 monthly
+- Magnetic: $25,000-$50,000 monthly
+- Luminary: $50,000-$100,000 monthly
+- Visionary: $100,000+ monthly
+- Oracle: $500,000+ monthly
+- Sovereign: $1,000,000+ monthly
+
+## **🔄 Key Changes Required:**
+
+1. **Switch from `team_size` to `monthly_referral_volume`** for rank calculations
+2. **Replace 5 ranks with 8 new ranks** and their thresholds
+3. **Update all rank calculation functions** to use dollar amounts instead of team counts
+4. **Update rank icons and colors** to match new system
+5. **Update progress calculations** for the new tier structure
+6. **Add logic to calculate monthly referral volume** (may need new database fields/calculations)
+
+The biggest challenge will be determining how to calculate the "monthly referral volume" since the current system tracks team size but the new system is based on earnings volume.
