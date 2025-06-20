@@ -117,4 +117,85 @@
 - **End your week with Data Sync Management** - ensure everything is running smoothly  
 - **When in doubt, sync first** - if data looks off, trigger a fresh sync before analyzing
 - **Bookmark your most-used pages** - save time on daily workflows
-- **Use exports for presentations** - Data Import Pages have built-in export features 
+- **Use exports for presentations** - Data Import Pages have built-in export features
+
+---
+
+# Referral Program Structure and Commission Details
+
+## Rank System Based on Total Referral Volume
+
+This program uses a tiered ranking system where participants advance through levels based on their total referral volume (cumulative earnings generated through referrals). Each rank comes with its own identity and represents different levels of achievement and influence within the community.
+
+### Rank Progression Structure
+
+**Aligned** - Entry Level ($0 - $1,000 monthly)
+- Total Referral Volume: $0 - $1,000
+- Description: You've tuned in and taken aligned action
+- This is the starting point where new participants begin their journey
+
+**Activated** - Building Momentum ($1,000 - $5,000 monthly)  
+- Total Referral Volume: $1,000 - $5,000
+- Description: Your energy is moving — you're becoming magnetic
+- Represents the phase where participants start gaining traction
+
+**Ascended** - Growing Impact ($5,000 - $10,000 monthly)
+- Total Referral Volume: $5,000 - $10,000  
+- Description: Your impact is rising and your influence expanding
+- Shows significant growth in referral performance
+
+**Magnetic** - Strong Performance ($25,000 - $50,000 monthly)
+- Total Referral Volume: $25,000 - $50,000
+- Description: You're pulling in abundance through pure alignment
+- Indicates mastery of the referral process with substantial results
+
+**Luminary** - Community Leader ($50,000 - $100,000 monthly)
+- Total Referral Volume: $50,000 - $100,000
+- Description: You're a beacon of light in the community
+- Represents established leadership and significant influence
+
+**Visionary** - Leader of Leaders ($100,000+ monthly)
+- Total Referral Volume: $100,000+
+- Description: You've become a leader of leaders with a big vision
+- Elite level with substantial monthly performance
+
+**Oracle** - Wisdom and Results ($500,000+ monthly)
+- Total Referral Volume: $500,000+
+- Description: Wisdom radiates from your results
+- Exceptional performance level with high-impact results
+
+**Sovereign** - Ultimate Mastery ($1,000,000+ monthly)
+- Total Referral Volume: $1,000,000+
+- Description: You embody mastery, legacy, and divine authority
+- The highest achievable rank representing ultimate success
+
+## Digital Products Commission Structure
+
+The program offers commissions on various digital products with a three-tier structure (L1, L2, L3). These likely represent different levels of the referral network, where L1 is direct referrals, L2 is second-level referrals, and L3 is third-level referrals.
+
+### Commission Rates by Product Category
+
+**High-Commission Products (20% / 10% / 5%)**
+- **Bae**: 20% L1, 10% L2, 5% L3
+- **Coaching Packs**: 20% L1, 10% L2, 5% L3  
+- **Online Mastery**: 20% L1, 10% L2, 5% L3
+- **BRAVO Fitness**: 20% L1, 10% L2, 5% L3
+- **AI System**: 20% L1, 10% L2, 5% L3
+
+**Modified Commission Product**
+- **REACTION CBD**: 15% L1, 5% L2, 5% L3
+- This product has a slightly lower L1 commission but maintains the same L2/L3 rates
+
+**Lower Commission Product**
+- **EVENTS**: 5% L1, 2.5% L2, 2.5% L3
+- Events have significantly lower commission rates across all levels
+
+## Key Program Features
+
+**Multi-Level Structure**: The commission system extends to three levels deep, allowing participants to earn from their direct referrals as well as referrals made by their referrals.
+
+**Rank-Based Identity**: Each level has a unique name and philosophical description that creates a sense of progression and achievement beyond just monetary milestones.
+
+**Product Diversity**: The program covers various digital products including coaching, fitness, AI systems, CBD products, and events, providing multiple revenue streams.
+
+**Scalable Growth**: The structure encourages building a network rather than just individual sales, with the potential for passive income through multi-level commissions. 
