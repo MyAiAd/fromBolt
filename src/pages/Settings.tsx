@@ -1,16 +1,18 @@
 import { useState } from 'react';
 import { Settings as SettingsIcon, Bell, Lock, CreditCard, User, Shield, Database, Save, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { toast } from 'react-toastify';
 import GoAffProImport from '../components/GoAffProImport';
 import MightyNetworksImport from '../components/MightyNetworksImport';
 import JennaZImport from '../components/JennaZImport';
 
 const Settings = () => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, supabase } = useAuth();
   const [activeTab, setActiveTab] = useState('general');
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   
   // Form states
   const [generalSettings, setGeneralSettings] = useState({
@@ -58,11 +60,73 @@ const Settings = () => {
     activityLogging: true
   });
 
+  const handlePasswordChange = async () => {
+    const { currentPassword, newPassword, confirmPassword } = securitySettings;
+
+    // Validation
+    if (!currentPassword) {
+      toast.error('Please enter your current password');
+      return;
+    }
+
+    if (!newPassword) {
+      toast.error('Please enter a new password');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast.error('New password must be at least 6 characters long');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error('New passwords do not match');
+      return;
+    }
+
+    if (newPassword === currentPassword) {
+      toast.error('New password must be different from current password');
+      return;
+    }
+
+    setIsChangingPassword(true);
+
+    try {
+      // Update password using Supabase
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // Clear password fields on success
+      setSecuritySettings({
+        ...securitySettings,
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+      
+      toast.success('Password changed successfully!');
+    } catch (error: any) {
+      console.error('Password change error:', error);
+      toast.error(error.message || 'Failed to change password');
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
   const handleSaveSettings = (section: string) => {
+    if (section === 'Security') {
+      handlePasswordChange();
+      return;
+    }
+    
     console.log(`Saving ${section} settings...`);
     // Here you would typically make an API call to save the settings
-    // For now, we'll just show a success message
-    alert(`${section} settings saved successfully!`);
+    toast.success(`${section} settings saved successfully!`);
   };
 
   const tabs = [
@@ -208,7 +272,7 @@ const Settings = () => {
 
                     <button
                       onClick={() => handleSaveSettings('General')}
-                      className="flex items-center px-4 py-2 bg-rise-gold text-black rounded-md hover:bg-yellow-400 transition-colors"
+                      className="flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-colors shadow-lg"
                     >
                       <Save className="mr-2 h-4 w-4" />
                       Save Changes
@@ -256,7 +320,7 @@ const Settings = () => {
 
                     <button
                       onClick={() => handleSaveSettings('Notifications')}
-                      className="flex items-center px-4 py-2 bg-rise-gold text-black rounded-md hover:bg-yellow-400 transition-colors"
+                      className="flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-colors shadow-lg"
                     >
                       <Save className="mr-2 h-4 w-4" />
                       Save Changes
@@ -391,10 +455,11 @@ const Settings = () => {
 
                     <button
                       onClick={() => handleSaveSettings('Security')}
-                      className="flex items-center px-4 py-2 bg-rise-gold text-black rounded-md hover:bg-yellow-400 transition-colors"
+                      disabled={isChangingPassword}
+                      className="flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <Save className="mr-2 h-4 w-4" />
-                      Save Changes
+                      <Save className={`mr-2 h-4 w-4 ${isChangingPassword ? 'animate-spin' : ''}`} />
+                      {isChangingPassword ? 'Changing Password...' : 'Save Changes'}
                     </button>
                   </div>
                 </div>
@@ -547,7 +612,7 @@ const Settings = () => {
 
                     <button
                       onClick={() => handleSaveSettings('Account')}
-                      className="flex items-center px-4 py-2 bg-rise-gold text-black rounded-md hover:bg-yellow-400 transition-colors"
+                      className="flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-colors shadow-lg"
                     >
                       <Save className="mr-2 h-4 w-4" />
                       Save Changes
@@ -617,7 +682,7 @@ const Settings = () => {
 
                     <button
                       onClick={() => handleSaveSettings('Privacy')}
-                      className="flex items-center px-4 py-2 bg-rise-gold text-black rounded-md hover:bg-yellow-400 transition-colors"
+                      className="flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-colors shadow-lg"
                     >
                       <Save className="mr-2 h-4 w-4" />
                       Save Changes
