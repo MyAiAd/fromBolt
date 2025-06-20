@@ -377,7 +377,7 @@ const Dashboard = () => {
               </button>
             </div>
             {copied && <p className="text-green-400 text-xs mt-1">Copied to clipboard!</p>}
-            <p className="text-gray-500 text-xs mt-2">Share: jennazwagil.com/join/{affiliateCode}</p>
+            <p className="text-gray-500 text-xs mt-2">Share: https://jennazwagil.com/jz-brands/{affiliateCode}</p>
           </div>
         </div>
       </motion.div>
