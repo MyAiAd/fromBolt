@@ -189,12 +189,15 @@ const Settings = () => {
                         <select
                           value={generalSettings.language}
                           onChange={(e) => setGeneralSettings({ ...generalSettings, language: e.target.value })}
-                          className="w-full px-3 py-2 bg-rise-dark border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-rise-gold"
+                          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          style={{
+                            colorScheme: 'dark'
+                          }}
                         >
-                          <option value="en">English</option>
-                          <option value="es">Spanish</option>
-                          <option value="fr">French</option>
-                          <option value="de">German</option>
+                          <option value="en" className="bg-gray-800 text-white">English</option>
+                          <option value="es" className="bg-gray-800 text-white">Spanish</option>
+                          <option value="fr" className="bg-gray-800 text-white">French</option>
+                          <option value="de" className="bg-gray-800 text-white">German</option>
                         </select>
                       </div>
                       
@@ -203,14 +206,17 @@ const Settings = () => {
                         <select
                           value={generalSettings.timezone}
                           onChange={(e) => setGeneralSettings({ ...generalSettings, timezone: e.target.value })}
-                          className="w-full px-3 py-2 bg-rise-dark border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-rise-gold"
+                          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          style={{
+                            colorScheme: 'dark'
+                          }}
                         >
-                          <option value="America/New_York">Eastern Time</option>
-                          <option value="America/Chicago">Central Time</option>
-                          <option value="America/Denver">Mountain Time</option>
-                          <option value="America/Los_Angeles">Pacific Time</option>
-                          <option value="Europe/London">London</option>
-                          <option value="Europe/Paris">Paris</option>
+                          <option value="America/New_York" className="bg-gray-800 text-white">Eastern Time</option>
+                          <option value="America/Chicago" className="bg-gray-800 text-white">Central Time</option>
+                          <option value="America/Denver" className="bg-gray-800 text-white">Mountain Time</option>
+                          <option value="America/Los_Angeles" className="bg-gray-800 text-white">Pacific Time</option>
+                          <option value="Europe/London" className="bg-gray-800 text-white">London</option>
+                          <option value="Europe/Paris" className="bg-gray-800 text-white">Paris</option>
                         </select>
                       </div>
 
@@ -219,12 +225,15 @@ const Settings = () => {
                         <select
                           value={generalSettings.currency}
                           onChange={(e) => setGeneralSettings({ ...generalSettings, currency: e.target.value })}
-                          className="w-full px-3 py-2 bg-rise-dark border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-rise-gold"
+                          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          style={{
+                            colorScheme: 'dark'
+                          }}
                         >
-                          <option value="USD">USD ($)</option>
-                          <option value="EUR">EUR (€)</option>
-                          <option value="GBP">GBP (£)</option>
-                          <option value="CAD">CAD ($)</option>
+                          <option value="USD" className="bg-gray-800 text-white">USD ($)</option>
+                          <option value="EUR" className="bg-gray-800 text-white">EUR (€)</option>
+                          <option value="GBP" className="bg-gray-800 text-white">GBP (£)</option>
+                          <option value="CAD" className="bg-gray-800 text-white">CAD ($)</option>
                         </select>
                       </div>
 
@@ -233,11 +242,14 @@ const Settings = () => {
                         <select
                           value={generalSettings.dateFormat}
                           onChange={(e) => setGeneralSettings({ ...generalSettings, dateFormat: e.target.value })}
-                          className="w-full px-3 py-2 bg-rise-dark border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-rise-gold"
+                          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          style={{
+                            colorScheme: 'dark'
+                          }}
                         >
-                          <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-                          <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-                          <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                          <option value="MM/DD/YYYY" className="bg-gray-800 text-white">MM/DD/YYYY</option>
+                          <option value="DD/MM/YYYY" className="bg-gray-800 text-white">DD/MM/YYYY</option>
+                          <option value="YYYY-MM-DD" className="bg-gray-800 text-white">YYYY-MM-DD</option>
                         </select>
                       </div>
                     </div>
@@ -442,13 +454,16 @@ const Settings = () => {
                         <select
                           value={securitySettings.sessionTimeout}
                           onChange={(e) => setSecuritySettings({ ...securitySettings, sessionTimeout: e.target.value })}
-                          className="w-full px-3 py-2 bg-rise-dark border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-rise-gold"
+                          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          style={{
+                            colorScheme: 'dark'
+                          }}
                         >
-                          <option value="15">15 minutes</option>
-                          <option value="30">30 minutes</option>
-                          <option value="60">1 hour</option>
-                          <option value="120">2 hours</option>
-                          <option value="480">8 hours</option>
+                          <option value="15" className="bg-gray-800 text-white">15 minutes</option>
+                          <option value="30" className="bg-gray-800 text-white">30 minutes</option>
+                          <option value="60" className="bg-gray-800 text-white">1 hour</option>
+                          <option value="120" className="bg-gray-800 text-white">2 hours</option>
+                          <option value="480" className="bg-gray-800 text-white">8 hours</option>
                         </select>
                       </div>
 
@@ -649,11 +664,14 @@ const Settings = () => {
                       <select
                         value={privacySettings.profileVisibility}
                         onChange={(e) => setPrivacySettings({ ...privacySettings, profileVisibility: e.target.value })}
-                        className="w-full px-3 py-2 bg-rise-dark border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-rise-gold"
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        style={{
+                          colorScheme: 'dark'
+                        }}
                       >
-                        <option value="public">Public</option>
-                        <option value="private">Private</option>
-                        <option value="contacts">Contacts Only</option>
+                        <option value="public" className="bg-gray-800 text-white">Public</option>
+                        <option value="private" className="bg-gray-800 text-white">Private</option>
+                        <option value="contacts" className="bg-gray-800 text-white">Contacts Only</option>
                       </select>
                     </div>
 
@@ -675,11 +693,14 @@ const Settings = () => {
                             <select
                               value={value as string}
                               onChange={(e) => setPrivacySettings({ ...privacySettings, [key]: e.target.value })}
-                              className="px-3 py-1 bg-rise-dark border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-rise-gold"
+                              className="px-3 py-1 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              style={{
+                                colorScheme: 'dark'
+                              }}
                             >
-                              <option value="essential">Essential Only</option>
-                              <option value="functional">Functional</option>
-                              <option value="all">All Cookies</option>
+                              <option value="essential" className="bg-gray-800 text-white">Essential Only</option>
+                              <option value="functional" className="bg-gray-800 text-white">Functional</option>
+                              <option value="all" className="bg-gray-800 text-white">All Cookies</option>
                             </select>
                           ) : (
                             <label className="relative inline-flex items-center cursor-pointer">
