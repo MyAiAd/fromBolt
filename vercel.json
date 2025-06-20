@@ -1,7 +1,13 @@
 {
-  "buildCommand": "npm run build",
+  "version": 2,
+  "buildCommand": "npm install && npm run build",
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": "vite",
-  "outputDirectory": "dist"
+  "outputDirectory": "dist",
+  "build": {
+    "env": {
+      "NODE_VERSION": "18"
+    }
+  }
 } 
