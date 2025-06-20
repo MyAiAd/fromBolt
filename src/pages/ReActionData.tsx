@@ -505,11 +505,14 @@ const ReActionData: React.FC = () => {
           <select
             value={dataSource}
             onChange={(e) => setDataSource(e.target.value as 'all' | 'test' | 'goaffpro')}
-            className="bg-rise-dark-light border border-gray-600 text-gray-300 px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-rise-gold"
+            className="bg-gray-800 border border-gray-600 text-white px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            style={{
+              colorScheme: 'dark'
+            }}
           >
-            <option value="all">All Data</option>
-            <option value="goaffpro">Real Data</option>
-            <option value="test">Test Data</option>
+            <option value="all" className="bg-gray-800 text-white">All Data</option>
+            <option value="goaffpro" className="bg-gray-800 text-white">Real Data</option>
+            <option value="test" className="bg-gray-800 text-white">Test Data</option>
           </select>
         </div>
       </div>
