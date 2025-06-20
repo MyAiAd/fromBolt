@@ -335,6 +335,10 @@ const Settings = () => {
                   <div className="space-y-6">
                     <div className="bg-rise-dark p-6 rounded-lg border border-gray-700">
                       <h4 className="text-md font-medium text-white mb-4">Change Password</h4>
+                      {/* Debug info - remove after testing */}
+                      <div className="mb-4 p-3 bg-yellow-900/20 border border-yellow-600 rounded text-xs text-yellow-300">
+                        <strong>Debug:</strong> Current: "{securitySettings.currentPassword}" | New: "{securitySettings.newPassword}" | Confirm: "{securitySettings.confirmPassword}"
+                      </div>
                       <div className="space-y-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-300 mb-2">Current Password</label>
@@ -342,13 +346,18 @@ const Settings = () => {
                             <input
                               type={showPassword ? 'text' : 'password'}
                               value={securitySettings.currentPassword}
-                              onChange={(e) => setSecuritySettings({ ...securitySettings, currentPassword: e.target.value })}
-                              className="w-full px-3 py-2 bg-rise-navy border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-rise-gold pr-10"
+                              onChange={(e) => {
+                                console.log('Current password input:', e.target.value);
+                                setSecuritySettings({ ...securitySettings, currentPassword: e.target.value });
+                              }}
+                              placeholder="Enter your current password"
+                              autoComplete="current-password"
+                              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10"
                             />
                             <button
                               type="button"
                               onClick={() => setShowPassword(!showPassword)}
-                              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                              className="absolute inset-y-0 right-0 pr-3 flex items-center z-10"
                             >
                               {showPassword ? <EyeOff className="h-4 w-4 text-gray-400" /> : <Eye className="h-4 w-4 text-gray-400" />}
                             </button>
@@ -361,13 +370,18 @@ const Settings = () => {
                             <input
                               type={showNewPassword ? 'text' : 'password'}
                               value={securitySettings.newPassword}
-                              onChange={(e) => setSecuritySettings({ ...securitySettings, newPassword: e.target.value })}
-                              className="w-full px-3 py-2 bg-rise-navy border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-rise-gold pr-10"
+                              onChange={(e) => {
+                                console.log('New password input:', e.target.value);
+                                setSecuritySettings({ ...securitySettings, newPassword: e.target.value });
+                              }}
+                              placeholder="Enter your new password"
+                              autoComplete="new-password"
+                              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10"
                             />
                             <button
                               type="button"
                               onClick={() => setShowNewPassword(!showNewPassword)}
-                              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                              className="absolute inset-y-0 right-0 pr-3 flex items-center z-10"
                             >
                               {showNewPassword ? <EyeOff className="h-4 w-4 text-gray-400" /> : <Eye className="h-4 w-4 text-gray-400" />}
                             </button>
@@ -380,13 +394,18 @@ const Settings = () => {
                             <input
                               type={showConfirmPassword ? 'text' : 'password'}
                               value={securitySettings.confirmPassword}
-                              onChange={(e) => setSecuritySettings({ ...securitySettings, confirmPassword: e.target.value })}
-                              className="w-full px-3 py-2 bg-rise-navy border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-rise-gold pr-10"
+                              onChange={(e) => {
+                                console.log('Confirm password input:', e.target.value);
+                                setSecuritySettings({ ...securitySettings, confirmPassword: e.target.value });
+                              }}
+                              placeholder="Confirm your new password"
+                              autoComplete="new-password"
+                              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10"
                             />
                             <button
                               type="button"
                               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                              className="absolute inset-y-0 right-0 pr-3 flex items-center z-10"
                             >
                               {showConfirmPassword ? <EyeOff className="h-4 w-4 text-gray-400" /> : <Eye className="h-4 w-4 text-gray-400" />}
                             </button>
