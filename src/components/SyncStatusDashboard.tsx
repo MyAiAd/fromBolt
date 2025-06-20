@@ -321,7 +321,7 @@ const SyncStatusDashboard: React.FC<SyncStatusProps> = ({ className = '' }) => {
     let hasMore = true;
 
     while (hasMore && page <= 100) { // Increased safety limit
-      const response = await fetch(`https://rest.gohighlevel.com/v1/contacts/?locationId=${locationId}&limit=1000&page=${page}`, {
+      const response = await fetch(`https://rest.gohighlevel.com/v1/contacts/?locationId=${locationId}&limit=100&page=${page}`, {
         headers: {
           'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json'

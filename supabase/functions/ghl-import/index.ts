@@ -150,7 +150,7 @@ serve(async (req) => {
     let nextCursor: string | null = null;
     
     do {
-      const endpoint = `/contacts/?locationId=${locationId}&limit=1000${
+      const endpoint = `/contacts/?locationId=${locationId}&limit=100${
         nextCursor ? `&cursor=${nextCursor}` : ''
       }`;
       

@@ -218,7 +218,7 @@ const JennaZImport: React.FC = () => {
       let nextCursor: string | null = null;
       
       do {
-        const endpoint = `/contacts/?locationId=${credentials.locationId}&limit=1000${
+        const endpoint = `/contacts/?locationId=${credentials.locationId}&limit=100${
           nextCursor ? `&cursor=${nextCursor}` : ''
         }`;
         
@@ -483,7 +483,7 @@ const JennaZImport: React.FC = () => {
       let nextCursor: string | null = null;
       
       do {
-        const endpoint = `/contacts/?locationId=${credentials.locationId}&limit=1000${
+        const endpoint = `/contacts/?locationId=${credentials.locationId}&limit=100${
           nextCursor ? `&cursor=${nextCursor}` : ''
         }`;
         

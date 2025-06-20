@@ -38,7 +38,7 @@ class SimpleGHLService {
   async fetchContacts() {
     console.log('🔄 Fetching contacts from Go High Level...');
     
-    const url = `${this.config.baseUrl}/contacts/?locationId=${this.config.locationId}&limit=1000`;
+    const url = `${this.config.baseUrl}/contacts/?locationId=${this.config.locationId}&limit=100`;
     
     const response = await fetch(url, {
       headers: {
