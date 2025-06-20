@@ -4,9 +4,6 @@ import { Suspense, lazy } from 'react';
 
 import AppLayout from './layouts/AppLayout';
 import AuthLayout from './layouts/AuthLayout';
-import Dashboard from './pages/Dashboard';
-import UserDashboard from './pages/UserDashboard';
-import Settings from './pages/Settings';
 import LoadingScreen from './components/LoadingScreen';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -14,6 +11,9 @@ import ProtectedRoute from './components/ProtectedRoute';
 const Login = lazy(() => import('./pages/auth/Login'));
 const Register = lazy(() => import('./pages/auth/Register'));
 const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const UserDashboard = lazy(() => import('./pages/UserDashboard'));
+const Settings = lazy(() => import('./pages/Settings'));
 const Affiliates = lazy(() => import('./pages/Affiliates'));
 const Campaigns = lazy(() => import('./pages/Campaigns'));
 const Performance = lazy(() => import('./pages/Performance'));

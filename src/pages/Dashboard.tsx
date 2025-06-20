@@ -324,10 +324,10 @@ const Dashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-96">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-rise-gold mx-auto mb-4"></div>
-          <p className="text-gray-400">Loading your dashboard...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rise-gold mx-auto mb-3"></div>
+          <p className="text-gray-400 text-sm">Loading your data...</p>
         </div>
       </div>
     );
