@@ -15,7 +15,7 @@ The affiliate ranking system has **5 distinct levels** based on the total number
 | **Silver** | 🥈 | 5-9 team members | Active affiliates building their network |
 | **Gold** | 🥇 | 10-24 team members | Successful team builders |
 | **Platinum** | 🏆 | 25-49 team members | Elite performers with substantial networks |
-| **Diamond** | 💎 | 50+ team members | Top-tier affiliates with large organizations |
+| **Sovereign** | 💎 | 50+ team members | Top-tier affiliates with large organizations |
 
 ## 📊 Rank Progress Calculation
 
@@ -24,15 +24,15 @@ The affiliate ranking system has **5 distinct levels** based on the total number
 - **Bronze → Silver**: Progress = (Current Team Size ÷ 5) × 100%
 - **Silver → Gold**: Progress = ((Current Team Size - 5) ÷ 5) × 100%
 - **Gold → Platinum**: Progress = ((Current Team Size - 10) ÷ 15) × 100%
-- **Platinum → Diamond**: Progress = ((Current Team Size - 25) ÷ 25) × 100%
-- **Diamond**: 100% (Top rank achieved)
+- **Platinum → Sovereign**: Progress = ((Current Team Size - 25) ÷ 25) × 100%
+- **Sovereign**: 100% (Top rank achieved)
 
 ### Examples:
 - **3 team members**: Bronze rank, 60% progress to Silver
 - **7 team members**: Silver rank, 40% progress to Gold  
 - **15 team members**: Gold rank, 33% progress to Platinum
-- **35 team members**: Platinum rank, 40% progress to Diamond
-- **75 team members**: Diamond rank, 100% (top level)
+- **35 team members**: Platinum rank, 40% progress to Sovereign
+- **75 team members**: Sovereign rank, 100% (top level)
 
 ## 🎯 Alternative Individual Performance Ranking
 
@@ -44,7 +44,7 @@ For individual affiliate performance tracking, there's a secondary ranking syste
 | **Silver** | 2-4 referrals |
 | **Gold** | 5-9 referrals |
 | **Platinum** | 10-19 referrals |
-| **Diamond** | 20+ referrals |
+| **Sovereign** | 20+ referrals |
 
 ## 💰 Commission Structure
 
@@ -109,7 +109,7 @@ Your total team size includes:
 - Special bonus opportunities
 - Mentorship program access
 
-#### Diamond (50+ team members)
+#### Sovereign (50+ team members)
 - Top-tier recognition
 - Maximum earning potential
 - Executive-level benefits

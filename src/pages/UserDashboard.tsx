@@ -30,7 +30,7 @@ const UserDashboard = () => {
 
   // Calculate rank based on team size
   const calculateRank = (teamSize: number) => {
-    if (teamSize >= 50) return 'Diamond';
+    if (teamSize >= 50) return 'Sovereign';
     if (teamSize >= 25) return 'Platinum';
     if (teamSize >= 10) return 'Gold';
     if (teamSize >= 5) return 'Silver';
@@ -40,7 +40,7 @@ const UserDashboard = () => {
   // Calculate progress to next rank
   const calculateNextRankProgress = (teamSize: number) => {
     if (teamSize >= 50) return 100; // Already at highest rank
-    if (teamSize >= 25) return ((teamSize - 25) / 25) * 100; // Progress to Diamond
+    if (teamSize >= 25) return ((teamSize - 25) / 25) * 100; // Progress to Sovereign
     if (teamSize >= 10) return ((teamSize - 10) / 15) * 100; // Progress to Platinum
     if (teamSize >= 5) return ((teamSize - 5) / 5) * 100; // Progress to Gold
     return (teamSize / 5) * 100; // Progress to Silver
@@ -48,7 +48,7 @@ const UserDashboard = () => {
 
   const getRankIcon = (rank: string) => {
     switch (rank) {
-      case 'Diamond': return '💎';
+      case 'Sovereign': return '💎';
       case 'Platinum': return '🏆';
       case 'Gold': return '🥇';
       case 'Silver': return '🥈';
@@ -62,7 +62,7 @@ const UserDashboard = () => {
       case 'Bronze': return 'Silver';
       case 'Silver': return 'Gold';
       case 'Gold': return 'Platinum';
-      case 'Platinum': return 'Diamond';
+      case 'Platinum': return 'Sovereign';
       default: return 'Max Rank';
     }
   };

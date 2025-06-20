@@ -174,7 +174,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                     <Award className="h-10 w-10 text-jennaz-rose" />
                     <div className="ml-3">
                       <p className="text-sm font-medium text-gray-200">Affiliate Level</p>
-                      <p className="text-xs text-jennaz-rose">Diamond Partner</p>
+                      <p className="text-xs text-jennaz-rose">Sovereign Partner</p>
                     </div>
                   </div>
                 </div>

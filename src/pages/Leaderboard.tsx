@@ -11,7 +11,7 @@ interface LeaderboardEntry {
   referrals: number;
   earnings: number;
   growth: number;
-  tier: 'Diamond' | 'Platinum' | 'Gold' | 'Silver' | 'Bronze';
+  tier: 'Sovereign' | 'Platinum' | 'Gold' | 'Silver' | 'Bronze';
   isCurrentUser?: boolean;
 }
 
@@ -28,7 +28,7 @@ const Leaderboard: React.FC = () => {
       referrals: 45,
       earnings: 12450,
       growth: 25.5,
-      tier: 'Diamond'
+      tier: 'Sovereign'
     },
     {
       id: '2',
@@ -125,7 +125,7 @@ const Leaderboard: React.FC = () => {
 
   const getTierColor = (tier: string) => {
     switch (tier) {
-      case 'Diamond': return 'text-blue-400';
+      case 'Sovereign': return 'text-blue-400';
       case 'Platinum': return 'text-gray-300';
       case 'Gold': return 'text-yellow-400';
       case 'Silver': return 'text-gray-400';
@@ -135,7 +135,7 @@ const Leaderboard: React.FC = () => {
 
   const getTierIcon = (tier: string) => {
     switch (tier) {
-      case 'Diamond': return '💎';
+      case 'Sovereign': return '💎';
       case 'Platinum': return '🏆';
       case 'Gold': return '🥇';
       case 'Silver': return '🥈';

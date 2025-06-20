@@ -244,7 +244,7 @@ const Dashboard = () => {
   }, [user?.id]); // Only depend on user.id, not the entire user object or supabase
 
   const calculateRank = (teamSize: number) => {
-    if (teamSize >= 50) return 'Diamond';
+    if (teamSize >= 50) return 'Sovereign';
     if (teamSize >= 25) return 'Platinum';
     if (teamSize >= 10) return 'Gold';
     if (teamSize >= 5) return 'Silver';
@@ -253,14 +253,14 @@ const Dashboard = () => {
 
   const calculateNextRankProgress = (teamSize: number) => {
     if (teamSize >= 50) return 100; // Already at top rank
-    if (teamSize >= 25) return Math.min(100, ((teamSize - 25) / 25) * 100); // Progress to Diamond
+    if (teamSize >= 25) return Math.min(100, ((teamSize - 25) / 25) * 100); // Progress to Sovereign
     if (teamSize >= 10) return Math.min(100, ((teamSize - 10) / 15) * 100); // Progress to Platinum
     if (teamSize >= 5) return Math.min(100, ((teamSize - 5) / 5) * 100); // Progress to Gold
     return Math.min(100, (teamSize / 5) * 100); // Progress to Silver
   };
 
   const getAffiliateRank = (referrals: number) => {
-    if (referrals >= 20) return 'Diamond';
+    if (referrals >= 20) return 'Sovereign';
     if (referrals >= 10) return 'Platinum';
     if (referrals >= 5) return 'Gold';
     if (referrals >= 2) return 'Silver';
@@ -281,7 +281,7 @@ const Dashboard = () => {
 
   const getRankColor = (rank: string) => {
     switch (rank) {
-      case 'Diamond': return 'text-blue-400';
+      case 'Sovereign': return 'text-blue-400';
       case 'Platinum': return 'text-gray-300';
       case 'Gold': return 'text-yellow-400';
       case 'Silver': return 'text-gray-400';
@@ -291,7 +291,7 @@ const Dashboard = () => {
 
   const getRankIcon = (rank: string) => {
     switch (rank) {
-      case 'Diamond': return '💎';
+      case 'Sovereign': return '💎';
       case 'Platinum': return '🏆';
       case 'Gold': return '🥇';
       case 'Silver': return '🥈';

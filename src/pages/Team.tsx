@@ -158,7 +158,7 @@ const Team: React.FC = () => {
 
   const getRankColor = (rank: string) => {
     switch (rank) {
-      case 'Diamond': return 'text-blue-400';
+      case 'Sovereign': return 'text-blue-400';
       case 'Platinum': return 'text-gray-300';
       case 'Gold': return 'text-yellow-400';
       case 'Silver': return 'text-gray-400';
@@ -168,7 +168,7 @@ const Team: React.FC = () => {
 
   const getRankIcon = (rank: string) => {
     switch (rank) {
-      case 'Diamond': return '💎';
+      case 'Sovereign': return '💎';
       case 'Platinum': return '🏆';
       case 'Gold': return '🥇';
       case 'Silver': return '🥈';
