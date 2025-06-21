@@ -9,5 +9,11 @@
     "env": {
       "NODE_VERSION": "18"
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/((?!api).*)",
+      "destination": "/index.html"
+    }
+  ]
 } 

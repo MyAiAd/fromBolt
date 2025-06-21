@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
@@ -7,9 +7,13 @@ import { motion } from 'framer-motion';
 const Login = () => {
   const { signIn } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Get the intended destination from location state, default to dashboard
+  const from = location.state?.from?.pathname || '/dashboard';
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,7 +24,8 @@ const Login = () => {
       if (error) throw error;
       
       toast.success("Welcome back!");
-      navigate('/dashboard');
+      console.log('Login: Redirecting to:', from);
+      navigate(from, { replace: true });
     } catch (error: any) {
       console.error('Login error:', error);
       toast.error(error.message || "Failed to sign in");

@@ -172,13 +172,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     let mounted = true;
 
-    // Shorter timeout to prevent infinite loading
+    // Longer timeout to ensure proper session restoration
     const loadingTimeout = setTimeout(() => {
       console.log('AuthProvider: Loading timeout reached, forcing loading to false');
       if (mounted) {
         setLoading(false);
       }
-    }, 2000); // Reduced to 2 seconds
+    }, 5000); // Increased to 5 seconds to allow proper session restoration
 
     // SIMPLIFIED BUT FUNCTIONAL: Initialize auth state
     const initAuth = async () => {
@@ -198,10 +198,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         console.log('AuthProvider: Checking for existing session...');
         
-        // Check for existing session with timeout to prevent hanging
+        // Check for existing session with longer timeout to prevent race conditions
         const sessionPromise = supabase.auth.getSession();
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Session timeout')), 3000)
+          setTimeout(() => reject(new Error('Session timeout')), 5000)
         );
         
         const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]) as { data: { session: Session | null } };
@@ -219,15 +219,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setIsAdmin(false);
         }
         
+        // Ensure loading is set to false after session check completes
+        console.log('AuthProvider: Session check complete, setting loading to false');
+        if (mounted) {
+          setLoading(false);
+        }
+        clearTimeout(loadingTimeout);
+        
       } catch (error) {
         console.error('Auth initialization error:', error);
         // On error, ensure clean state
         if (mounted) {
           setUser(null);
-        }
-      } finally {
-        console.log('AuthProvider: Setting loading to false in finally block');
-        if (mounted) {
+          setIsAdmin(false);
           setLoading(false);
         }
         clearTimeout(loadingTimeout);
