@@ -38,22 +38,47 @@ class SimpleGHLService {
   async fetchContacts() {
     console.log('🔄 Fetching contacts from Go High Level...');
     
-    const url = `${this.config.baseUrl}/contacts/?locationId=${this.config.locationId}&limit=100`;
+    let allContacts = [];
+    let page = 1;
+    let hasMore = true;
     
-    const response = await fetch(url, {
-      headers: {
-        'Authorization': `Bearer ${this.config.apiKey}`,
-        'Content-Type': 'application/json'
-      }
-    });
+    while (hasMore && allContacts.length < 1000) { // Safety limit
+      console.log(`📥 Fetching page ${page}...`);
+      
+      const url = `${this.config.baseUrl}/contacts/?locationId=${this.config.locationId}&limit=100&skip=${(page - 1) * 100}`;
+      
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${this.config.apiKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-    if (!response.ok) {
-      throw new Error(`GHL API Error: ${response.status} ${response.statusText}`);
+      if (!response.ok) {
+        throw new Error(`GHL API Error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.contacts && data.contacts.length > 0) {
+        allContacts.push(...data.contacts);
+        console.log(`✅ Page ${page}: ${data.contacts.length} contacts (total: ${allContacts.length})`);
+        
+        // Check if we got fewer contacts than the limit - means we're done
+        hasMore = data.contacts.length === 100;
+        page++;
+      } else {
+        hasMore = false;
+      }
+      
+      // Rate limiting - be nice to the API
+      if (hasMore) {
+        await new Promise(resolve => setTimeout(resolve, 250));
+      }
     }
 
-    const data = await response.json();
-    console.log(`✅ Total contacts fetched: ${data.contacts?.length || 0}`);
-    return data.contacts || [];
+    console.log(`✅ Total contacts fetched: ${allContacts.length}`);
+    return allContacts;
   }
 
   async importAffiliates(userId) {

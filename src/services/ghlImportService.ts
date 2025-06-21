@@ -18,10 +18,13 @@ interface GHLContact {
   referralCode?: string;
 }
 
-interface GHLImportConfig {
+export interface GHLImportConfig {
   apiKey: string;
   locationId: string;
   baseUrl?: string;
+  apiVersion?: 'v1' | 'v2'; // Add API version option
+  useOAuth?: boolean; // Add OAuth option
+  refreshToken?: string; // For OAuth refresh
 }
 
 interface ImportResult {
@@ -73,7 +76,11 @@ export class GHLImportService {
     this.supabase = supabase;
     this.serviceRoleClient = serviceRoleClient;
     this.config = {
-      baseUrl: 'https://rest.gohighlevel.com/v1',
+      baseUrl: config.apiVersion === 'v2' 
+        ? 'https://services.leadconnectorhq.com' 
+        : 'https://rest.gohighlevel.com/v1',
+      apiVersion: 'v1', // Default to v1 for backward compatibility
+      useOAuth: false,
       ...config
     };
   }
@@ -107,15 +114,32 @@ export class GHLImportService {
     if (error) throw error;
   }
 
-  private async makeGHLRequest(endpoint: string): Promise<GHLAPIResponse> {
-    const url = `${this.config.baseUrl}${endpoint}`;
+  private async makeGHLRequest(endpoint: string, cursor?: string): Promise<GHLAPIResponse> {
+    const isV2 = this.config.apiVersion === 'v2';
+    let url: string;
     
-    const response = await fetch(url, {
-      headers: {
-        'Authorization': `Bearer ${this.config.apiKey}`,
-        'Content-Type': 'application/json'
+    if (isV2) {
+      // v2 API structure
+      url = `${this.config.baseUrl}${endpoint}`;
+      if (cursor) {
+        url += `${endpoint.includes('?') ? '&' : '?'}cursor=${cursor}`;
       }
-    });
+    } else {
+      // v1 API structure
+      url = `${this.config.baseUrl}${endpoint}`;
+    }
+
+    const headers: Record<string, string> = {
+      'Authorization': `Bearer ${this.config.apiKey}`,
+      'Content-Type': 'application/json'
+    };
+
+    // Add version header for v2
+    if (isV2) {
+      headers['Version'] = '2021-07-28';
+    }
+
+    const response = await fetch(url, { headers });
 
     if (!response.ok) {
       throw new Error(`GHL API Error: ${response.status} ${response.statusText}`);
@@ -124,53 +148,58 @@ export class GHLImportService {
     return response.json() as Promise<GHLAPIResponse>;
   }
 
-  async fetchContacts(): Promise<GHLContact[]> {
-    console.log('🔄 Fetching contacts from Go High Level...');
+  async fetchAllContacts(): Promise<GHLContact[]> {
+    console.log('🔄 Fetching all contacts from Go High Level...');
     
-    let allContacts: GHLContact[] = [];
-    let nextCursor: string | null = null;
-    
+    const allContacts: GHLContact[] = [];
+    let cursor: string | null = null;
+    let page = 1;
+    const limit = 100; // Standard limit for both APIs
+
     do {
       try {
-        const endpoint = `/contacts/?locationId=${this.config.locationId}&limit=100${
-          nextCursor ? `&cursor=${nextCursor}` : ''
-        }`;
+        console.log(`📥 Fetching page ${page}...`);
         
-        const response = await this.makeGHLRequest(endpoint);
+        const endpoint = this.config.apiVersion === 'v2'
+          ? `/contacts/?locationId=${this.config.locationId}&limit=${limit}`
+          : `/contacts/?locationId=${this.config.locationId}&limit=${limit}`;
+
+        const response = await this.makeGHLRequest(endpoint, cursor);
         
         if (response.contacts && Array.isArray(response.contacts)) {
-          allContacts = allContacts.concat(response.contacts);
-          console.log(`📥 Fetched ${response.contacts.length} contacts (total: ${allContacts.length})`);
+          allContacts.push(...response.contacts);
+          console.log(`✅ Fetched ${response.contacts.length} contacts (total: ${allContacts.length})`);
         }
+
+        // Handle pagination differently for v1 vs v2
+        if (this.config.apiVersion === 'v2') {
+          cursor = response.meta?.nextCursor || null;
+        } else {
+          // v1 pagination - check if we got fewer results than limit
+          cursor = response.contacts?.length === limit ? `${allContacts.length}` : null;
+        }
+
+        page++;
         
-        nextCursor = response.meta?.nextCursor || null;
-        
-        // Rate limiting - pause between requests
-        if (nextCursor) {
-          await new Promise(resolve => setTimeout(resolve, 200));
+        // Rate limiting - be more conservative
+        if (cursor) {
+          await new Promise(resolve => setTimeout(resolve, 250));
         }
         
       } catch (error) {
-        console.error('❌ Error fetching contacts from GHL:', error);
-        throw error;
+        console.error(`❌ Error fetching page ${page}:`, error);
+        break;
       }
-    } while (nextCursor);
+    } while (cursor && allContacts.length < 1000); // Safety limit
 
     console.log(`✅ Total contacts fetched: ${allContacts.length}`);
     return allContacts;
   }
 
   async importAffiliates(userId: string): Promise<ImportResult> {
-    const logId = await this.createImportLog({
-      import_source: 'ghl',
-      import_type: 'affiliates',
-      started_by: userId,
-      import_config: {
-        locationId: this.config.locationId,
-        timestamp: new Date().toISOString()
-      }
-    });
-
+    console.log('🔄 Starting import process...');
+    console.log(`🔧 Using API ${this.config.apiVersion} with base URL: ${this.config.baseUrl}`);
+    
     const result: ImportResult = {
       success: false,
       recordsProcessed: 0,
@@ -182,7 +211,8 @@ export class GHLImportService {
     };
 
     try {
-      const contacts = await this.fetchContacts();
+      // Use the new fetchAllContacts method
+      const contacts = await this.fetchAllContacts();
       result.recordsProcessed = contacts.length;
 
       console.log('🔄 Processing GHL contacts into affiliate system...');
