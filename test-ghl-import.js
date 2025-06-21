@@ -252,35 +252,30 @@ async function testGHLImport() {
     
     // Check the data in the database
     console.log('\n🔍 Checking imported data...');
-    const { data: ghlAffiliates, error: ghlError } = await serviceRoleClient
+    
+    // Note: Use service role client for accurate counts (bypasses RLS)
+    const { data: ghlAffiliates, error: ghlError, count: ghlCount } = await serviceRoleClient
       .from('ghl_affiliates')
-      .select('*')
+      .select('*', { count: 'exact' })
       .limit(5);
     
     if (ghlError) {
       console.error('❌ Error fetching GHL affiliates:', ghlError);
     } else {
-      console.log(`📊 GHL Affiliates table contains ${ghlAffiliates.length} records (showing first 5)`);
+      console.log(`📊 GHL Affiliates table contains ${ghlCount} total records (showing first 5)`);
+      console.log(`💡 Note: Regular client might show fewer due to RLS policies`);
     }
     
-    const { data: affiliateSystemUsers, error: affiliateError } = await serviceRoleClient
+    const { data: affiliateSystemUsers, error: affiliateError, count: affCount } = await serviceRoleClient
       .from('affiliate_system_users')
-      .select('*')
+      .select('*', { count: 'exact' })
       .eq('primary_source', 'ghl')
       .limit(5);
     
     if (affiliateError) {
       console.error('❌ Error fetching affiliate system users:', affiliateError);
     } else {
-      console.log(`📊 Affiliate System Users from GHL: ${affiliateSystemUsers.length} records (showing first 5)`);
-      if (affiliateSystemUsers.length > 0) {
-        console.log('\nSample affiliate:');
-        const affiliate = affiliateSystemUsers[0];
-        console.log(`- Email: ${affiliate.email}`);
-        console.log(`- Name: ${affiliate.first_name} ${affiliate.last_name}`);
-        console.log(`- Referral Code: ${affiliate.referral_code}`);
-        console.log(`- Status: ${affiliate.status}`);
-      }
+      console.log(`📊 Affiliate System Users from GHL: ${affCount} total records (showing first 5)`);
     }
     
   } catch (error) {
