@@ -178,6 +178,9 @@ const Dashboard = () => {
           // Calculate average commission as monthly earnings estimate
           const monthlyEarnings = allAffiliates.length > 0 ? Math.round(totalCommission / Math.max(allAffiliates.length, 1)) : 0;
           
+          // For rank calculation, use monthly earnings as referral volume estimate
+          const estimatedMonthlyVolume = monthlyEarnings;
+          
           const realStats = {
             totalTeamMembers: affiliateStats.total || 0,
             totalCommission: Math.round(totalCommission),
@@ -185,8 +188,8 @@ const Dashboard = () => {
             conversionRate: allAffiliates.length > 0 ? 
               (allAffiliates.filter(a => a.referrals > 0).length / allAffiliates.length * 100) : 0,
             monthlyEarnings: monthlyEarnings,
-            rank: calculateRank(affiliateStats.total || 0),
-            nextRankProgress: calculateNextRankProgress(affiliateStats.total || 0)
+            rank: calculateRank(estimatedMonthlyVolume),
+            nextRankProgress: calculateNextRankProgress(estimatedMonthlyVolume)
           };
           
           setStats(realStats);
@@ -204,7 +207,7 @@ const Dashboard = () => {
               name: affiliate.name,
               earnings: affiliate.commission,
               referrals: affiliate.referrals,
-              rank: getAffiliateRank(affiliate.referrals)
+              rank: getAffiliateRank(parseFloat(affiliate.commission.replace('$', '').replace(',', '')) || 0)
             }));
 
           // Add current user if they have activity
@@ -233,7 +236,7 @@ const Dashboard = () => {
             totalClicks: 0,
             conversionRate: 0,
             monthlyEarnings: 0,
-            rank: 'Bronze',
+            rank: 'Aligned',
             nextRankProgress: 0
           });
           setTopPerformers([]);
@@ -426,7 +429,7 @@ const Dashboard = () => {
       <motion.div variants={itemVariants} className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
         <div>
           <h1 className="text-3xl font-serif font-semibold text-white mb-2">
-            Welcome Back, {userData?.full_name || 'Partner'}! 
+            Welcome Back, {userData?.full_name?.split(' ')[0] || user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'Partner'}! 
             <span className="ml-2">{getRankIcon(stats.rank)}</span>
           </h1>
           <p className="text-gray-400">Your journey with The RISE continues. Let's stack those sats together!</p>

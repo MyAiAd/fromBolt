@@ -123,6 +123,15 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     loadUserRank();
   }, [user, isAdmin, supabase]);
 
+  // Get user's first name for display
+  const getUserDisplayName = () => {
+    if (!user) return 'Partner';
+    
+    // Try to get first name from user metadata or email
+    const fullName = user.user_metadata?.full_name || user.email?.split('@')[0];
+    return fullName?.split(' ')[0] || 'Partner';
+  };
+
   return (
     <>
       {/* Mobile sidebar */}
@@ -241,7 +250,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                   <div className="flex items-center">
                     <Award className="h-10 w-10 text-jennaz-rose" />
                     <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-200">Affiliate Level</p>
+                      <p className="text-sm font-medium text-gray-200">{getUserDisplayName()}</p>
                       <p className="text-xs text-jennaz-rose">{userRank} {userRankIcon}</p>
                     </div>
                   </div>
