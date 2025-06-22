@@ -26,7 +26,7 @@ interface ActivityItem {
 }
 
 const Dashboard = () => {
-  const { supabase, user } = useAuth();
+  const { supabase, user, isAdmin } = useAuth();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [stats, setStats] = useState({
     totalTeamMembers: 0,
@@ -43,6 +43,14 @@ const Dashboard = () => {
   const [topPerformers, setTopPerformers] = useState<TopPerformer[]>([]);
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
   const [copied, setCopied] = useState(false);
+
+  const getCapitalizedFirstName = () => {
+    const firstName = userData?.full_name?.split(' ')[0] || 
+                     user?.user_metadata?.full_name?.split(' ')[0] || 
+                     user?.email?.split('@')[0] || 
+                     'Partner';
+    return firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+  };
 
   const getNextRankName = (rank: string) => {
     switch (rank) {
@@ -179,7 +187,10 @@ const Dashboard = () => {
           const monthlyEarnings = allAffiliates.length > 0 ? Math.round(totalCommission / Math.max(allAffiliates.length, 1)) : 0;
           
           // For rank calculation, use monthly earnings as referral volume estimate
+          // But for admin users, always set to Sovereign rank
           const estimatedMonthlyVolume = monthlyEarnings;
+          const userRank = isAdmin ? 'Sovereign' : calculateRank(estimatedMonthlyVolume);
+          const userProgress = isAdmin ? 100 : calculateNextRankProgress(estimatedMonthlyVolume);
           
           const realStats = {
             totalTeamMembers: affiliateStats.total || 0,
@@ -188,8 +199,8 @@ const Dashboard = () => {
             conversionRate: allAffiliates.length > 0 ? 
               (allAffiliates.filter(a => a.referrals > 0).length / allAffiliates.length * 100) : 0,
             monthlyEarnings: monthlyEarnings,
-            rank: calculateRank(estimatedMonthlyVolume),
-            nextRankProgress: calculateNextRankProgress(estimatedMonthlyVolume)
+            rank: userRank,
+            nextRankProgress: userProgress
           };
           
           setStats(realStats);
@@ -236,8 +247,8 @@ const Dashboard = () => {
             totalClicks: 0,
             conversionRate: 0,
             monthlyEarnings: 0,
-            rank: 'Aligned',
-            nextRankProgress: 0
+            rank: isAdmin ? 'Sovereign' : 'Aligned',
+            nextRankProgress: isAdmin ? 100 : 0
           });
           setTopPerformers([]);
         }
@@ -429,7 +440,7 @@ const Dashboard = () => {
       <motion.div variants={itemVariants} className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
         <div>
           <h1 className="text-3xl font-serif font-semibold text-white mb-2">
-            Welcome Back, {userData?.full_name?.split(' ')[0] || user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'Partner'}! 
+            Welcome Back, {getCapitalizedFirstName()}! 
             <span className="ml-2">{getRankIcon(stats.rank)}</span>
           </h1>
           <p className="text-gray-400">Your journey with The RISE continues. Let's stack those sats together!</p>
