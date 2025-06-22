@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import { LayoutDashboard, Users, BarChart3, Settings, Award, Layers, LogOut, Database, RefreshCw, HelpCircle } from 'lucide-react';
+import { LayoutDashboard, Users, BarChart3, Settings, Award, Layers, LogOut, Database, RefreshCw, HelpCircle, Trophy, UsersIcon } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment, useState, useEffect } from 'react';
@@ -19,6 +19,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Team', href: '/team', icon: UsersIcon },
+    { name: 'Leaderboard', href: '/leaderboard', icon: Trophy },
     { name: 'Affiliates', href: '/affiliates', icon: Users },
     { name: 'Affiliate Management', href: '/affiliates-dashboard', icon: Users },
     { name: 'Campaigns', href: '/campaigns', icon: Layers },

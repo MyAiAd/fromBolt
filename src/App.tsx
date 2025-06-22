@@ -24,6 +24,8 @@ const JennaZData = lazy(() => import('./pages/JennaZData'));
 const AffiliatesDashboard = lazy(() => import('./pages/AffiliatesDashboard'));
 const DataSyncManagement = lazy(() => import('./pages/DataSyncManagement'));
 const UserGuide = lazy(() => import('./pages/UserGuide'));
+const Team = lazy(() => import('./pages/Team'));
+const Leaderboard = lazy(() => import('./pages/Leaderboard'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 function App() {
@@ -154,6 +156,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <UserGuide />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/team" 
+            element={
+              <ProtectedRoute>
+                <Team />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/leaderboard" 
+            element={
+              <ProtectedRoute>
+                <Leaderboard />
               </ProtectedRoute>
             } 
           />
