@@ -129,7 +129,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     
     // Try to get first name from user metadata or email
     const fullName = user.user_metadata?.full_name || user.email?.split('@')[0];
-    return fullName?.split(' ')[0] || 'Partner';
+    const firstName = fullName?.split(' ')[0] || 'Partner';
+    return firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
   };
 
   return (
