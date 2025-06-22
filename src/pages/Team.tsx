@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Users, Search, UserPlus, Crown, TrendingUp, DollarSign, Eye, Mail, Phone } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import { useAuth } from '../hooks/useAuth';
+import { AffiliateAggregationService } from '../services/affiliateAggregationService';
 
 interface TeamMember {
   id: string;
@@ -18,12 +20,14 @@ interface TeamMember {
 }
 
 const Team: React.FC = () => {
-  const { affiliates, orders, isLoading: dataLoading, refreshData } = useData();
+  const { affiliates, orders, isLoading: dataLoading } = useData();
+  const { supabase, isAdmin } = useAuth();
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [filteredMembers, setFilteredMembers] = useState<TeamMember[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [levelFilter, setLevelFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [isLoading, setIsLoading] = useState(false);
   const [teamStats, setTeamStats] = useState({
     totalMembers: 0,
     activeMembers: 0,
@@ -31,15 +35,85 @@ const Team: React.FC = () => {
     thisMonthGrowth: 0
   });
 
+  const aggregationService = useMemo(() => new AffiliateAggregationService(supabase), [supabase]);
+
   useEffect(() => {
-    processRealData();
-  }, [affiliates, orders]);
+    loadTeamData();
+  }, [isAdmin, affiliates, orders, aggregationService]);
 
   useEffect(() => {
     filterMembers();
   }, [teamMembers, searchTerm, levelFilter, statusFilter]);
 
-  const processRealData = () => {
+  const loadTeamData = async () => {
+    setIsLoading(true);
+    try {
+      if (isAdmin) {
+        // Admin: Load all affiliates from all sources using aggregation service
+        console.log('🔄 Team: Loading all affiliates for admin...');
+        const allAffiliates = await aggregationService.getAllAffiliates();
+        transformAggregatedData(allAffiliates);
+      } else {
+        // Regular user: Use filtered data from DataContext
+        console.log('🔄 Team: Loading user-specific data...');
+        processRegularUserData();
+      }
+    } catch (error) {
+      console.error('Error loading team data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const transformAggregatedData = (aggregatedAffiliates: any[]) => {
+    console.log(`🔄 Team: Processing ${aggregatedAffiliates.length} aggregated affiliates for admin`);
+    
+    // Transform aggregated affiliate data into TeamMember format
+    const transformedMembers: TeamMember[] = aggregatedAffiliates.map((affiliate) => {
+      // Extract earnings from commission string (e.g. "$123.45" -> 123.45)
+      const totalEarnings = parseFloat(affiliate.commission.replace('$', '')) || 0;
+
+      // Determine rank based on total earnings using new tier system
+      const getRankFromEarnings = (earnings: number): string => {
+        if (earnings >= 1000000) return 'Sovereign';
+        if (earnings >= 500000) return 'Oracle';
+        if (earnings >= 100000) return 'Visionary';
+        if (earnings >= 50000) return 'Luminary';
+        if (earnings >= 25000) return 'Magnetic';
+        if (earnings >= 5000) return 'Ascended';
+        if (earnings >= 1000) return 'Activated';
+        return 'Aligned';
+      };
+
+      return {
+        id: affiliate.id,
+        name: affiliate.name || 'Unknown',
+        email: affiliate.email,
+        phone: affiliate.originalData?.phone || '', 
+        joinDate: affiliate.dateJoined,
+        level: 1, // Could be enhanced with referral structure
+        referrals: affiliate.referrals || 0,
+        earnings: totalEarnings,
+        rank: getRankFromEarnings(totalEarnings),
+        status: affiliate.status.toLowerCase() === 'active' ? 'active' : 'inactive',
+        directReferrer: affiliate.source || 'System'
+      };
+    });
+
+    setTeamMembers(transformedMembers);
+    
+    // Calculate team stats from aggregated data
+    const stats = {
+      totalMembers: transformedMembers.length,
+      activeMembers: transformedMembers.filter(m => m.status === 'active').length,
+      totalEarnings: transformedMembers.reduce((sum, m) => sum + m.earnings, 0),
+      thisMonthGrowth: 15 // Would need historical data to calculate real growth
+    };
+    
+    setTeamStats(stats);
+  };
+
+  const processRegularUserData = () => {
     if (!affiliates || affiliates.length === 0) {
       setTeamMembers([]);
       setTeamStats({
@@ -51,8 +125,8 @@ const Team: React.FC = () => {
       return;
     }
 
-    // Transform real affiliate data into TeamMember format
-    const transformedMembers: TeamMember[] = affiliates.map((affiliate, index) => {
+    // Transform regular user data (same as before)
+    const transformedMembers: TeamMember[] = affiliates.map((affiliate) => {
       // Calculate earnings from orders for this affiliate
       const affiliateOrders = orders.filter(order => 
         order.affiliate_id === affiliate.id || 
@@ -78,25 +152,25 @@ const Team: React.FC = () => {
         id: affiliate.id,
         name: `${affiliate.first_name || ''} ${affiliate.last_name || ''}`.trim() || 'Unknown',
         email: affiliate.email,
-        phone: '', // Not available in current data structure
+        phone: '', 
         joinDate: affiliate.created_at ? new Date(affiliate.created_at).toISOString().split('T')[0] : '',
-        level: 1, // Could be calculated based on referral structure if data available
+        level: 1,
         referrals: affiliate.total_orders || 0,
         earnings: totalEarnings || affiliate.total_earnings || 0,
         rank: getRankFromEarnings(totalEarnings || affiliate.total_earnings || 0),
         status: affiliate.status === 'active' ? 'active' : 'inactive',
-        directReferrer: 'System' // Would need referral structure data to determine this
+        directReferrer: 'System'
       };
     });
 
     setTeamMembers(transformedMembers);
     
-    // Calculate team stats from real data
+    // Calculate team stats from regular data
     const stats = {
       totalMembers: transformedMembers.length,
       activeMembers: transformedMembers.filter(m => m.status === 'active').length,
       totalEarnings: transformedMembers.reduce((sum, m) => sum + m.earnings, 0),
-      thisMonthGrowth: 15 // Would need historical data to calculate real growth
+      thisMonthGrowth: 15
     };
     
     setTeamStats(stats);
@@ -158,7 +232,7 @@ const Team: React.FC = () => {
     }
   };
 
-  if (dataLoading) {
+  if (dataLoading || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">

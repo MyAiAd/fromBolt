@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, Crown, TrendingUp, Users, DollarSign, Calendar, Filter } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import { useAuth } from '../hooks/useAuth';
+import { AffiliateAggregationService } from '../services/affiliateAggregationService';
 
 interface LeaderboardEntry {
   id: string;
@@ -18,22 +20,105 @@ interface LeaderboardEntry {
 
 const Leaderboard: React.FC = () => {
   const { affiliates, orders, isLoading: dataLoading } = useData();
+  const { supabase, isAdmin } = useAuth();
   const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'quarter' | 'year'>('month');
   const [categoryFilter, setCategoryFilter] = useState<'earnings' | 'referrals' | 'growth'>('earnings');
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const aggregationService = useMemo(() => new AffiliateAggregationService(supabase), [supabase]);
 
   useEffect(() => {
-    processRealData();
-  }, [affiliates, orders, timeFilter, categoryFilter]);
+    loadLeaderboardData();
+  }, [isAdmin, affiliates, orders, timeFilter, categoryFilter, aggregationService]);
 
-  const processRealData = () => {
+  const loadLeaderboardData = async () => {
+    setIsLoading(true);
+    try {
+      if (isAdmin) {
+        // Admin: Load all affiliates from all sources using aggregation service
+        console.log('🔄 Leaderboard: Loading all affiliates for admin...');
+        const allAffiliates = await aggregationService.getAllAffiliates();
+        transformAggregatedData(allAffiliates);
+      } else {
+        // Regular user: Use filtered data from DataContext
+        console.log('🔄 Leaderboard: Loading user-specific data...');
+        processRegularUserData();
+      }
+    } catch (error) {
+      console.error('Error loading leaderboard data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const transformAggregatedData = (aggregatedAffiliates: any[]) => {
+    console.log(`🔄 Leaderboard: Processing ${aggregatedAffiliates.length} aggregated affiliates for admin`);
+    
+    // Transform aggregated affiliate data into LeaderboardEntry format
+    const transformedData: LeaderboardEntry[] = aggregatedAffiliates.map((affiliate) => {
+      // Extract earnings from commission string (e.g. "$123.45" -> 123.45)
+      const totalEarnings = parseFloat(affiliate.commission.replace('$', '')) || 0;
+
+      // Calculate growth (mock for now, would need historical data)
+      const growth = Math.random() * 30; // Mock growth percentage
+
+      // Determine rank based on total earnings using new tier system
+      const getRankFromEarnings = (earnings: number): LeaderboardEntry['tier'] => {
+        if (earnings >= 1000000) return 'Sovereign';
+        if (earnings >= 500000) return 'Oracle';
+        if (earnings >= 100000) return 'Visionary';
+        if (earnings >= 50000) return 'Luminary';
+        if (earnings >= 25000) return 'Magnetic';
+        if (earnings >= 5000) return 'Ascended';
+        if (earnings >= 1000) return 'Activated';
+        return 'Aligned';
+      };
+
+      return {
+        id: affiliate.id,
+        rank: 0, // Will be set after sorting
+        name: affiliate.name || 'Unknown',
+        level: 1, // Could be enhanced with referral structure
+        referrals: affiliate.referrals || 0,
+        earnings: totalEarnings,
+        growth: growth,
+        tier: getRankFromEarnings(totalEarnings),
+        isCurrentUser: false // Would need current user comparison
+      };
+    });
+
+    // Sort by the selected category
+    const sortedData = transformedData.sort((a, b) => {
+      switch (categoryFilter) {
+        case 'earnings':
+          return b.earnings - a.earnings;
+        case 'referrals':
+          return b.referrals - a.referrals;
+        case 'growth':
+          return b.growth - a.growth;
+        default:
+          return b.earnings - a.earnings;
+      }
+    });
+
+    // Assign ranks after sorting
+    const rankedData = sortedData.map((item, index) => ({
+      ...item,
+      rank: index + 1
+    }));
+
+    setLeaderboardData(rankedData);
+  };
+
+  const processRegularUserData = () => {
     if (!affiliates || affiliates.length === 0) {
       setLeaderboardData([]);
       return;
     }
 
-    // Transform real affiliate data into LeaderboardEntry format
-    const transformedData: LeaderboardEntry[] = affiliates.map((affiliate, index) => {
+    // Transform regular user affiliate data into LeaderboardEntry format
+    const transformedData: LeaderboardEntry[] = affiliates.map((affiliate) => {
       // Calculate earnings from orders for this affiliate
       const affiliateOrders = orders.filter(order => 
         order.affiliate_id === affiliate.id || 
@@ -65,12 +150,12 @@ const Leaderboard: React.FC = () => {
         id: affiliate.id,
         rank: 0, // Will be set after sorting
         name: `${affiliate.first_name || ''} ${affiliate.last_name || ''}`.trim() || 'Unknown',
-        level: 1, // Could be calculated based on referral structure if data available
+        level: 1,
         referrals: referralsCount,
         earnings: totalEarnings || affiliate.total_earnings || 0,
         growth: growth,
         tier: getRankFromEarnings(totalEarnings || affiliate.total_earnings || 0),
-        isCurrentUser: false // Would need current user comparison
+        isCurrentUser: false
       };
     });
 
