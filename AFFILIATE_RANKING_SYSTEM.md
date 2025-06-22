@@ -1,50 +1,44 @@
 # JennaZ Affiliate Ranking System
 
 ## Overview
-The JennaZ affiliate platform uses a sophisticated multi-level ranking system that rewards affiliates based on team building and performance. This document outlines how affiliate levels, ranks, and commissions are determined.
+The JennaZ affiliate platform uses a sophisticated 8-tier ranking system that rewards affiliates based on their monthly referral volume performance. This document outlines how affiliate ranks and commissions are determined based on the total dollar value of referrals generated monthly.
 
-## 🏆 Affiliate Rank Levels
+## 🏆 Affiliate Rank System
 
-### Rank Tiers (Based on Total Team Size)
+### Rank Tiers (Based on Monthly Referral Volume)
 
-The affiliate ranking system has **5 distinct levels** based on the total number of team members in your network:
+The affiliate ranking system has **8 distinct levels** based on monthly referral volume (cumulative earnings generated through referrals):
 
-| Rank | Icon | Team Size Required | Description |
-|------|------|-------------------|-------------|
-| **Bronze** | 🥉 | 0-4 team members | Starting level for new affiliates |
-| **Silver** | 🥈 | 5-9 team members | Active affiliates building their network |
-| **Gold** | 🥇 | 10-24 team members | Successful team builders |
-| **Platinum** | 🏆 | 25-49 team members | Elite performers with substantial networks |
-| **Sovereign** | 💎 | 50+ team members | Top-tier affiliates with large organizations |
+| Rank | Icon | Monthly Volume Required | Description |
+|------|------|------------------------|-------------|
+| **Aligned** | 🎯 | $0 - $1,000 | Entry level - You've tuned in and taken aligned action |
+| **Activated** | ⚡ | $1,000 - $5,000 | Building momentum - Your energy is moving, becoming magnetic |
+| **Ascended** | 🚀 | $5,000 - $25,000 | Growing impact - Your impact is rising and influence expanding |
+| **Magnetic** | 🧲 | $25,000 - $50,000 | Strong performance - Pulling in abundance through pure alignment |
+| **Luminary** | 💫 | $50,000 - $100,000 | Community leader - You're a beacon of light in the community |
+| **Visionary** | ✨ | $100,000 - $500,000 | Leader of leaders - You've become a leader with a big vision |
+| **Oracle** | 🔮 | $500,000 - $1,000,000 | Wisdom and results - Wisdom radiates from your results |
+| **Sovereign** | 👑 | $1,000,000+ | Ultimate mastery - You embody mastery, legacy, and divine authority |
 
 ## 📊 Rank Progress Calculation
 
 ### How Progress to Next Rank is Calculated:
 
-- **Bronze → Silver**: Progress = (Current Team Size ÷ 5) × 100%
-- **Silver → Gold**: Progress = ((Current Team Size - 5) ÷ 5) × 100%
-- **Gold → Platinum**: Progress = ((Current Team Size - 10) ÷ 15) × 100%
-- **Platinum → Sovereign**: Progress = ((Current Team Size - 25) ÷ 25) × 100%
+- **Aligned → Activated**: Progress = (Current Volume ÷ $1,000) × 100%
+- **Activated → Ascended**: Progress = ((Current Volume - $1,000) ÷ $4,000) × 100%
+- **Ascended → Magnetic**: Progress = ((Current Volume - $5,000) ÷ $20,000) × 100%
+- **Magnetic → Luminary**: Progress = ((Current Volume - $25,000) ÷ $25,000) × 100%
+- **Luminary → Visionary**: Progress = ((Current Volume - $50,000) ÷ $50,000) × 100%
+- **Visionary → Oracle**: Progress = ((Current Volume - $100,000) ÷ $400,000) × 100%
+- **Oracle → Sovereign**: Progress = ((Current Volume - $500,000) ÷ $500,000) × 100%
 - **Sovereign**: 100% (Top rank achieved)
 
 ### Examples:
-- **3 team members**: Bronze rank, 60% progress to Silver
-- **7 team members**: Silver rank, 40% progress to Gold  
-- **15 team members**: Gold rank, 33% progress to Platinum
-- **35 team members**: Platinum rank, 40% progress to Sovereign
-- **75 team members**: Sovereign rank, 100% (top level)
-
-## 🎯 Alternative Individual Performance Ranking
-
-For individual affiliate performance tracking, there's a secondary ranking system based on personal referrals:
-
-| Rank | Personal Referrals Required |
-|------|---------------------------|
-| **Bronze** | 0-1 referrals |
-| **Silver** | 2-4 referrals |
-| **Gold** | 5-9 referrals |
-| **Platinum** | 10-19 referrals |
-| **Sovereign** | 20+ referrals |
+- **$500 monthly volume**: Aligned rank, 50% progress to Activated
+- **$3,000 monthly volume**: Activated rank, 50% progress to Ascended  
+- **$15,000 monthly volume**: Ascended rank, 50% progress to Magnetic
+- **$75,000 monthly volume**: Luminary rank, 50% progress to Visionary
+- **$1,500,000 monthly volume**: Sovereign rank, 100% (top level)
 
 ## 💰 Commission Structure
 
@@ -52,114 +46,142 @@ For individual affiliate performance tracking, there's a secondary ranking syste
 
 The platform operates on a 3-level commission structure:
 
-#### Default Products (15/5/2 Structure)
-- **Level 1 (Direct Referrals)**: 15%
-- **Level 2 (Indirect Referrals)**: 5%
-- **Level 3 (Grand Referrals)**: 2%
+#### High-Commission Products (20/10/5 Structure)
+- **BAE**: 20% L1, 10% L2, 5% L3
+- **Coaching Packs**: 20% L1, 10% L2, 5% L3
+- **Online Mastery**: 20% L1, 10% L2, 5% L3
+- **BRAVO Fitness**: 20% L1, 10% L2, 5% L3
+- **AI System**: 20% L1, 10% L2, 5% L3
 
-#### Events (5/2.5/2.5 Structure)
-- **Level 1 (Direct Referrals)**: 5%
-- **Level 2 (Indirect Referrals)**: 2.5%
-- **Level 3 (Grand Referrals)**: 2.5%
+#### Modified Commission Product
+- **REACTION CBD**: 15% L1, 5% L2, 5% L3
+
+#### Lower Commission Product
+- **Events**: 5% L1, 2.5% L2, 2.5% L3
 
 ### How Multi-Level Commissions Work
 
 ```
 You (Level 0)
-├── Direct Referral A (Level 1) - You earn 15% on their sales
-│   ├── Their Referral B (Level 2) - You earn 5% on their sales
-│   │   └── Their Referral C (Level 3) - You earn 2% on their sales
-│   └── Their Referral D (Level 2) - You earn 5% on their sales
-└── Direct Referral E (Level 1) - You earn 15% on their sales
-    └── Their Referral F (Level 2) - You earn 5% on their sales
+├── Direct Referral A (Level 1) - You earn based on product type
+│   ├── Their Referral B (Level 2) - You earn L2 commission on their sales
+│   │   └── Their Referral C (Level 3) - You earn L3 commission on their sales
+│   └── Their Referral D (Level 2) - You earn L2 commission on their sales
+└── Direct Referral E (Level 1) - You earn L1 commission on their sales
+    └── Their Referral F (Level 2) - You earn L2 commission on their sales
 ```
 
-## 📈 Team Size Calculation
+## 📈 Monthly Referral Volume Calculation
 
-### What Counts as "Team Size"
+### What Counts as "Monthly Referral Volume"
 
-Your total team size includes:
-- **Level 1**: All your direct referrals
-- **Level 2**: All referrals made by your direct referrals
-- **Level 3**: All referrals made by your Level 2 affiliates
+Your monthly referral volume includes:
+- **Level 1**: Commission earnings from all your direct referrals
+- **Level 2**: Commission earnings from referrals made by your direct referrals
+- **Level 3**: Commission earnings from referrals made by your Level 2 affiliates
 
-**Total Team Size = Level 1 + Level 2 + Level 3 Affiliates**
+**Total Monthly Volume = L1 + L2 + L3 Commission Earnings for the Current Month**
 
 ## 🎖️ Rank Benefits
 
 ### What Each Rank Level Unlocks:
 
-#### Bronze (0-4 team members)
+#### Aligned ($0-$1,000 monthly)
 - Basic affiliate access
 - Standard commission rates
 - Access to training materials
+- Entry-level support
 
-#### Silver (5-9 team members)
+#### Activated ($1,000-$5,000 monthly)
 - Enhanced dashboard features
-- Priority support
+- Priority support access
 - Advanced training modules
+- Community recognition
 
-#### Gold (10-24 team members)
-- Leadership recognition
+#### Ascended ($5,000-$25,000 monthly)
+- Leadership development resources
 - Exclusive events access
-- Advanced analytics
+- Advanced analytics dashboard
+- Mentorship opportunities
 
-#### Platinum (25-49 team members)
+#### Magnetic ($25,000-$50,000 monthly)
 - Elite status recognition
 - Special bonus opportunities
-- Mentorship program access
+- Advanced marketing tools
+- Direct mentor access
 
-#### Sovereign (50+ team members)
-- Top-tier recognition
-- Maximum earning potential
+#### Luminary ($50,000-$100,000 monthly)
+- Community leadership role
+- Advanced training delivery
+- Speaking opportunities
+- Strategic planning sessions
+
+#### Visionary ($100,000-$500,000 monthly)
 - Executive-level benefits
-- Advisory board consideration
+- Product development input
+- Leadership council participation
+- International opportunities
+
+#### Oracle ($500,000-$1,000,000 monthly)
+- Master-level recognition
+- Strategic advisory role
+- Exclusive retreat access
+- Personal brand development
+
+#### Sovereign ($1,000,000+ monthly)
+- Ultimate recognition and status
+- Executive partnership opportunities
+- Legacy program participation
+- Global ambassador status
 
 ## 🔄 Rank Updates
 
 ### When Ranks Are Calculated:
-- **Real-time**: Dashboard displays current rank based on live team size
-- **Automatic**: Ranks update immediately when team size changes
-- **Retroactive**: Historical rank achievements are tracked
+- **Monthly Assessment**: Ranks calculated based on current month's referral volume
+- **Real-time Display**: Dashboard shows current rank based on monthly performance
+- **Progressive Tracking**: Historical rank achievements are maintained
+- **Volume Reset**: Monthly volume resets each calendar month
 
-### Team Growth Tracking:
-- New referrals automatically added to team count
-- Inactive affiliates may affect team metrics
-- Commission earnings influence overall performance metrics
+### Performance Tracking:
+- Monthly volume calculations include all commission tiers
+- Active affiliate performance influences team metrics
+- Consistent monthly achievement builds long-term status
+- Seasonal trends and growth patterns analyzed
 
 ## 📊 Performance Metrics
 
 ### Key Performance Indicators (KPIs):
-1. **Total Team Size** - Primary ranking factor
-2. **Direct Referrals** - Personal recruiting success
-3. **Commission Earnings** - Financial performance
-4. **Team Activity** - Overall network engagement
-5. **Growth Rate** - Month-over-month team expansion
+1. **Monthly Referral Volume** - Primary ranking factor
+2. **Direct Referral Performance** - L1 commission generation
+3. **Team Depth Performance** - L2 & L3 commission generation
+4. **Consistency Rating** - Month-over-month volume stability
+5. **Growth Trajectory** - Quarterly volume improvement trends
 
 ## 🎯 Advancement Strategies
 
 ### Tips for Rank Advancement:
-1. **Focus on Direct Referrals**: Build your Level 1 base first
-2. **Support Your Team**: Help referrals succeed to grow Level 2 & 3
-3. **Consistent Activity**: Regular engagement maintains team growth
-4. **Quality Over Quantity**: Active affiliates contribute more than inactive ones
-5. **Leverage Training**: Use platform resources to improve performance
+1. **Focus on High-Value Products**: Promote products with higher commission rates
+2. **Build Deep Networks**: Develop L2 and L3 relationships for sustained volume
+3. **Consistent Monthly Activity**: Maintain regular promotional activities
+4. **Quality Over Quantity**: Focus on conversions that generate significant volume
+5. **Leverage Training**: Use platform resources to improve conversion rates
+6. **Track Monthly Progress**: Monitor volume daily to optimize monthly performance
 
 ---
 
 ## Technical Implementation Notes
 
 ### Data Sources:
-- Team size calculated from `affiliate_system_users` table
-- Referral relationships tracked in `referral_relationships` table
-- Commission data from `multi_level_commissions` table
-- Real-time aggregation via `affiliateAggregationService`
+- Monthly volume calculated from commission earnings tables
+- Referral relationships tracked across 3 levels
+- Real-time volume aggregation via commission tracking service
+- Monthly reset automation handles volume calculations
 
 ### Rank Calculation Frequency:
-- Dashboard: Real-time calculation on page load
-- Background: Periodic updates for cached metrics
-- Triggers: Automatic recalculation on team changes
+- Dashboard: Real-time calculation based on current month's volume
+- Monthly: Automated rank assessment on month-end
+- Historical: Maintains record of all monthly rank achievements
 
 ---
 
-*This ranking system is designed to reward both individual effort and team building success, creating multiple pathways for affiliate advancement and earnings growth.* 
+*This ranking system rewards consistent high-volume performance and incentivizes both direct sales excellence and team development, creating multiple pathways for affiliate advancement and substantial earnings growth.* 

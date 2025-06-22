@@ -11,7 +11,7 @@ interface LeaderboardEntry {
   referrals: number;
   earnings: number;
   growth: number;
-  tier: 'Sovereign' | 'Platinum' | 'Gold' | 'Silver' | 'Bronze';
+  tier: 'Sovereign' | 'Oracle' | 'Visionary' | 'Luminary' | 'Magnetic' | 'Ascended' | 'Activated' | 'Aligned';
   isCurrentUser?: boolean;
 }
 
@@ -125,21 +125,27 @@ const Leaderboard: React.FC = () => {
 
   const getTierColor = (tier: string) => {
     switch (tier) {
-      case 'Sovereign': return 'text-blue-400';
-      case 'Platinum': return 'text-gray-300';
-      case 'Gold': return 'text-yellow-400';
-      case 'Silver': return 'text-gray-400';
-      default: return 'text-amber-600';
+      case 'Sovereign': return 'text-purple-400';
+      case 'Oracle': return 'text-indigo-400';
+      case 'Visionary': return 'text-blue-400';
+      case 'Luminary': return 'text-cyan-400';
+      case 'Magnetic': return 'text-green-400';
+      case 'Ascended': return 'text-yellow-400';
+      case 'Activated': return 'text-orange-400';
+      default: return 'text-gray-400';
     }
   };
 
   const getTierIcon = (tier: string) => {
     switch (tier) {
-      case 'Sovereign': return '💎';
-      case 'Platinum': return '🏆';
-      case 'Gold': return '🥇';
-      case 'Silver': return '🥈';
-      default: return '🥉';
+      case 'Sovereign': return '👑';
+      case 'Oracle': return '🔮';
+      case 'Visionary': return '✨';
+      case 'Luminary': return '💫';
+      case 'Magnetic': return '🧲';
+      case 'Ascended': return '🚀';
+      case 'Activated': return '⚡';
+      default: return '🎯';
     }
   };
 

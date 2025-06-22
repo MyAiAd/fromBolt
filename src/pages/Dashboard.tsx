@@ -44,6 +44,67 @@ const Dashboard = () => {
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
   const [copied, setCopied] = useState(false);
 
+  const getNextRankName = (rank: string) => {
+    switch (rank) {
+      case 'Aligned': return 'Activated';
+      case 'Activated': return 'Ascended';
+      case 'Ascended': return 'Magnetic';
+      case 'Magnetic': return 'Luminary';
+      case 'Luminary': return 'Visionary';
+      case 'Visionary': return 'Oracle';
+      case 'Oracle': return 'Sovereign';
+      default: return 'Max Rank';
+    }
+  };
+
+  const mockTopPerformers: TopPerformer[] = [
+    {
+      name: 'Sarah Johnson',
+      earnings: '$15,420',
+      referrals: 47,
+      rank: 'Sovereign',
+    },
+    {
+      name: 'Mike Chen', 
+      earnings: '$9,680',
+      referrals: 32,
+      rank: 'Oracle',
+    },
+    {
+      name: 'Emma Rodriguez',
+      earnings: '$7,340', 
+      referrals: 28,
+      rank: 'Visionary',
+    }
+  ];
+
+  const mockRecentActivity: ActivityItem[] = [
+    {
+      type: 'referral',
+      message: 'New referral from Sarah Johnson',
+      time: '2 hours ago',
+      icon: UserPlus,
+    },
+    {
+      type: 'commission',
+      message: 'Commission earned: $250',
+      time: '4 hours ago',
+      icon: DollarSign,
+    },
+    {
+      type: 'rank_up',
+      message: 'Rank updated to Magnetic!',
+      time: '1 day ago',
+      icon: TrendingUp,
+    },
+    {
+      type: 'team_growth',
+      message: 'Team member promoted to Activated',
+      time: '2 days ago',
+      icon: Users,
+    }
+  ];
+
   useEffect(() => {
     const fetchData = async () => {
       if (!user?.id) {
@@ -243,28 +304,37 @@ const Dashboard = () => {
     fetchData();
   }, [user?.id]); // Only depend on user.id, not the entire user object or supabase
 
-  const calculateRank = (teamSize: number) => {
-    if (teamSize >= 50) return 'Sovereign';
-    if (teamSize >= 25) return 'Platinum';
-    if (teamSize >= 10) return 'Gold';
-    if (teamSize >= 5) return 'Silver';
-    return 'Bronze';
+  const calculateRank = (monthlyReferralVolume: number) => {
+    if (monthlyReferralVolume >= 1000000) return 'Sovereign';
+    if (monthlyReferralVolume >= 500000) return 'Oracle';
+    if (monthlyReferralVolume >= 100000) return 'Visionary';
+    if (monthlyReferralVolume >= 50000) return 'Luminary';
+    if (monthlyReferralVolume >= 25000) return 'Magnetic';
+    if (monthlyReferralVolume >= 5000) return 'Ascended';
+    if (monthlyReferralVolume >= 1000) return 'Activated';
+    return 'Aligned';
   };
 
-  const calculateNextRankProgress = (teamSize: number) => {
-    if (teamSize >= 50) return 100; // Already at top rank
-    if (teamSize >= 25) return Math.min(100, ((teamSize - 25) / 25) * 100); // Progress to Sovereign
-    if (teamSize >= 10) return Math.min(100, ((teamSize - 10) / 15) * 100); // Progress to Platinum
-    if (teamSize >= 5) return Math.min(100, ((teamSize - 5) / 5) * 100); // Progress to Gold
-    return Math.min(100, (teamSize / 5) * 100); // Progress to Silver
+  const calculateNextRankProgress = (monthlyReferralVolume: number) => {
+    if (monthlyReferralVolume >= 1000000) return 100; // Already at top rank
+    if (monthlyReferralVolume >= 500000) return Math.min(100, ((monthlyReferralVolume - 500000) / 500000) * 100); // Progress to Sovereign
+    if (monthlyReferralVolume >= 100000) return Math.min(100, ((monthlyReferralVolume - 100000) / 400000) * 100); // Progress to Oracle
+    if (monthlyReferralVolume >= 50000) return Math.min(100, ((monthlyReferralVolume - 50000) / 50000) * 100); // Progress to Visionary
+    if (monthlyReferralVolume >= 25000) return Math.min(100, ((monthlyReferralVolume - 25000) / 25000) * 100); // Progress to Luminary
+    if (monthlyReferralVolume >= 5000) return Math.min(100, ((monthlyReferralVolume - 5000) / 20000) * 100); // Progress to Magnetic
+    if (monthlyReferralVolume >= 1000) return Math.min(100, ((monthlyReferralVolume - 1000) / 4000) * 100); // Progress to Ascended
+    return Math.min(100, (monthlyReferralVolume / 1000) * 100); // Progress from Aligned to Activated
   };
 
-  const getAffiliateRank = (referrals: number) => {
-    if (referrals >= 20) return 'Sovereign';
-    if (referrals >= 10) return 'Platinum';
-    if (referrals >= 5) return 'Gold';
-    if (referrals >= 2) return 'Silver';
-    return 'Bronze';
+  const getAffiliateRank = (monthlyReferralVolume: number) => {
+    if (monthlyReferralVolume >= 1000000) return 'Sovereign';
+    if (monthlyReferralVolume >= 500000) return 'Oracle';
+    if (monthlyReferralVolume >= 100000) return 'Visionary';
+    if (monthlyReferralVolume >= 50000) return 'Luminary';
+    if (monthlyReferralVolume >= 25000) return 'Magnetic';
+    if (monthlyReferralVolume >= 5000) return 'Ascended';
+    if (monthlyReferralVolume >= 1000) return 'Activated';
+    return 'Aligned';
   };
 
   const copyAffiliateCode = async () => {
@@ -281,21 +351,27 @@ const Dashboard = () => {
 
   const getRankColor = (rank: string) => {
     switch (rank) {
-      case 'Sovereign': return 'text-blue-400';
-      case 'Platinum': return 'text-gray-300';
-      case 'Gold': return 'text-yellow-400';
-      case 'Silver': return 'text-gray-400';
-      default: return 'text-amber-600';
+      case 'Sovereign': return 'text-purple-400';
+      case 'Oracle': return 'text-indigo-400';
+      case 'Visionary': return 'text-blue-400';
+      case 'Luminary': return 'text-cyan-400';
+      case 'Magnetic': return 'text-green-400';
+      case 'Ascended': return 'text-yellow-400';
+      case 'Activated': return 'text-orange-400';
+      default: return 'text-gray-400'; // Aligned
     }
   };
 
   const getRankIcon = (rank: string) => {
     switch (rank) {
-      case 'Sovereign': return '💎';
-      case 'Platinum': return '🏆';
-      case 'Gold': return '🥇';
-      case 'Silver': return '🥈';
-      default: return '🥉';
+      case 'Sovereign': return '👑';
+      case 'Oracle': return '🔮';
+      case 'Visionary': return '✨';
+      case 'Luminary': return '💫';
+      case 'Magnetic': return '🧲';
+      case 'Ascended': return '🚀';
+      case 'Activated': return '⚡';
+      default: return '🎯'; // Aligned
     }
   };
 
@@ -461,16 +537,19 @@ const Dashboard = () => {
             <h3 className="text-gray-400 text-sm">Rank Progress</h3>
             <Crown className="h-5 w-5 text-purple-400" />
           </div>
-          <p className="text-3xl font-bold text-white mb-2">{Math.round(stats.nextRankProgress)}%</p>
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm text-gray-400">Progress to Next Rank</span>
+            <span className="text-sm text-gray-400">{Math.round(stats.nextRankProgress)}%</span>
+          </div>
           <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
             <div 
               className="bg-rise-gold h-2 rounded-full transition-all duration-500" 
               style={{ width: `${stats.nextRankProgress}%` }}
             ></div>
           </div>
-          <div className="text-xs text-gray-400">
-            Next: {stats.rank === 'Bronze' ? 'Silver' : stats.rank === 'Silver' ? 'Gold' : 'Platinum'}
-          </div>
+          <p className="text-xs text-gray-400">
+            Next: {getNextRankName(stats.rank)}
+          </p>
         </motion.div>
       </div>
 

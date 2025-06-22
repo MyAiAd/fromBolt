@@ -49,46 +49,47 @@ const Team: React.FC = () => {
           phone: '+1 (555) 123-4567',
           joinDate: '2024-01-15',
           level: 1,
-          referrals: 8,
-          earnings: 2450,
-          rank: 'Gold',
+          referrals: 12,
+          earnings: 3600,
+          rank: 'Magnetic',
           status: 'active',
           directReferrer: 'You'
         },
         {
           id: '2',
-          name: 'Michael Chen',
-          email: 'michael@example.com',
+          name: 'Mike Chen',
+          email: 'mike@example.com',
+          phone: '+1 (555) 234-5678',
           joinDate: '2024-02-03',
           level: 1,
-          referrals: 5,
-          earnings: 1890,
-          rank: 'Silver',
+          referrals: 8,
+          earnings: 2400,
+          rank: 'Ascended',
           status: 'active',
           directReferrer: 'You'
         },
         {
           id: '3',
-          name: 'Emma Davis',
+          name: 'Emma Rodriguez',
           email: 'emma@example.com',
-          joinDate: '2024-01-28',
+          joinDate: '2024-02-20',
           level: 2,
-          referrals: 3,
-          earnings: 1650,
-          rank: 'Silver',
+          referrals: 6,
+          earnings: 1800,
+          rank: 'Activated',
           status: 'active',
           directReferrer: 'Sarah Johnson'
         },
         {
           id: '4',
-          name: 'James Wilson',
-          email: 'james@example.com',
-          joinDate: '2024-03-10',
+          name: 'Alex Thompson',
+          email: 'alex@example.com',
+          joinDate: '2024-03-01',
           level: 1,
-          referrals: 2,
+          referrals: 4,
           earnings: 1200,
-          rank: 'Bronze',
-          status: 'pending',
+          rank: 'Activated',
+          status: 'inactive',
           directReferrer: 'You'
         },
         {
@@ -158,21 +159,27 @@ const Team: React.FC = () => {
 
   const getRankColor = (rank: string) => {
     switch (rank) {
-      case 'Sovereign': return 'text-blue-400';
-      case 'Platinum': return 'text-gray-300';
-      case 'Gold': return 'text-yellow-400';
-      case 'Silver': return 'text-gray-400';
-      default: return 'text-amber-600';
+      case 'Sovereign': return 'text-purple-400';
+      case 'Oracle': return 'text-indigo-400';
+      case 'Visionary': return 'text-blue-400';
+      case 'Luminary': return 'text-cyan-400';
+      case 'Magnetic': return 'text-green-400';
+      case 'Ascended': return 'text-yellow-400';
+      case 'Activated': return 'text-orange-400';
+      default: return 'text-gray-400';
     }
   };
 
   const getRankIcon = (rank: string) => {
     switch (rank) {
-      case 'Sovereign': return '💎';
-      case 'Platinum': return '🏆';
-      case 'Gold': return '🥇';
-      case 'Silver': return '🥈';
-      default: return '🥉';
+      case 'Sovereign': return '👑';
+      case 'Oracle': return '🔮';
+      case 'Visionary': return '✨';
+      case 'Luminary': return '💫';
+      case 'Magnetic': return '🧲';
+      case 'Ascended': return '🚀';
+      case 'Activated': return '⚡';
+      default: return '🎯';
     }
   };
 

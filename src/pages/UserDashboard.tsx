@@ -19,6 +19,7 @@ interface UserAffiliateData {
   total_l3_earnings: number;
   pending_earnings: number;
   paid_earnings: number;
+  monthly_referral_volume?: number;
   status: string;
   signup_date: string;
 }
@@ -28,43 +29,68 @@ const UserDashboard = () => {
   const [userData, setUserData] = useState<UserAffiliateData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Calculate rank based on team size
-  const calculateRank = (teamSize: number) => {
-    if (teamSize >= 50) return 'Sovereign';
-    if (teamSize >= 25) return 'Platinum';
-    if (teamSize >= 10) return 'Gold';
-    if (teamSize >= 5) return 'Silver';
-    return 'Bronze';
+  // Calculate rank based on monthly referral volume
+  const calculateRank = (monthlyReferralVolume: number) => {
+    if (monthlyReferralVolume >= 1000000) return 'Sovereign';
+    if (monthlyReferralVolume >= 500000) return 'Oracle';
+    if (monthlyReferralVolume >= 100000) return 'Visionary';
+    if (monthlyReferralVolume >= 50000) return 'Luminary';
+    if (monthlyReferralVolume >= 25000) return 'Magnetic';
+    if (monthlyReferralVolume >= 5000) return 'Ascended';
+    if (monthlyReferralVolume >= 1000) return 'Activated';
+    return 'Aligned';
   };
 
   // Calculate progress to next rank
-  const calculateNextRankProgress = (teamSize: number) => {
-    if (teamSize >= 50) return 100; // Already at highest rank
-    if (teamSize >= 25) return ((teamSize - 25) / 25) * 100; // Progress to Sovereign
-    if (teamSize >= 10) return ((teamSize - 10) / 15) * 100; // Progress to Platinum
-    if (teamSize >= 5) return ((teamSize - 5) / 5) * 100; // Progress to Gold
-    return (teamSize / 5) * 100; // Progress to Silver
+  const calculateNextRankProgress = (monthlyReferralVolume: number) => {
+    if (monthlyReferralVolume >= 1000000) return 100; // Already at highest rank
+    if (monthlyReferralVolume >= 500000) return ((monthlyReferralVolume - 500000) / 500000) * 100; // Progress to Sovereign
+    if (monthlyReferralVolume >= 100000) return ((monthlyReferralVolume - 100000) / 400000) * 100; // Progress to Oracle
+    if (monthlyReferralVolume >= 50000) return ((monthlyReferralVolume - 50000) / 50000) * 100; // Progress to Visionary
+    if (monthlyReferralVolume >= 25000) return ((monthlyReferralVolume - 25000) / 25000) * 100; // Progress to Luminary
+    if (monthlyReferralVolume >= 5000) return ((monthlyReferralVolume - 5000) / 20000) * 100; // Progress to Magnetic
+    if (monthlyReferralVolume >= 1000) return ((monthlyReferralVolume - 1000) / 4000) * 100; // Progress to Ascended
+    return (monthlyReferralVolume / 1000) * 100; // Progress from Aligned to Activated
   };
 
   const getRankIcon = (rank: string) => {
     switch (rank) {
-      case 'Sovereign': return '💎';
-      case 'Platinum': return '🏆';
-      case 'Gold': return '🥇';
-      case 'Silver': return '🥈';
-      case 'Bronze': return '🥉';
+      case 'Sovereign': return '👑';
+      case 'Oracle': return '🔮';
+      case 'Visionary': return '✨';
+      case 'Luminary': return '💫';
+      case 'Magnetic': return '🧲';
+      case 'Ascended': return '🚀';
+      case 'Activated': return '⚡';
+      case 'Aligned': return '🎯';
       default: return '⭐';
     }
   };
 
   const getNextRankName = (rank: string) => {
     switch (rank) {
-      case 'Bronze': return 'Silver';
-      case 'Silver': return 'Gold';
-      case 'Gold': return 'Platinum';
-      case 'Platinum': return 'Sovereign';
+      case 'Aligned': return 'Activated';
+      case 'Activated': return 'Ascended';
+      case 'Ascended': return 'Magnetic';
+      case 'Magnetic': return 'Luminary';
+      case 'Luminary': return 'Visionary';
+      case 'Visionary': return 'Oracle';
+      case 'Oracle': return 'Sovereign';
       default: return 'Max Rank';
     }
+  };
+
+  // Calculate monthly referral volume from existing earnings data if not available
+  const calculateMonthlyReferralVolume = (userData: UserAffiliateData) => {
+    // If monthly_referral_volume is available, use it
+    if (userData.monthly_referral_volume !== undefined) {
+      return userData.monthly_referral_volume;
+    }
+    
+    // Otherwise, estimate based on current total earnings (this is a temporary fallback)
+    // In a real implementation, you'd query the database for current month's commission earnings
+    const estimatedMonthlyVolume = userData.total_earnings * 0.1; // Rough estimate
+    return estimatedMonthlyVolume;
   };
 
   useEffect(() => {
@@ -149,9 +175,10 @@ const UserDashboard = () => {
     );
   }
 
-  const rank = calculateRank(userData.total_team_size);
-  const nextRankProgress = calculateNextRankProgress(userData.total_team_size);
+  const rank = calculateRank(userData ? calculateMonthlyReferralVolume(userData) : 0);
+  const nextRankProgress = calculateNextRankProgress(userData ? calculateMonthlyReferralVolume(userData) : 0);
   const nextRank = getNextRankName(rank);
+  const monthlyVolume = userData ? calculateMonthlyReferralVolume(userData) : 0;
 
   return (
     <motion.div
@@ -182,7 +209,7 @@ const UserDashboard = () => {
             <span className="text-4xl">{getRankIcon(rank)}</span>
             <div>
               <p className="text-2xl font-bold text-white">{rank}</p>
-              <p className="text-sm text-gray-400">Team size: {userData.total_team_size}</p>
+              <p className="text-sm text-gray-400">Monthly Volume: ${monthlyVolume.toLocaleString()}</p>
             </div>
           </div>
         </div>
