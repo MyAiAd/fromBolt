@@ -38,7 +38,7 @@ const Leaderboard: React.FC = () => {
       referrals: 38,
       earnings: 9890,
       growth: 18.2,
-      tier: 'Platinum'
+      tier: 'Oracle'
     },
     {
       id: '3',
@@ -48,7 +48,7 @@ const Leaderboard: React.FC = () => {
       referrals: 32,
       earnings: 8650,
       growth: 22.1,
-      tier: 'Gold'
+      tier: 'Visionary'
     },
     {
       id: '4',
@@ -58,7 +58,7 @@ const Leaderboard: React.FC = () => {
       referrals: 28,
       earnings: 7200,
       growth: 15.8,
-      tier: 'Gold'
+      tier: 'Luminary'
     },
     {
       id: '5',
@@ -68,7 +68,7 @@ const Leaderboard: React.FC = () => {
       referrals: 24,
       earnings: 6500,
       growth: 12.3,
-      tier: 'Silver',
+      tier: 'Magnetic',
       isCurrentUser: true
     },
     {
@@ -79,7 +79,7 @@ const Leaderboard: React.FC = () => {
       referrals: 22,
       earnings: 5980,
       growth: 19.4,
-      tier: 'Silver'
+      tier: 'Ascended'
     },
     {
       id: '7',
@@ -89,7 +89,7 @@ const Leaderboard: React.FC = () => {
       referrals: 18,
       earnings: 4450,
       growth: 8.7,
-      tier: 'Bronze'
+      tier: 'Activated'
     },
     {
       id: '8',
@@ -99,7 +99,7 @@ const Leaderboard: React.FC = () => {
       referrals: 16,
       earnings: 3890,
       growth: 14.2,
-      tier: 'Bronze'
+      tier: 'Activated'
     },
     {
       id: '9',
@@ -109,7 +109,7 @@ const Leaderboard: React.FC = () => {
       referrals: 14,
       earnings: 3200,
       growth: 11.5,
-      tier: 'Bronze'
+      tier: 'Aligned'
     },
     {
       id: '10',
@@ -119,7 +119,7 @@ const Leaderboard: React.FC = () => {
       referrals: 12,
       earnings: 2750,
       growth: 9.8,
-      tier: 'Bronze'
+      tier: 'Aligned'
     }
   ];
 
@@ -132,6 +132,7 @@ const Leaderboard: React.FC = () => {
       case 'Magnetic': return 'text-green-400';
       case 'Ascended': return 'text-yellow-400';
       case 'Activated': return 'text-orange-400';
+      case 'Aligned': return 'text-gray-400';
       default: return 'text-gray-400';
     }
   };
@@ -145,6 +146,7 @@ const Leaderboard: React.FC = () => {
       case 'Magnetic': return '🧲';
       case 'Ascended': return '🚀';
       case 'Activated': return '⚡';
+      case 'Aligned': return '🎯';
       default: return '🎯';
     }
   };
