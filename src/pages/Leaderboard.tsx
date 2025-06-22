@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, Crown, TrendingUp, Users, DollarSign, Calendar, Filter } from 'lucide-react';
+import { useData } from '../contexts/DataContext';
 
 interface LeaderboardEntry {
   id: string;
@@ -16,112 +17,87 @@ interface LeaderboardEntry {
 }
 
 const Leaderboard: React.FC = () => {
+  const { affiliates, orders, isLoading: dataLoading } = useData();
   const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'quarter' | 'year'>('month');
   const [categoryFilter, setCategoryFilter] = useState<'earnings' | 'referrals' | 'growth'>('earnings');
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
 
-  const leaderboardData: LeaderboardEntry[] = [
-    {
-      id: '1',
-      rank: 1,
-      name: 'Sarah Johnson',
-      level: 1,
-      referrals: 45,
-      earnings: 12450,
-      growth: 25.5,
-      tier: 'Sovereign'
-    },
-    {
-      id: '2',
-      rank: 2,
-      name: 'Michael Chen',
-      level: 1,
-      referrals: 38,
-      earnings: 9890,
-      growth: 18.2,
-      tier: 'Oracle'
-    },
-    {
-      id: '3',
-      rank: 3,
-      name: 'Emma Davis',
-      level: 2,
-      referrals: 32,
-      earnings: 8650,
-      growth: 22.1,
-      tier: 'Visionary'
-    },
-    {
-      id: '4',
-      rank: 4,
-      name: 'James Wilson',
-      level: 1,
-      referrals: 28,
-      earnings: 7200,
-      growth: 15.8,
-      tier: 'Luminary'
-    },
-    {
-      id: '5',
-      rank: 5,
-      name: 'You',
-      level: 1,
-      referrals: 24,
-      earnings: 6500,
-      growth: 12.3,
-      tier: 'Magnetic',
-      isCurrentUser: true
-    },
-    {
-      id: '6',
-      rank: 6,
-      name: 'Lisa Rodriguez',
-      level: 2,
-      referrals: 22,
-      earnings: 5980,
-      growth: 19.4,
-      tier: 'Ascended'
-    },
-    {
-      id: '7',
-      rank: 7,
-      name: 'David Kim',
-      level: 3,
-      referrals: 18,
-      earnings: 4450,
-      growth: 8.7,
-      tier: 'Activated'
-    },
-    {
-      id: '8',
-      rank: 8,
-      name: 'Maria Garcia',
-      level: 2,
-      referrals: 16,
-      earnings: 3890,
-      growth: 14.2,
-      tier: 'Activated'
-    },
-    {
-      id: '9',
-      rank: 9,
-      name: 'Alex Thompson',
-      level: 1,
-      referrals: 14,
-      earnings: 3200,
-      growth: 11.5,
-      tier: 'Aligned'
-    },
-    {
-      id: '10',
-      rank: 10,
-      name: 'Jennifer Lee',
-      level: 2,
-      referrals: 12,
-      earnings: 2750,
-      growth: 9.8,
-      tier: 'Aligned'
+  useEffect(() => {
+    processRealData();
+  }, [affiliates, orders, timeFilter, categoryFilter]);
+
+  const processRealData = () => {
+    if (!affiliates || affiliates.length === 0) {
+      setLeaderboardData([]);
+      return;
     }
-  ];
+
+    // Transform real affiliate data into LeaderboardEntry format
+    const transformedData: LeaderboardEntry[] = affiliates.map((affiliate, index) => {
+      // Calculate earnings from orders for this affiliate
+      const affiliateOrders = orders.filter(order => 
+        order.affiliate_id === affiliate.id || 
+        order.customer_email === affiliate.email
+      );
+      const totalEarnings = affiliateOrders.reduce((sum, order) => 
+        sum + (order.commission_amount || order.commission || 0), 0
+      );
+
+      // Calculate referrals count
+      const referralsCount = affiliate.total_orders || affiliateOrders.length || 0;
+
+      // Calculate growth (mock for now, would need historical data)
+      const growth = Math.random() * 30; // Mock growth percentage
+
+      // Determine rank based on total earnings using new tier system
+      const getRankFromEarnings = (earnings: number): LeaderboardEntry['tier'] => {
+        if (earnings >= 1000000) return 'Sovereign';
+        if (earnings >= 500000) return 'Oracle';
+        if (earnings >= 100000) return 'Visionary';
+        if (earnings >= 50000) return 'Luminary';
+        if (earnings >= 25000) return 'Magnetic';
+        if (earnings >= 5000) return 'Ascended';
+        if (earnings >= 1000) return 'Activated';
+        return 'Aligned';
+      };
+
+      return {
+        id: affiliate.id,
+        rank: 0, // Will be set after sorting
+        name: `${affiliate.first_name || ''} ${affiliate.last_name || ''}`.trim() || 'Unknown',
+        level: 1, // Could be calculated based on referral structure if data available
+        referrals: referralsCount,
+        earnings: totalEarnings || affiliate.total_earnings || 0,
+        growth: growth,
+        tier: getRankFromEarnings(totalEarnings || affiliate.total_earnings || 0),
+        isCurrentUser: false // Would need current user comparison
+      };
+    });
+
+    // Sort by the selected category
+    const sortedData = transformedData.sort((a, b) => {
+      switch (categoryFilter) {
+        case 'earnings':
+          return b.earnings - a.earnings;
+        case 'referrals':
+          return b.referrals - a.referrals;
+        case 'growth':
+          return b.growth - a.growth;
+        default:
+          return b.earnings - a.earnings;
+      }
+    });
+
+    // Assign ranks after sorting
+    const rankedData = sortedData.map((item, index) => ({
+      ...item,
+      rank: index + 1
+    }));
+
+    setLeaderboardData(rankedData);
+  };
+
+
 
   const getTierColor = (tier: string) => {
     switch (tier) {

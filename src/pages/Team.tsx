@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Users, Search, UserPlus, Crown, TrendingUp, DollarSign, Eye, Mail, Phone } from 'lucide-react';
+import { useData } from '../contexts/DataContext';
 
 interface TeamMember {
   id: string;
@@ -17,12 +18,12 @@ interface TeamMember {
 }
 
 const Team: React.FC = () => {
+  const { affiliates, orders, isLoading: dataLoading, refreshData } = useData();
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [filteredMembers, setFilteredMembers] = useState<TeamMember[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [levelFilter, setLevelFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [isLoading, setIsLoading] = useState(true);
   const [teamStats, setTeamStats] = useState({
     totalMembers: 0,
     activeMembers: 0,
@@ -31,109 +32,74 @@ const Team: React.FC = () => {
   });
 
   useEffect(() => {
-    fetchTeamData();
-  }, []);
+    processRealData();
+  }, [affiliates, orders]);
 
   useEffect(() => {
     filterMembers();
   }, [teamMembers, searchTerm, levelFilter, statusFilter]);
 
-  const fetchTeamData = async () => {
-    try {
-      // Mock team data for demonstration
-      const mockTeamMembers: TeamMember[] = [
-        {
-          id: '1',
-          name: 'Sarah Johnson',
-          email: 'sarah@example.com',
-          phone: '+1 (555) 123-4567',
-          joinDate: '2024-01-15',
-          level: 1,
-          referrals: 12,
-          earnings: 3600,
-          rank: 'Magnetic',
-          status: 'active',
-          directReferrer: 'You'
-        },
-        {
-          id: '2',
-          name: 'Mike Chen',
-          email: 'mike@example.com',
-          phone: '+1 (555) 234-5678',
-          joinDate: '2024-02-03',
-          level: 1,
-          referrals: 8,
-          earnings: 2400,
-          rank: 'Ascended',
-          status: 'active',
-          directReferrer: 'You'
-        },
-        {
-          id: '3',
-          name: 'Emma Rodriguez',
-          email: 'emma@example.com',
-          joinDate: '2024-02-20',
-          level: 2,
-          referrals: 6,
-          earnings: 1800,
-          rank: 'Activated',
-          status: 'active',
-          directReferrer: 'Sarah Johnson'
-        },
-        {
-          id: '4',
-          name: 'Alex Thompson',
-          email: 'alex@example.com',
-          joinDate: '2024-03-01',
-          level: 1,
-          referrals: 4,
-          earnings: 1200,
-          rank: 'Activated',
-          status: 'inactive',
-          directReferrer: 'You'
-        },
-        {
-          id: '5',
-          name: 'Lisa Rodriguez',
-          email: 'lisa@example.com',
-          joinDate: '2024-02-20',
-          level: 2,
-          referrals: 4,
-          earnings: 980,
-          rank: 'Bronze',
-          status: 'active',
-          directReferrer: 'Michael Chen'
-        },
-        {
-          id: '6',
-          name: 'David Kim',
-          email: 'david@example.com',
-          joinDate: '2024-03-05',
-          level: 3,
-          referrals: 1,
-          earnings: 450,
-          rank: 'Bronze',
-          status: 'inactive',
-          directReferrer: 'Emma Davis'
-        }
-      ];
-
-      setTeamMembers(mockTeamMembers);
-      
-      // Calculate team stats
-      const stats = {
-        totalMembers: mockTeamMembers.length,
-        activeMembers: mockTeamMembers.filter(m => m.status === 'active').length,
-        totalEarnings: mockTeamMembers.reduce((sum, m) => sum + m.earnings, 0),
-        thisMonthGrowth: 15 // Mock growth percentage
-      };
-      
-      setTeamStats(stats);
-    } catch (error) {
-      console.error('Error fetching team data:', error);
-    } finally {
-      setIsLoading(false);
+  const processRealData = () => {
+    if (!affiliates || affiliates.length === 0) {
+      setTeamMembers([]);
+      setTeamStats({
+        totalMembers: 0,
+        activeMembers: 0,
+        totalEarnings: 0,
+        thisMonthGrowth: 0
+      });
+      return;
     }
+
+    // Transform real affiliate data into TeamMember format
+    const transformedMembers: TeamMember[] = affiliates.map((affiliate, index) => {
+      // Calculate earnings from orders for this affiliate
+      const affiliateOrders = orders.filter(order => 
+        order.affiliate_id === affiliate.id || 
+        order.customer_email === affiliate.email
+      );
+      const totalEarnings = affiliateOrders.reduce((sum, order) => 
+        sum + (order.commission_amount || order.commission || 0), 0
+      );
+
+      // Determine rank based on total earnings using new tier system
+      const getRankFromEarnings = (earnings: number): string => {
+        if (earnings >= 1000000) return 'Sovereign';
+        if (earnings >= 500000) return 'Oracle';
+        if (earnings >= 100000) return 'Visionary';
+        if (earnings >= 50000) return 'Luminary';
+        if (earnings >= 25000) return 'Magnetic';
+        if (earnings >= 5000) return 'Ascended';
+        if (earnings >= 1000) return 'Activated';
+        return 'Aligned';
+      };
+
+      return {
+        id: affiliate.id,
+        name: `${affiliate.first_name || ''} ${affiliate.last_name || ''}`.trim() || 'Unknown',
+        email: affiliate.email,
+        phone: '', // Not available in current data structure
+        joinDate: affiliate.created_at ? new Date(affiliate.created_at).toISOString().split('T')[0] : '',
+        level: 1, // Could be calculated based on referral structure if data available
+        referrals: affiliate.total_orders || 0,
+        earnings: totalEarnings || affiliate.total_earnings || 0,
+        rank: getRankFromEarnings(totalEarnings || affiliate.total_earnings || 0),
+        status: affiliate.status === 'active' ? 'active' : 'inactive',
+        directReferrer: 'System' // Would need referral structure data to determine this
+      };
+    });
+
+    setTeamMembers(transformedMembers);
+    
+    // Calculate team stats from real data
+    const stats = {
+      totalMembers: transformedMembers.length,
+      activeMembers: transformedMembers.filter(m => m.status === 'active').length,
+      totalEarnings: transformedMembers.reduce((sum, m) => sum + m.earnings, 0),
+      thisMonthGrowth: 15 // Would need historical data to calculate real growth
+    };
+    
+    setTeamStats(stats);
   };
 
   const filterMembers = () => {
@@ -192,7 +158,7 @@ const Team: React.FC = () => {
     }
   };
 
-  if (isLoading) {
+  if (dataLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
