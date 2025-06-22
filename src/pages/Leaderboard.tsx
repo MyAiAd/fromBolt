@@ -155,7 +155,7 @@ const Leaderboard: React.FC = () => {
     if (rank === 1) return 'bg-yellow-500 text-black';
     if (rank === 2) return 'bg-gray-400 text-black';
     if (rank === 3) return 'bg-amber-600 text-black';
-    return 'bg-rise-gold text-black';
+    return 'bg-rise-gold text-white';
   };
 
   const topThree = leaderboardData.slice(0, 3);
