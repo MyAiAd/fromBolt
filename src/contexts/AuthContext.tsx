@@ -23,32 +23,9 @@ type AuthContextType = {
   }>;
 };
 
-// Create the context with a proper default value
-const defaultContextValue: AuthContextType = {
-  supabase: createClient('https://placeholder.supabase.co', 'placeholder-key'),
-  user: null,
-  isAdmin: false,
-  loading: true,
-  signIn: async () => ({ 
-    data: null, 
-    error: { message: 'AuthProvider not mounted' } 
-  }),
-  signUp: async () => ({ 
-    data: null, 
-    error: { message: 'AuthProvider not mounted' } 
-  }),
-  signOut: async () => {
-    console.error('AuthProvider not mounted');
-  },
-  resetPassword: async () => ({ 
-    data: null, 
-    error: { message: 'AuthProvider not mounted' } 
-  })
-};
+// Default context value will be created after environment variables are loaded
 
-export const AuthContext = createContext<AuthContextType>(defaultContextValue);
-
-// Validate environment variables
+// Validate environment variables FIRST
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
@@ -99,6 +76,31 @@ const supabase = createClient(
     }
   }
 );
+
+// FIXED: Create default context value with the ACTUAL supabase client, not placeholder
+const defaultContextValue: AuthContextType = {
+  supabase: supabase, // Use the real client, not placeholder
+  user: null,
+  isAdmin: false,
+  loading: true,
+  signIn: async () => ({ 
+    data: null, 
+    error: { message: 'AuthProvider not mounted' } 
+  }),
+  signUp: async () => ({ 
+    data: null, 
+    error: { message: 'AuthProvider not mounted' } 
+  }),
+  signOut: async () => {
+    console.error('AuthProvider not mounted');
+  },
+  resetPassword: async () => ({ 
+    data: null, 
+    error: { message: 'AuthProvider not mounted' } 
+  })
+};
+
+export const AuthContext = createContext<AuthContextType>(defaultContextValue);
 
 // Create the provider component
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
