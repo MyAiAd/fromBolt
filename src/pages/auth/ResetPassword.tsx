@@ -10,6 +10,7 @@ export default function ResetPassword() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
   const [searchParams] = useSearchParams();
   const { supabase } = useAuth();
   const navigate = useNavigate();
@@ -21,16 +22,40 @@ export default function ResetPassword() {
     // If we have tokens from the URL, set the session
     if (accessToken && refreshToken) {
       console.log('ResetPassword: Setting session with tokens from URL');
-      supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      });
+      const setSessionAsync = async () => {
+        try {
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          
+          if (error) {
+            console.error('ResetPassword: Session setup error:', error);
+          } else {
+            console.log('ResetPassword: Session established successfully', data.session ? 'with session' : 'without session');
+            if (data.session) {
+              setSessionReady(true);
+            }
+          }
+        } catch (error) {
+          console.error('ResetPassword: Exception during session setup:', error);
+        }
+      };
+      
+      setSessionAsync();
     }
   }, [accessToken, refreshToken, supabase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    // Check if session is ready
+    if (!sessionReady) {
+      toast.error('Session not ready. Please wait a moment and try again.');
+      setLoading(false);
+      return;
+    }
 
     // Validation
     if (!password) {
@@ -52,6 +77,14 @@ export default function ResetPassword() {
     }
 
     try {
+      // Double-check session before updating
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session found. Please try clicking the reset link again.');
+      }
+
+      console.log('ResetPassword: Updating password with active session');
+      
       // Update the user's password
       const { error } = await supabase.auth.updateUser({
         password: password
@@ -102,14 +135,24 @@ export default function ResetPassword() {
 
   return (
     <div className="w-full max-w-md space-y-8">
-      <div className="text-center">
-        <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900">
-          Set New Password
-        </h2>
-        <p className="mt-2 text-sm text-gray-600">
-          Enter your new password below.
-        </p>
-      </div>
+              <div className="text-center">
+          <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900">
+            Set New Password
+          </h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Enter your new password below.
+          </p>
+          {!sessionReady && (
+            <div className="mt-2 text-sm text-yellow-600 bg-yellow-50 border border-yellow-200 rounded p-2">
+              ⏳ Setting up secure session...
+            </div>
+          )}
+          {sessionReady && (
+            <div className="mt-2 text-sm text-green-600 bg-green-50 border border-green-200 rounded p-2">
+              ✅ Session ready - you can now reset your password
+            </div>
+          )}
+        </div>
 
       <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
         <div className="space-y-4">
@@ -179,10 +222,10 @@ export default function ResetPassword() {
         <div>
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !sessionReady}
             className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Updating Password...' : 'Update Password'}
+            {loading ? 'Updating Password...' : !sessionReady ? 'Setting up session...' : 'Update Password'}
           </button>
         </div>
 
