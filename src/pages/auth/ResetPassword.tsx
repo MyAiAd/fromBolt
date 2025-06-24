@@ -26,19 +26,71 @@ export default function ResetPassword() {
         // Handle different token formats
         if (token && type === 'recovery') {
           // Handle recovery token from email template
-          console.log('ResetPassword: Verifying recovery token from URL');
-          const { data, error } = await supabase.auth.verifyOtp({
-            token_hash: token,
-            type: 'recovery'
-          });
+          console.log('ResetPassword: Verifying recovery token from URL, token length:', token.length);
+          console.log('ResetPassword: Token preview:', token.substring(0, 20) + '...');
           
-          if (error) {
-            console.error('ResetPassword: Recovery token verification error:', error);
-          } else {
-            console.log('ResetPassword: Recovery token verified successfully');
-            if (data.session) {
+          // Try different approaches for recovery token
+          let success = false;
+          
+          // Method 1: Direct verifyOtp with token_hash
+          try {
+            const { data, error } = await supabase.auth.verifyOtp({
+              token_hash: token,
+              type: 'recovery'
+            });
+            
+            if (!error && data.session) {
+              console.log('ResetPassword: Recovery token verified successfully with token_hash');
               setSessionReady(true);
+              success = true;
+            } else if (error) {
+              console.log('ResetPassword: Method 1 failed:', error.message);
             }
+          } catch (err) {
+            console.log('ResetPassword: Method 1 exception:', err);
+          }
+          
+          // Method 2: Try with exchangeCodeForSession (if Method 1 fails)
+          if (!success) {
+            try {
+              console.log('ResetPassword: Trying exchangeCodeForSession method...');
+              const { data, error } = await supabase.auth.exchangeCodeForSession(token);
+              
+              if (!error && data.session) {
+                console.log('ResetPassword: Recovery token verified successfully with exchangeCodeForSession');
+                setSessionReady(true);
+                success = true;
+              } else if (error) {
+                console.log('ResetPassword: Method 2 failed:', error.message);
+              }
+            } catch (err) {
+              console.log('ResetPassword: Method 2 exception:', err);
+            }
+          }
+          
+          // Method 3: Try treating as access token (if Methods 1&2 fail)
+          if (!success) {
+            try {
+              console.log('ResetPassword: Trying as access token...');
+              const { data, error } = await supabase.auth.setSession({
+                access_token: token,
+                refresh_token: token,
+              });
+              
+              if (!error && data.session) {
+                console.log('ResetPassword: Token worked as access token');
+                setSessionReady(true);
+                success = true;
+              } else if (error) {
+                console.log('ResetPassword: Method 3 failed:', error.message);
+              }
+            } catch (err) {
+              console.log('ResetPassword: Method 3 exception:', err);
+            }
+          }
+          
+          if (!success) {
+            console.error('ResetPassword: All token verification methods failed');
           }
         } else if (accessToken && refreshToken) {
           // Handle access/refresh tokens
