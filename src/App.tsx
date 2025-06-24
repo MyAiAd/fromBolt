@@ -11,6 +11,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 const Login = lazy(() => import('./pages/auth/Login'));
 const Register = lazy(() => import('./pages/auth/Register'));
 const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/auth/ResetPassword'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const UserDashboard = lazy(() => import('./pages/UserDashboard'));
 const Settings = lazy(() => import('./pages/Settings'));
@@ -42,11 +43,12 @@ function App() {
   return (
     <Suspense fallback={<LoadingScreen />}>
       <Routes>
-        {/* Auth Routes - only accessible when NOT logged in */}
+        {/* Auth Routes - accessible for password reset flow */}
         <Route element={<AuthLayout />}>
           <Route path="/login" element={!user ? <Login /> : <Navigate to="/dashboard" replace />} />
           <Route path="/register" element={!user ? <Register /> : <Navigate to="/dashboard" replace />} />
           <Route path="/forgot-password" element={!user ? <ForgotPassword /> : <Navigate to="/dashboard" replace />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
         </Route>
         
         {/* Protected Routes - only accessible when logged in */}
