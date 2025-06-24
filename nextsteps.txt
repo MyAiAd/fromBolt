@@ -1,0 +1,83 @@
+
+
+I can see there are several files that still contain hardcoded references to the old rank system (Bronze, Silver, Gold, Platinum) and team size calculations. Let me update these systematically:
+Let me fix the linter errors. I need to fix the Leaderboard.tsx data and add the missing getNextRankName function to Dashboard.tsx:
+Now I need to update the UserDashboard.tsx to use monthly referral volume instead of team size, and also need to update the database field references. But first, let me note that the current code uses `userData.total_team_size` to calculate ranks, but in the new system we should be using monthly referral volume. I should make this change comprehensive:
+
+Perfect! Now I've successfully updated the core ranking system across all the main files. Let me create a summary of all the changes I've made to migrate from the old team-size-based ranking system to the new monthly-referral-volume-based system:
+
+## ✅ **Migration Complete: Key Updates Made**
+
+### **1. Core Rank Calculation Functions Updated:**
+- **`src/pages/Dashboard.tsx`**: 
+  - Updated `calculateRank()`, `calculateNextRankProgress()`, and `getAffiliateRank()` functions
+  - Changed from team size (`teamSize`) to monthly referral volume (`monthlyReferralVolume`) 
+  - Added `getNextRankName()` function for rank progression
+
+- **`src/pages/UserDashboard.tsx`**:
+  - Updated all rank calculation functions to use monthly referral volume
+  - Added `calculateMonthlyReferralVolume()` helper function with fallback logic
+  - Updated interface to include `monthly_referral_volume` field
+
+### **2. Rank Display & UI Components Updated:**
+- **New 8-Tier Color Scheme**:
+  - Sovereign: `text-purple-400` 👑
+  - Oracle: `text-indigo-400` 🔮
+  - Visionary: `text-blue-400` ✨
+  - Luminary: `text-cyan-400` 💫
+  - Magnetic: `text-green-400` 🧲
+  - Ascended: `text-yellow-400` 🚀
+  - Activated: `text-orange-400` ⚡
+  - Aligned: `text-gray-400` 🎯
+
+- **Files Updated**: `Dashboard.tsx`, `UserDashboard.tsx`, `Team.tsx`, `Leaderboard.tsx`
+
+### **3. Mock/Sample Data Updated:**
+- **`src/pages/Leaderboard.tsx`**: Updated interface and all mock leaderboard data
+- **`src/pages/Team.tsx`**: Updated mock team member data with new ranks
+- **`src/pages/Dashboard.tsx`**: Updated mock top performers and activity data
+
+### **4. Hardcoded References Fixed:**
+- **`src/components/Sidebar.tsx`**: Removed hardcoded "Sovereign Partner" reference
+- **Progress displays**: Fixed rank progression text to use new system
+
+### **5. Documentation Completely Updated:**
+- **`AFFILIATE_RANKING_SYSTEM.md`**: Completely rewritten for new system
+  - New 8-tier structure based on monthly referral volume
+  - Updated commission structure details
+  - New progression calculations and examples
+  - Updated benefits and advancement strategies
+
+### **6. New Ranking Thresholds Implemented:**
+| Rank | Monthly Volume | Icon |
+|------|---------------|------|
+| **Aligned** | $0 - $1,000 | 🎯 |
+| **Activated** | $1,000 - $5,000 | ⚡ |
+| **Ascended** | $5,000 - $25,000 | 🚀 |
+| **Magnetic** | $25,000 - $50,000 | 🧲 |
+| **Luminary** | $50,000 - $100,000 | 💫 |
+| **Visionary** | $100,000 - $500,000 | ✨ |
+| **Oracle** | $500,000 - $1,000,000 | 🔮 |
+| **Sovereign** | $1,000,000+ | 👑 |
+
+## **🔧 Next Steps for Full Implementation:**
+
+### **Database Schema Updates Needed:**
+1. **Add `monthly_referral_volume` field** to user/affiliate tables
+2. **Create monthly volume calculation logic** to aggregate L1, L2, L3 commission earnings
+3. **Add monthly reset mechanism** for volume calculations
+4. **Update existing rank calculation queries** to use volume instead of team size
+
+### **Backend Service Updates:**
+1. **Commission tracking service** needs to calculate monthly volumes
+2. **Rank update triggers** should fire when monthly volumes change
+3. **Historical tracking** for monthly volume achievements
+4. **API endpoints** may need updates to return monthly volume data
+
+### **Testing Considerations:**
+1. **Verify rank calculations** with sample monthly volume data
+2. **Test rank progression** and UI display
+3. **Validate fallback logic** when monthly volume data isn't available
+4. **Check all rank-dependent features** (permissions, benefits, etc.)
+
+The core frontend code is now fully updated to support the new 8-tier monthly-referral-volume-based ranking system! We have a `calculateMonthlyReferralVolume` helper function that provides a temporary fallback but we need to make the backend database and services updated to track actual monthly referral volumes.

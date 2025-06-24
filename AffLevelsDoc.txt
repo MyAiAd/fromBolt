@@ -1,4 +1,4 @@
-Here are the **key locations** where the levels/ranks and their calculations need to be updated to match the new referral program structure:
+I need to update the **key locations** where the levels/ranks and their calculations need to be updated to match the new referral program structure:
 
 ## **🎯 Main Areas That Need Updates:**
 

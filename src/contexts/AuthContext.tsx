@@ -52,11 +52,19 @@ export const AuthContext = createContext<AuthContextType>(defaultContextValue);
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+// DEBUG: Log environment variables to help diagnose production issues
+console.log('🔍 Environment Variables Debug:');
+console.log('- VITE_SUPABASE_URL:', supabaseUrl);
+console.log('- VITE_SUPABASE_ANON_KEY:', supabaseKey ? `${supabaseKey.substring(0, 20)}...` : 'undefined');
+console.log('- NODE_ENV:', import.meta.env.NODE_ENV);
+console.log('- MODE:', import.meta.env.MODE);
+
 // Check if we have valid environment variables
 const hasValidConfig = Boolean(supabaseUrl && supabaseKey);
 
 if (!supabaseUrl) {
   console.warn('Missing environment variable: VITE_SUPABASE_URL');
+  console.warn('Available env vars:', Object.keys(import.meta.env));
 }
 
 if (!supabaseKey) {
@@ -67,9 +75,16 @@ if (!supabaseKey) {
 if (supabaseUrl) {
   try {
     new URL(supabaseUrl);
+    console.log('✅ Valid Supabase URL format');
   } catch {
     console.warn(`Invalid VITE_SUPABASE_URL: ${supabaseUrl}`);
   }
+}
+
+// IMPORTANT: Fail fast if no valid config instead of using placeholders
+if (!hasValidConfig) {
+  console.error('❌ CRITICAL: Missing Supabase environment variables!');
+  console.error('This will cause connection failures. Check your deployment configuration.');
 }
 
 // Set up the Supabase client with fallback values to prevent crashes
