@@ -22,11 +22,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     { name: 'Team', href: '/team', icon: UsersIcon },
     { name: 'Leaderboard', href: '/leaderboard', icon: Trophy },
     { name: 'Affiliates', href: '/affiliates', icon: Users },
-    { name: 'Affiliate Management', href: '/affiliates-dashboard', icon: Users },
     { name: 'Campaigns', href: '/campaigns', icon: Layers },
     { name: 'Performance', href: '/performance', icon: BarChart3 },
     ...(isAdmin
       ? [
+          { name: 'Affiliate Management', href: '/affiliates-dashboard', icon: Users },
           { name: 'ReAction', href: '/reaction-data', icon: Database },
           { name: 'Bitcoin is BAE', href: '/mightynetworks-data', icon: Database },
           { name: 'JennaZ', href: '/jennaz-data', icon: Database },
