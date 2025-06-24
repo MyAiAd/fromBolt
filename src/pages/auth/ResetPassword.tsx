@@ -23,6 +23,14 @@ export default function ResetPassword() {
   useEffect(() => {
     const setupSession = async () => {
       try {
+        // Check if we already have a session (from server-side verification)
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          console.log('ResetPassword: Found existing session from server-side verification');
+          setSessionReady(true);
+          return;
+        }
+
         // Handle different token formats
         if (token && type === 'recovery') {
           // Handle recovery token from email template
@@ -116,9 +124,8 @@ export default function ResetPassword() {
       }
     };
 
-    if ((accessToken && refreshToken) || (token && type === 'recovery')) {
-      setupSession();
-    }
+    // Always check for session, even without URL tokens (for server-side verification)
+    setupSession();
   }, [accessToken, refreshToken, token, type, supabase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -184,8 +191,9 @@ export default function ResetPassword() {
     }
   };
 
-  // If no valid tokens, show error message
-  if (!accessToken && !token) {
+  // Only show error if we have no tokens AND no session is being established
+  // (Allow time for server-side verification to establish session)
+  if (!accessToken && !token && !sessionReady && !loading) {
     return (
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
