@@ -36,8 +36,16 @@ interface UserCampaignData {
   campaigns: Campaign[];
 }
 
+interface RealCampaignMetrics {
+  [campaignId: string]: {
+    clicks: number;
+    commissions: number;
+    totalEarnings: number;
+  };
+}
+
 const Campaigns = () => {
-  const { user, supabase } = useAuth();
+  const { user, supabase, isAdmin } = useAuth();
   const [userData, setUserData] = useState<UserCampaignData | null>(null);
   const [editingReferralCode, setEditingReferralCode] = useState(false);
   const [newReferralCode, setNewReferralCode] = useState('');
@@ -45,18 +53,15 @@ const Campaigns = () => {
   const [customReferralIds, setCustomReferralIds] = useState<{ [key: string]: string }>({});
   const [copiedStates, setCopiedStates] = useState<{ [key: string]: boolean }>({});
   const [loading, setLoading] = useState(true);
+  const [realMetrics, setRealMetrics] = useState<RealCampaignMetrics>({});
 
-  // Mock data - in production, this would come from your database
-  const mockCampaigns: Campaign[] = [
+  // Campaign templates - structure with real data populated
+  const campaignTemplates: Omit<Campaign, 'clicks' | 'commission' | 'leads' | 'customers'>[] = [
     {
       id: 'reaction-affiliate',
       name: 'Reaction Affiliate',
       url: 'https://jennazwagil.com/reaction-production',
       status: 'Live',
-      clicks: 0,
-      leads: 0,
-      customers: 0,
-      commission: 0,
       commissionRate: '15% default commission',
       description: 'Rewards plan(1) • Payout(Net-15)'
     },
@@ -65,10 +70,6 @@ const Campaigns = () => {
       name: 'JennaZ.co Affiliate',
       url: 'https://jennaz.co/rise',
       status: 'Live',
-      clicks: 3,
-      leads: 1,
-      customers: 0,
-      commission: 0,
       commissionRate: '20% default commission',
       description: 'No rewards plan • Payout(Net-15)'
     },
@@ -77,38 +78,130 @@ const Campaigns = () => {
       name: 'The RISE Campaign',
       url: 'https://jennazwagil.com/rise',
       status: 'Paused',
-      clicks: 0,
-      leads: 0,
-      customers: 0,
-      commission: 0,
       commissionRate: 'No default commission setup',
       description: 'Custom campaign for The RISE community'
     }
   ];
+
+  const loadRealCampaignData = async (userReferralCode: string) => {
+    if (!user?.email) return {};
+
+    try {
+      const metrics: RealCampaignMetrics = {};
+
+      // Get clicks data for each campaign based on referral code patterns
+      const { data: clicksData, error: clicksError } = await supabase
+        .from('clicks')
+        .select('referral_code, conversion_status, created_at')
+        .eq('referral_code', userReferralCode);
+
+      if (clicksError) {
+        console.error('Error fetching clicks:', clicksError);
+      }
+
+      // Get commission data for the user
+      const { data: commissionsData, error: commissionsError } = await supabase
+        .from('multi_level_commissions')
+        .select('commission_amount, order_source, status, order_date')
+        .eq('earning_affiliate_id', user.id);
+
+      if (commissionsError) {
+        console.error('Error fetching commissions:', commissionsError);
+      }
+
+      // Organize data by campaign
+      for (const template of campaignTemplates) {
+        const campaignMetrics = {
+          clicks: 0,
+          commissions: 0,
+          totalEarnings: 0
+        };
+
+        // Count clicks for this campaign
+        if (clicksData) {
+          campaignMetrics.clicks = clicksData.length;
+          // Count conversions as "leads"
+          campaignMetrics.commissions = clicksData.filter(
+            click => click.conversion_status === 'converted'
+          ).length;
+        }
+
+        // Calculate earnings from commissions
+        if (commissionsData) {
+          const campaignCommissions = commissionsData.filter(commission => {
+            // Map order sources to campaigns
+            switch (template.id) {
+              case 'reaction-affiliate':
+                return commission.order_source === 'goaffpro';
+              case 'jennaz-affiliate':
+                return commission.order_source === 'shopify' || commission.order_source === 'native';
+              case 'rise-campaign':
+                return commission.order_source === 'mightynetworks';
+              default:
+                return false;
+            }
+          });
+
+          campaignMetrics.totalEarnings = campaignCommissions.reduce(
+            (sum, commission) => sum + parseFloat(commission.commission_amount || '0'), 0
+          );
+          
+          // Count approved commissions as customers
+          campaignMetrics.commissions = campaignCommissions.filter(
+            commission => commission.status === 'approved' || commission.status === 'paid'
+          ).length;
+        }
+
+        metrics[template.id] = campaignMetrics;
+      }
+
+      return metrics;
+    } catch (error) {
+      console.error('Error loading campaign metrics:', error);
+      return {};
+    }
+  };
 
   useEffect(() => {
     const loadUserData = async () => {
       if (!user?.email) return;
 
       try {
-        // In production, fetch from your database
-        // For now, using mock data with user's referral code
-        const { data, error } = await supabase
+        // Get user's referral code from affiliate_system_users
+        const { data: userData, error: userError } = await supabase
           .from('affiliate_system_users')
           .select('referral_code')
           .eq('email', user.email)
           .single();
 
-        const referralCode = data?.referral_code || 'DEFAULTCODE';
+        if (userError && userError.code !== 'PGRST116') {
+          console.error('Error fetching user data:', userError);
+        }
+
+        const referralCode = userData?.referral_code || 'DEFAULTCODE';
+        setNewReferralCode(referralCode);
+
+        // Load real campaign metrics
+        const metrics = await loadRealCampaignData(referralCode);
+        setRealMetrics(metrics);
+
+        // Create campaigns with real data
+        const campaignsWithData: Campaign[] = campaignTemplates.map(template => ({
+          ...template,
+          clicks: metrics[template.id]?.clicks || 0,
+          leads: Math.floor((metrics[template.id]?.clicks || 0) * 0.3), // Estimate leads as 30% of clicks
+          customers: metrics[template.id]?.commissions || 0,
+          commission: Math.round(metrics[template.id]?.totalEarnings || 0)
+        }));
+
         setUserData({
           referralCode,
-          campaigns: mockCampaigns
+          campaigns: campaignsWithData
         });
-        setNewReferralCode(referralCode);
 
         // Initialize custom referral IDs
         const initialCustomIds: { [key: string]: string } = {};
-        mockCampaigns.forEach(campaign => {
+        campaignTemplates.forEach(campaign => {
           initialCustomIds[campaign.id] = referralCode;
         });
         setCustomReferralIds(initialCustomIds);
@@ -152,6 +245,21 @@ const Campaigns = () => {
       setTimeout(() => {
         setCopiedStates(prev => ({ ...prev, [campaignId]: false }));
       }, 2000);
+      
+      // Track the copy action as a potential click/engagement
+      if (user?.id && userData.referralCode) {
+        const { error } = await supabase
+          .from('clicks')
+          .insert({
+            affiliate_id: user.id,
+            referral_code: referralId,
+            conversion_status: 'clicked',
+            ip_address: 'dashboard-copy', // Special marker for dashboard copies
+            user_agent: 'campaign-dashboard'
+          });
+        
+        if (error) console.log('Could not track copy action:', error);
+      }
     } catch (err) {
       console.error('Failed to copy:', err);
     }
@@ -167,10 +275,19 @@ const Campaigns = () => {
         .eq('email', user.email);
 
       if (!error && userData) {
+        const updatedReferralCode = newReferralCode.trim().toUpperCase();
         setUserData({
           ...userData,
-          referralCode: newReferralCode.trim().toUpperCase()
+          referralCode: updatedReferralCode
         });
+        
+        // Update all custom referral IDs to use the new default
+        const updatedCustomIds: { [key: string]: string } = {};
+        Object.keys(customReferralIds).forEach(campaignId => {
+          updatedCustomIds[campaignId] = updatedReferralCode;
+        });
+        setCustomReferralIds(updatedCustomIds);
+        
         setEditingReferralCode(false);
       }
     } catch (error) {
@@ -220,7 +337,15 @@ const Campaigns = () => {
     return (
       <div className="text-center py-12">
         <h2 className="text-2xl font-bold text-white mb-4">Campaigns Not Available</h2>
-        <p className="text-gray-400">Please ensure your affiliate profile is set up correctly.</p>
+        <p className="text-gray-400 mb-4">Please ensure your affiliate profile is set up correctly.</p>
+        <div className="bg-rise-dark-light p-6 rounded-lg max-w-md mx-auto">
+          <p className="text-sm text-gray-300">
+            If you continue to see this message, please contact support at{' '}
+            <a href="mailto:support@jennaz.co" className="text-rise-gold hover:underline">
+              support@jennaz.co
+            </a>
+          </p>
+        </div>
       </div>
     );
   }
@@ -241,7 +366,7 @@ const Campaigns = () => {
           </p>
         </div>
         <div className="text-right text-sm text-gray-400">
-          All Campaigns (3)
+          All Campaigns ({userData.campaigns.length})
         </div>
       </motion.div>
 
@@ -336,7 +461,7 @@ const Campaigns = () => {
                 <div className="text-sm text-gray-400">Leads</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-white">${campaign.customers}</div>
+                <div className="text-2xl font-bold text-white">{campaign.customers}</div>
                 <div className="text-sm text-gray-400">Customers</div>
               </div>
               <div className="text-center">
