@@ -17,13 +17,32 @@ export default function ResetPassword() {
 
   const accessToken = searchParams.get('access_token');
   const refreshToken = searchParams.get('refresh_token');
+  const token = searchParams.get('token');
+  const type = searchParams.get('type');
 
   useEffect(() => {
-    // If we have tokens from the URL, set the session
-    if (accessToken && refreshToken) {
-      console.log('ResetPassword: Setting session with tokens from URL');
-      const setSessionAsync = async () => {
-        try {
+    const setupSession = async () => {
+      try {
+        // Handle different token formats
+        if (token && type === 'recovery') {
+          // Handle recovery token from email template
+          console.log('ResetPassword: Verifying recovery token from URL');
+          const { data, error } = await supabase.auth.verifyOtp({
+            token_hash: token,
+            type: 'recovery'
+          });
+          
+          if (error) {
+            console.error('ResetPassword: Recovery token verification error:', error);
+          } else {
+            console.log('ResetPassword: Recovery token verified successfully');
+            if (data.session) {
+              setSessionReady(true);
+            }
+          }
+        } else if (accessToken && refreshToken) {
+          // Handle access/refresh tokens
+          console.log('ResetPassword: Setting session with access/refresh tokens from URL');
           const { data, error } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
@@ -37,14 +56,18 @@ export default function ResetPassword() {
               setSessionReady(true);
             }
           }
-        } catch (error) {
-          console.error('ResetPassword: Exception during session setup:', error);
+        } else {
+          console.log('ResetPassword: No valid tokens found in URL');
         }
-      };
-      
-      setSessionAsync();
+      } catch (error) {
+        console.error('ResetPassword: Exception during session setup:', error);
+      }
+    };
+
+    if ((accessToken && refreshToken) || (token && type === 'recovery')) {
+      setupSession();
     }
-  }, [accessToken, refreshToken, supabase]);
+  }, [accessToken, refreshToken, token, type, supabase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,8 +132,8 @@ export default function ResetPassword() {
     }
   };
 
-  // If no access token, show error message
-  if (!accessToken) {
+  // If no valid tokens, show error message
+  if (!accessToken && !token) {
     return (
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
