@@ -349,13 +349,13 @@ const UserDashboard = () => {
             <p className="text-lg font-mono text-rise-gold">{userData.referral_code}</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button 
-              onClick={copyAffiliateCode}
+            <Link 
+              to="/campaigns" 
               className="btn btn-primary flex items-center space-x-2"
             >
               <Share2 className="w-4 h-4" />
-              <span>Copy Affiliate Link</span>
-            </button>
+              <span>Manage Campaigns</span>
+            </Link>
             <Link to="/training" className="btn btn-secondary flex items-center space-x-2">
               <Target className="w-4 h-4" />
               <span>Learn Bitcoin Marketing</span>

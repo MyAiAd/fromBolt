@@ -43,7 +43,6 @@ const Dashboard = () => {
   const [topPerformers, setTopPerformers] = useState<TopPerformer[]>([]);
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
   const [copied, setCopied] = useState(false);
-  const [copiedReaction, setCopiedReaction] = useState(false);
 
   const getCapitalizedFirstName = () => {
     const firstName = userData?.full_name?.split(' ')[0] || 
@@ -364,27 +363,7 @@ const Dashboard = () => {
     }
   };
 
-  const copyJZBrandsLink = async () => {
-    try {
-      const jzBrandsLink = `https://jennazwagil.com/jz-brands/${affiliateCode}`;
-      await navigator.clipboard.writeText(jzBrandsLink);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy:', err);
-    }
-  };
 
-  const copyReactionLink = async () => {
-    try {
-      const reactionLink = `https://jennazwagil.com/reaction-production?ref=${affiliateCode}`;
-      await navigator.clipboard.writeText(reactionLink);
-      setCopiedReaction(true);
-      setTimeout(() => setCopiedReaction(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy:', err);
-    }
-  };
 
   const getRankColor = (rank: string) => {
     switch (rank) {
@@ -490,33 +469,15 @@ const Dashboard = () => {
               </button>
             </div>
             
-            {/* Share Links */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between bg-rise-dark px-3 py-2 rounded">
-                <p className="text-gray-300 text-xs flex-1 text-left">JZ-Brands: https://jennazwagil.com/jz-brands/{affiliateCode}</p>
-                <button
-                  onClick={copyJZBrandsLink}
-                  className="btn btn-secondary p-1 ml-2"
-                  title="Copy JZ-Brands link"
-                >
-                  <Copy className="w-3 h-3" />
-                </button>
-              </div>
-              
-              <div className="flex items-center justify-between bg-rise-dark px-3 py-2 rounded">
-                <p className="text-gray-300 text-xs flex-1 text-left">ReAction: https://jennazwagil.com/reaction-production?ref={affiliateCode}</p>
-                <button
-                  onClick={copyReactionLink}
-                  className="btn btn-secondary p-1 ml-2"
-                  title="Copy ReAction link"
-                >
-                  <Copy className="w-3 h-3" />
-                </button>
-              </div>
-            </div>
+            <Link 
+              to="/campaigns" 
+              className="btn btn-primary w-full mt-2 flex items-center justify-center space-x-2"
+            >
+              <Share2 className="w-4 h-4" />
+              <span>Manage Campaigns</span>
+            </Link>
             
-            {copied && <p className="text-green-400 text-xs mt-2">JZ-Brands link copied!</p>}
-            {copiedReaction && <p className="text-green-400 text-xs mt-2">ReAction link copied!</p>}
+            {copied && <p className="text-green-400 text-xs mt-2">Affiliate link copied!</p>}
           </div>
         </div>
       </motion.div>
