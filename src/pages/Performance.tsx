@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { BarChart3, TrendingUp, DollarSign, Users, Activity, Target } from 'lucide-react';
+import { BarChart3, TrendingUp, DollarSign, Users, Activity } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
@@ -284,10 +284,10 @@ const Performance = () => {
         <p className="text-gray-400">Track your growth, earnings, and campaign effectiveness.</p>
       </div>
 
-      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <div className="card">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-gray-400 text-sm">Total Revenue</h3>
+            <h3 className="text-gray-400 text-sm">Total Commission</h3>
             <DollarSign className="h-5 w-5 text-green-400" />
           </div>
           <p className="text-3xl font-bold text-white">{formatCurrency(stats.totalRevenue)}</p>
@@ -298,13 +298,6 @@ const Performance = () => {
             <Activity className="h-5 w-5 text-blue-400" />
           </div>
           <p className="text-3xl font-bold text-white">{stats.conversionRate.toFixed(1)}%</p>
-        </div>
-        <div className="card">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-gray-400 text-sm">Average Order Value</h3>
-            <Target className="h-5 w-5 text-yellow-400" />
-          </div>
-          <p className="text-3xl font-bold text-white">{formatCurrency(stats.averageOrderValue)}</p>
         </div>
         <div className="card">
           <div className="flex justify-between items-center mb-4">
