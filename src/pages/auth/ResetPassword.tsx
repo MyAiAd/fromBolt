@@ -24,21 +24,25 @@ export default function ResetPassword() {
     const setupSession = async () => {
       try {
         // Check if we already have a session (from server-side verification)
-        const { data: { session } } = await supabase.auth.getSession();
+        console.log('ResetPassword: Checking for existing session...');
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        console.log('ResetPassword: Session check result:', session ? 'session found' : 'no session', sessionError ? `error: ${sessionError.message}` : 'no error');
+        
         if (session) {
           console.log('ResetPassword: Found existing session from server-side verification');
+          console.log('ResetPassword: Session user:', session.user?.email);
           setSessionReady(true);
           return;
         }
+
+        // Try different approaches for recovery token
+        let success = false;
 
         // Handle different token formats
         if (token && type === 'recovery') {
           // Handle recovery token from email template
           console.log('ResetPassword: Verifying recovery token from URL, token length:', token.length);
           console.log('ResetPassword: Token preview:', token.substring(0, 20) + '...');
-          
-          // Try different approaches for recovery token
-          let success = false;
           
           // Method 1: Direct verifyOtp with token_hash
           try {
@@ -118,6 +122,35 @@ export default function ResetPassword() {
           }
         } else {
           console.log('ResetPassword: No valid tokens found in URL');
+          
+          // Check for URL fragments (Supabase might use these for server-side verification)
+          const hash = window.location.hash;
+          if (hash) {
+            console.log('ResetPassword: Found URL hash, checking for tokens:', hash);
+            const hashParams = new URLSearchParams(hash.substring(1));
+            const hashAccessToken = hashParams.get('access_token');
+            const hashRefreshToken = hashParams.get('refresh_token');
+            
+            if (hashAccessToken && hashRefreshToken) {
+              console.log('ResetPassword: Found tokens in URL hash, setting session...');
+              try {
+                const { data, error } = await supabase.auth.setSession({
+                  access_token: hashAccessToken,
+                  refresh_token: hashRefreshToken,
+                });
+                
+                if (!error && data.session) {
+                  console.log('ResetPassword: Session established from URL hash');
+                  setSessionReady(true);
+                  success = true;
+                } else if (error) {
+                  console.log('ResetPassword: Hash token session failed:', error.message);
+                }
+              } catch (err) {
+                console.log('ResetPassword: Hash token exception:', err);
+              }
+            }
+          }
         }
       } catch (error) {
         console.error('ResetPassword: Exception during session setup:', error);
