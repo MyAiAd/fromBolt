@@ -86,6 +86,13 @@ const Campaigns = () => {
   const loadRealCampaignData = async (userReferralCode: string, isAdminUser: boolean) => {
     if (!user?.email) return {};
 
+    console.log('🔍 Loading campaign data for:', { 
+      userEmail: user.email, 
+      userReferralCode, 
+      isAdminUser,
+      userId: user.id 
+    });
+
     try {
       const metrics: RealCampaignMetrics = {};
 
@@ -93,15 +100,19 @@ const Campaigns = () => {
       let commissionsData: any[] = [];
 
       if (isAdminUser) {
+        console.log('👑 Admin user detected - loading ALL affiliate data');
+        
         // Admin: Get ALL clicks and commissions across all affiliates
         const { data: allClicksData, error: clicksError } = await supabase
           .from('clicks')
           .select('referral_code, conversion_status, created_at, affiliate_id');
 
         if (clicksError) {
-          console.error('Error fetching all clicks:', clicksError);
+          console.error('❌ Error fetching all clicks:', clicksError);
         } else {
           clicksData = allClicksData || [];
+          console.log('📊 Admin clicks data loaded:', clicksData.length, 'total clicks');
+          console.log('📊 Sample clicks:', clicksData.slice(0, 3));
         }
 
         // Get ALL commission data for admin view
@@ -110,11 +121,15 @@ const Campaigns = () => {
           .select('commission_amount, order_source, status, order_date, earning_affiliate_id');
 
         if (commissionsError) {
-          console.error('Error fetching all commissions:', commissionsError);
+          console.error('❌ Error fetching all commissions:', commissionsError);
         } else {
           commissionsData = allCommissionsData || [];
+          console.log('💰 Admin commissions data loaded:', commissionsData.length, 'total commissions');
+          console.log('💰 Sample commissions:', commissionsData.slice(0, 3));
         }
       } else {
+        console.log('👤 Regular user - loading personal data only');
+        
         // Regular user: Get only their own clicks and commissions
         const { data: userClicksData, error: clicksError } = await supabase
           .from('clicks')
@@ -122,9 +137,10 @@ const Campaigns = () => {
           .eq('referral_code', userReferralCode);
 
         if (clicksError) {
-          console.error('Error fetching user clicks:', clicksError);
+          console.error('❌ Error fetching user clicks:', clicksError);
         } else {
           clicksData = userClicksData || [];
+          console.log('📊 User clicks data loaded:', clicksData.length, 'clicks for', userReferralCode);
         }
 
         // Get commission data for the specific user
@@ -134,19 +150,24 @@ const Campaigns = () => {
           .eq('earning_affiliate_id', user.id);
 
         if (commissionsError) {
-          console.error('Error fetching user commissions:', commissionsError);
+          console.error('❌ Error fetching user commissions:', commissionsError);
         } else {
           commissionsData = userCommissionsData || [];
+          console.log('💰 User commissions data loaded:', commissionsData.length, 'commissions for user', user.id);
         }
       }
 
       // Organize data by campaign
+      console.log('🏗️ Processing campaign metrics for', campaignTemplates.length, 'campaigns');
+      
       for (const template of campaignTemplates) {
         const campaignMetrics = {
           clicks: 0,
           commissions: 0,
           totalEarnings: 0
         };
+
+        console.log(`📈 Processing ${template.name} (${template.id})`);
 
         // Count clicks for this campaign
         if (clicksData) {
@@ -156,6 +177,7 @@ const Campaigns = () => {
             campaignMetrics.commissions = clicksData.filter(
               click => click.conversion_status === 'converted'
             ).length;
+            console.log(`  👑 Admin view - Total clicks: ${campaignMetrics.clicks}, Conversions: ${campaignMetrics.commissions}`);
           } else {
             // For regular user, filter by their referral code
             const userClicks = clicksData.filter(click => click.referral_code === userReferralCode);
@@ -163,6 +185,7 @@ const Campaigns = () => {
             campaignMetrics.commissions = userClicks.filter(
               click => click.conversion_status === 'converted'
             ).length;
+            console.log(`  👤 User view - Clicks: ${campaignMetrics.clicks}, Conversions: ${campaignMetrics.commissions}`);
           }
         }
 
@@ -190,11 +213,15 @@ const Campaigns = () => {
           campaignMetrics.commissions = campaignCommissions.filter(
             commission => commission.status === 'approved' || commission.status === 'paid'
           ).length;
+          
+          console.log(`  💰 Campaign commissions: ${campaignCommissions.length} total, ${campaignMetrics.commissions} approved/paid, $${campaignMetrics.totalEarnings} earnings`);
         }
 
         metrics[template.id] = campaignMetrics;
+        console.log(`  ✅ Final metrics for ${template.name}:`, campaignMetrics);
       }
 
+      console.log('🎯 Final metrics object:', metrics);
       return metrics;
     } catch (error) {
       console.error('Error loading campaign metrics:', error);
@@ -222,17 +249,26 @@ const Campaigns = () => {
         setNewReferralCode(referralCode);
 
                  // Load real campaign metrics
+         console.log('🔄 About to load campaign metrics with isAdmin:', isAdmin);
          const metrics = await loadRealCampaignData(referralCode, isAdmin);
+         console.log('📥 Received metrics from database:', metrics);
          setRealMetrics(metrics);
 
         // Create campaigns with real data
-        const campaignsWithData: Campaign[] = campaignTemplates.map(template => ({
-          ...template,
-          clicks: metrics[template.id]?.clicks || 0,
-          leads: Math.floor((metrics[template.id]?.clicks || 0) * 0.3), // Estimate leads as 30% of clicks
-          customers: metrics[template.id]?.commissions || 0,
-          commission: Math.round(metrics[template.id]?.totalEarnings || 0)
-        }));
+        console.log('🏭 Creating campaigns with real data...');
+        const campaignsWithData: Campaign[] = campaignTemplates.map(template => {
+          const campaignData = {
+            ...template,
+            clicks: metrics[template.id]?.clicks || 0,
+            leads: Math.floor((metrics[template.id]?.clicks || 0) * 0.3), // Estimate leads as 30% of clicks
+            customers: metrics[template.id]?.commissions || 0,
+            commission: Math.round(metrics[template.id]?.totalEarnings || 0)
+          };
+          console.log(`📊 Created campaign data for ${template.name}:`, campaignData);
+          return campaignData;
+        });
+        
+        console.log('🎯 Final campaigns with data:', campaignsWithData);
 
         setUserData({
           referralCode,
