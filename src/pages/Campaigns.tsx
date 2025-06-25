@@ -83,30 +83,61 @@ const Campaigns = () => {
     }
   ];
 
-  const loadRealCampaignData = async (userReferralCode: string) => {
+  const loadRealCampaignData = async (userReferralCode: string, isAdminUser: boolean) => {
     if (!user?.email) return {};
 
     try {
       const metrics: RealCampaignMetrics = {};
 
-      // Get clicks data for each campaign based on referral code patterns
-      const { data: clicksData, error: clicksError } = await supabase
-        .from('clicks')
-        .select('referral_code, conversion_status, created_at')
-        .eq('referral_code', userReferralCode);
+      let clicksData: any[] = [];
+      let commissionsData: any[] = [];
 
-      if (clicksError) {
-        console.error('Error fetching clicks:', clicksError);
-      }
+      if (isAdminUser) {
+        // Admin: Get ALL clicks and commissions across all affiliates
+        const { data: allClicksData, error: clicksError } = await supabase
+          .from('clicks')
+          .select('referral_code, conversion_status, created_at, affiliate_id');
 
-      // Get commission data for the user
-      const { data: commissionsData, error: commissionsError } = await supabase
-        .from('multi_level_commissions')
-        .select('commission_amount, order_source, status, order_date')
-        .eq('earning_affiliate_id', user.id);
+        if (clicksError) {
+          console.error('Error fetching all clicks:', clicksError);
+        } else {
+          clicksData = allClicksData || [];
+        }
 
-      if (commissionsError) {
-        console.error('Error fetching commissions:', commissionsError);
+        // Get ALL commission data for admin view
+        const { data: allCommissionsData, error: commissionsError } = await supabase
+          .from('multi_level_commissions')
+          .select('commission_amount, order_source, status, order_date, earning_affiliate_id');
+
+        if (commissionsError) {
+          console.error('Error fetching all commissions:', commissionsError);
+        } else {
+          commissionsData = allCommissionsData || [];
+        }
+      } else {
+        // Regular user: Get only their own clicks and commissions
+        const { data: userClicksData, error: clicksError } = await supabase
+          .from('clicks')
+          .select('referral_code, conversion_status, created_at')
+          .eq('referral_code', userReferralCode);
+
+        if (clicksError) {
+          console.error('Error fetching user clicks:', clicksError);
+        } else {
+          clicksData = userClicksData || [];
+        }
+
+        // Get commission data for the specific user
+        const { data: userCommissionsData, error: commissionsError } = await supabase
+          .from('multi_level_commissions')
+          .select('commission_amount, order_source, status, order_date')
+          .eq('earning_affiliate_id', user.id);
+
+        if (commissionsError) {
+          console.error('Error fetching user commissions:', commissionsError);
+        } else {
+          commissionsData = userCommissionsData || [];
+        }
       }
 
       // Organize data by campaign
@@ -119,11 +150,20 @@ const Campaigns = () => {
 
         // Count clicks for this campaign
         if (clicksData) {
-          campaignMetrics.clicks = clicksData.length;
-          // Count conversions as "leads"
-          campaignMetrics.commissions = clicksData.filter(
-            click => click.conversion_status === 'converted'
-          ).length;
+          if (isAdminUser) {
+            // For admin, count all clicks
+            campaignMetrics.clicks = clicksData.length;
+            campaignMetrics.commissions = clicksData.filter(
+              click => click.conversion_status === 'converted'
+            ).length;
+          } else {
+            // For regular user, filter by their referral code
+            const userClicks = clicksData.filter(click => click.referral_code === userReferralCode);
+            campaignMetrics.clicks = userClicks.length;
+            campaignMetrics.commissions = userClicks.filter(
+              click => click.conversion_status === 'converted'
+            ).length;
+          }
         }
 
         // Calculate earnings from commissions
@@ -181,9 +221,9 @@ const Campaigns = () => {
         const referralCode = userData?.referral_code || 'DEFAULTCODE';
         setNewReferralCode(referralCode);
 
-        // Load real campaign metrics
-        const metrics = await loadRealCampaignData(referralCode);
-        setRealMetrics(metrics);
+                 // Load real campaign metrics
+         const metrics = await loadRealCampaignData(referralCode, isAdmin);
+         setRealMetrics(metrics);
 
         // Create campaigns with real data
         const campaignsWithData: Campaign[] = campaignTemplates.map(template => ({
@@ -362,18 +402,23 @@ const Campaigns = () => {
         <div>
           <h1 className="text-3xl font-bold text-white mb-2">Campaigns</h1>
           <p className="text-gray-400">
-            Manage your affiliate campaigns and track performance
+            {isAdmin 
+              ? 'Monitor all affiliate campaigns and network performance'
+              : 'Manage your affiliate campaigns and track performance'
+            }
           </p>
         </div>
         <div className="text-right text-sm text-gray-400">
-          All Campaigns ({userData.campaigns.length})
+          {isAdmin ? 'Network Campaigns' : 'All Campaigns'} ({userData.campaigns.length})
         </div>
       </motion.div>
 
       {/* Referral Code Management */}
       <motion.div variants={itemVariants} className="card mb-8">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-white">Your Referral Code</h2>
+          <h2 className="text-xl font-semibold text-white">
+            {isAdmin ? 'Admin Referral Code' : 'Your Referral Code'}
+          </h2>
           {!editingReferralCode && (
             <button
               onClick={() => setEditingReferralCode(true)}
@@ -416,7 +461,10 @@ const Campaigns = () => {
           <div className="bg-rise-dark-light p-4 rounded-lg">
             <code className="text-rise-gold font-mono text-xl">{userData.referralCode}</code>
             <p className="text-gray-400 text-sm mt-2">
-              This is your default referral code. You can customize it for each campaign below.
+              {isAdmin 
+                ? 'This is your admin referral code. Campaign metrics above show network-wide data for all affiliates.'
+                : 'This is your default referral code. You can customize it for each campaign below.'
+              }
             </p>
           </div>
         )}
