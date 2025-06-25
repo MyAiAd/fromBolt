@@ -105,14 +105,17 @@ const Campaigns = () => {
         }
 
         // Get ALL commission data for admin view
+        console.log('🔍 ADMIN: Fetching commission data...');
         const { data: allCommissionsData, error: commissionsError } = await supabase
           .from('multi_level_commissions')
           .select('commission_amount, order_source, status, order_date, earning_affiliate_id');
 
         if (commissionsError) {
-          console.error('Error fetching all commissions:', commissionsError);
+          console.error('❌ COMMISSION ERROR:', commissionsError);
         } else {
           commissionsData = allCommissionsData || [];
+          console.log('✅ COMMISSION SUCCESS: Retrieved', commissionsData.length, 'commission records');
+          console.log('📊 Sample commission data:', commissionsData.slice(0, 3));
         }
       } else {
         // Regular user: Get only their own clicks and commissions
@@ -168,28 +171,49 @@ const Campaigns = () => {
 
         // Calculate earnings from commissions
         if (commissionsData) {
+          console.log(`📈 Processing commissions for ${template.name} (${template.id})...`);
+          
           const campaignCommissions = commissionsData.filter(commission => {
             // Map order sources to campaigns
+            let matches = false;
             switch (template.id) {
               case 'reaction-affiliate':
-                return commission.order_source === 'goaffpro';
+                matches = commission.order_source === 'goaffpro';
+                break;
               case 'jennaz-affiliate':
-                return commission.order_source === 'shopify' || commission.order_source === 'native';
+                matches = commission.order_source === 'shopify' || commission.order_source === 'native';
+                break;
               case 'rise-campaign':
-                return commission.order_source === 'mightynetworks';
+                matches = commission.order_source === 'mightynetworks';
+                break;
               default:
-                return false;
+                matches = false;
             }
+            
+            if (matches) {
+              console.log(`  ✅ Found matching commission:`, {
+                order_source: commission.order_source,
+                amount: commission.commission_amount,
+                status: commission.status
+              });
+            }
+            
+            return matches;
           });
+
+          console.log(`  📊 ${template.name}: Found ${campaignCommissions.length} matching commissions`);
 
           campaignMetrics.totalEarnings = campaignCommissions.reduce(
             (sum, commission) => sum + parseFloat(commission.commission_amount || '0'), 0
           );
           
           // Count approved commissions as customers
-          campaignMetrics.commissions = campaignCommissions.filter(
+          const approvedCommissions = campaignCommissions.filter(
             commission => commission.status === 'approved' || commission.status === 'paid'
-          ).length;
+          );
+          campaignMetrics.commissions = approvedCommissions.length;
+          
+          console.log(`  💰 ${template.name}: $${campaignMetrics.totalEarnings} total, ${campaignMetrics.commissions} approved`);
         }
 
         metrics[template.id] = campaignMetrics;
