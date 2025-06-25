@@ -93,15 +93,23 @@ const Campaigns = () => {
       let commissionsData: any[] = [];
 
       if (isAdminUser) {
+        console.log('🔍 ADMIN DEBUG: Attempting to fetch ALL clicks data...');
+        
         // Admin: Get ALL clicks and commissions across all affiliates
         const { data: allClicksData, error: clicksError } = await supabase
           .from('clicks')
           .select('referral_code, conversion_status, created_at, affiliate_id');
 
         if (clicksError) {
-          console.error('Error fetching all clicks:', clicksError);
+          console.error('❌ CLICKS ERROR:', {
+            message: clicksError.message,
+            details: clicksError.details,
+            hint: clicksError.hint,
+            code: clicksError.code
+          });
         } else {
           clicksData = allClicksData || [];
+          console.log('✅ CLICKS SUCCESS: Retrieved', clicksData.length, 'click records');
         }
 
         // Get ALL commission data for admin view
