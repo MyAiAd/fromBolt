@@ -590,27 +590,27 @@ const Affiliates = () => {
       {/* Source Breakdown - Primary prominence */}
       <motion.div variants={itemVariants} className="card mb-6">
         <h3 className="text-xl font-bold text-white mb-6">Affiliates by Source</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="flex items-center justify-between p-4 bg-rise-dark-light rounded-lg">
-            <div className="flex items-center space-x-3">
-              <div className="h-4 w-4 rounded-full bg-blue-400"></div>
-              <span className="text-gray-300 font-medium">Shopify</span>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="border border-blue-400/30 bg-rise-dark-light rounded-xl p-6 hover:border-blue-400/50 transition-colors">
+            <div className="flex items-center space-x-3 mb-2">
+              <div className="h-5 w-5 rounded-full bg-blue-400"></div>
+              <span className="text-gray-300 font-medium text-lg">Shopify</span>
             </div>
-            <span className="text-white font-bold text-lg">{stats.bySource.shopify}</span>
+            <span className="text-white font-bold text-3xl">{stats.bySource.shopify}</span>
           </div>
-          <div className="flex items-center justify-between p-4 bg-rise-dark-light rounded-lg">
-            <div className="flex items-center space-x-3">
-              <div className="h-4 w-4 rounded-full bg-purple-400"></div>
-              <span className="text-gray-300 font-medium">Mighty Networks</span>
+          <div className="border border-purple-400/30 bg-rise-dark-light rounded-xl p-6 hover:border-purple-400/50 transition-colors">
+            <div className="flex items-center space-x-3 mb-2">
+              <div className="h-5 w-5 rounded-full bg-purple-400"></div>
+              <span className="text-gray-300 font-medium text-lg">Mighty Networks</span>
             </div>
-            <span className="text-white font-bold text-lg">{stats.bySource.mightynetworks}</span>
+            <span className="text-white font-bold text-3xl">{stats.bySource.mightynetworks}</span>
           </div>
-          <div className="flex items-center justify-between p-4 bg-rise-dark-light rounded-lg">
-            <div className="flex items-center space-x-3">
-              <div className="h-4 w-4 rounded-full bg-yellow-400"></div>
-              <span className="text-gray-300 font-medium">GHL</span>
+          <div className="border border-yellow-400/30 bg-rise-dark-light rounded-xl p-6 hover:border-yellow-400/50 transition-colors">
+            <div className="flex items-center space-x-3 mb-2">
+              <div className="h-5 w-5 rounded-full bg-yellow-400"></div>
+              <span className="text-gray-300 font-medium text-lg">GHL</span>
             </div>
-            <span className="text-white font-bold text-lg">{stats.bySource.ghl}</span>
+            <span className="text-white font-bold text-3xl">{stats.bySource.ghl}</span>
           </div>
         </div>
       </motion.div>
@@ -621,19 +621,19 @@ const Affiliates = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400 text-sm">Total Affiliates</p>
-              <p className="text-2xl font-bold text-white">{stats.total}</p>
+              <p className="text-lg font-semibold text-white">{stats.total}</p>
             </div>
-            <Database className="h-8 w-8 text-rise-gold" />
+            <Database className="h-6 w-6 text-rise-gold" />
           </div>
         </div>
         <div className="card">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400 text-sm">Active</p>
-              <p className="text-2xl font-bold text-green-400">{stats.active}</p>
+              <p className="text-lg font-semibold text-green-400">{stats.active}</p>
             </div>
-            <div className="h-8 w-8 rounded-full bg-green-500/20 flex items-center justify-center">
-              <div className="h-3 w-3 rounded-full bg-green-400"></div>
+            <div className="h-6 w-6 rounded-full bg-green-500/20 flex items-center justify-center">
+              <div className="h-2 w-2 rounded-full bg-green-400"></div>
             </div>
           </div>
         </div>
@@ -641,10 +641,10 @@ const Affiliates = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400 text-sm">Pending</p>
-              <p className="text-2xl font-bold text-yellow-400">{stats.pending}</p>
+              <p className="text-lg font-semibold text-yellow-400">{stats.pending}</p>
             </div>
-            <div className="h-8 w-8 rounded-full bg-yellow-500/20 flex items-center justify-center">
-              <div className="h-3 w-3 rounded-full bg-yellow-400"></div>
+            <div className="h-6 w-6 rounded-full bg-yellow-500/20 flex items-center justify-center">
+              <div className="h-2 w-2 rounded-full bg-yellow-400"></div>
             </div>
           </div>
         </div>
@@ -652,10 +652,10 @@ const Affiliates = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-400 text-sm">Inactive</p>
-              <p className="text-2xl font-bold text-red-400">{stats.inactive}</p>
+              <p className="text-lg font-semibold text-red-400">{stats.inactive}</p>
             </div>
-            <div className="h-8 w-8 rounded-full bg-red-500/20 flex items-center justify-center">
-              <div className="h-3 w-3 rounded-full bg-red-400"></div>
+            <div className="h-6 w-6 rounded-full bg-red-500/20 flex items-center justify-center">
+              <div className="h-2 w-2 rounded-full bg-red-400"></div>
             </div>
           </div>
         </div>
