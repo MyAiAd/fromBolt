@@ -1,9 +1,9 @@
 import { Link, useLocation } from 'react-router-dom';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import { LayoutDashboard, Users, BarChart3, Settings, Award, Layers, LogOut, Database, RefreshCw, HelpCircle, Trophy, UsersIcon } from 'lucide-react';
+import { LayoutDashboard, Users, BarChart3, Settings, Award, Layers, LogOut, Database, RefreshCw, HelpCircle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { Dialog, Transition } from '@headlessui/react';
-import { Fragment, useState, useEffect } from 'react';
+import { Fragment, useState } from 'react';
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -12,21 +12,17 @@ interface SidebarProps {
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   const location = useLocation();
-  const { signOut, isAdmin, user, supabase } = useAuth();
+  const { signOut, isAdmin } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [userRank, setUserRank] = useState('Partner');
-  const [userRankIcon, setUserRankIcon] = useState('👑');
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Team', href: '/team', icon: UsersIcon },
-    { name: 'Leaderboard', href: '/leaderboard', icon: Trophy },
-    { name: 'Affiliates', href: '/affiliates', icon: Users },
+    { name: 'Data Import', href: '/affiliates', icon: Users },
+    { name: 'Affiliate Management', href: '/affiliates-dashboard', icon: Users },
     { name: 'Campaigns', href: '/campaigns', icon: Layers },
     { name: 'Performance', href: '/performance', icon: BarChart3 },
     ...(isAdmin
       ? [
-          { name: 'Affiliate Management', href: '/affiliates-dashboard', icon: Users },
           { name: 'ReAction', href: '/reaction-data', icon: Database },
           { name: 'Bitcoin is BAE', href: '/mightynetworks-data', icon: Database },
           { name: 'JennaZ', href: '/jennaz-data', icon: Database },
@@ -57,82 +53,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
       // Reset state if logout fails for some reason
       setIsLoggingOut(false);
     }
-  };
-
-  // Calculate rank based on monthly referral volume
-  const calculateRank = (monthlyReferralVolume: number) => {
-    if (monthlyReferralVolume >= 1000000) return 'Sovereign';
-    if (monthlyReferralVolume >= 500000) return 'Oracle';
-    if (monthlyReferralVolume >= 100000) return 'Visionary';
-    if (monthlyReferralVolume >= 50000) return 'Luminary';
-    if (monthlyReferralVolume >= 25000) return 'Magnetic';
-    if (monthlyReferralVolume >= 5000) return 'Ascended';
-    if (monthlyReferralVolume >= 1000) return 'Activated';
-    return 'Aligned';
-  };
-
-  const getRankIcon = (rank: string) => {
-    switch (rank) {
-      case 'Sovereign': return '👑';
-      case 'Oracle': return '🔮';
-      case 'Visionary': return '✨';
-      case 'Luminary': return '💫';
-      case 'Magnetic': return '🧲';
-      case 'Ascended': return '🚀';
-      case 'Activated': return '⚡';
-      default: return '🎯'; // Aligned
-    }
-  };
-
-  // Load user rank data
-  useEffect(() => {
-    const loadUserRank = async () => {
-      if (!user?.email) return;
-
-      // For admin users, default to Sovereign rank
-      if (isAdmin) {
-        setUserRank('Sovereign');
-        setUserRankIcon('👑');
-        return;
-      }
-
-      try {
-        // Try to get user data from affiliate system
-        const { data, error } = await supabase
-          .from('affiliate_system_users')
-          .select('monthly_referral_volume, total_earnings')
-          .eq('email', user.email)
-          .single();
-
-        if (data) {
-          // Use monthly_referral_volume if available, otherwise estimate from total earnings
-          const monthlyVolume = data.monthly_referral_volume || (data.total_earnings * 0.1);
-          const rank = calculateRank(monthlyVolume);
-          setUserRank(rank);
-          setUserRankIcon(getRankIcon(rank));
-        } else {
-          // Default for new users
-          setUserRank('Aligned');
-          setUserRankIcon('🎯');
-        }
-      } catch (error) {
-        console.error('Error loading user rank:', error);
-        setUserRank('Aligned');
-        setUserRankIcon('🎯');
-      }
-    };
-
-    loadUserRank();
-  }, [user, isAdmin, supabase]);
-
-  // Get user's first name for display
-  const getUserDisplayName = () => {
-    if (!user) return 'Partner';
-    
-    // Try to get first name from user metadata or email
-    const fullName = user.user_metadata?.full_name || user.email?.split('@')[0];
-    const firstName = fullName?.split(' ')[0] || 'Partner';
-    return firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
   };
 
   return (
@@ -253,8 +173,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                   <div className="flex items-center">
                     <Award className="h-10 w-10 text-jennaz-rose" />
                     <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-200">{getUserDisplayName()}</p>
-                      <p className="text-xs text-jennaz-rose">{userRank} {userRankIcon}</p>
+                      <p className="text-sm font-medium text-gray-200">Affiliate Level</p>
+                      <p className="text-xs text-jennaz-rose">Sovereign Partner</p>
                     </div>
                   </div>
                 </div>
