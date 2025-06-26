@@ -359,26 +359,38 @@ const Affiliates = () => {
         return matchesSearch && matchesLevel && matchesStatus && matchesSource;
       })
       .sort((a, b) => {
+        console.log('🔄 Sorting by field:', sortField, 'direction:', sortDirection);
+        console.log('🔄 Comparing values:', a[sortField], 'vs', b[sortField]);
+        
         if (sortField === 'commission') {
           // Strip the $ and convert to number for commission sorting
           const valueA = parseFloat(a[sortField].replace('$', '').replace(',', ''));
           const valueB = parseFloat(b[sortField].replace('$', '').replace(',', ''));
+          console.log('🔄 Commission parsed values:', valueA, 'vs', valueB);
           return sortDirection === 'asc' ? valueA - valueB : valueB - valueA;
         } else if (sortField === 'dateJoined') {
           // Date comparison
-          return sortDirection === 'asc' 
-            ? new Date(a[sortField]).getTime() - new Date(b[sortField]).getTime()
-            : new Date(b[sortField]).getTime() - new Date(a[sortField]).getTime();
+          const dateA = new Date(a[sortField]).getTime();
+          const dateB = new Date(b[sortField]).getTime();
+          console.log('🔄 Date parsed values:', dateA, 'vs', dateB);
+          return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
         } else if (sortField === 'referrals') {
           // Number comparison
-          return sortDirection === 'asc' ? a[sortField] - b[sortField] : b[sortField] - a[sortField];
+          console.log('🔄 Referrals raw values:', a[sortField], 'vs', b[sortField], 'types:', typeof a[sortField], typeof b[sortField]);
+          const numA = Number(a[sortField]) || 0;
+          const numB = Number(b[sortField]) || 0;
+          console.log('🔄 Referrals converted values:', numA, 'vs', numB);
+          return sortDirection === 'asc' ? numA - numB : numB - numA;
         } else {
-          // String comparison
+          // String comparison (includes level)
           const aValue = (a[sortField] || '').toString().toLowerCase();
           const bValue = (b[sortField] || '').toString().toLowerCase();
-          return sortDirection === 'asc'
+          console.log('🔄 String comparison values:', aValue, 'vs', bValue);
+          const result = sortDirection === 'asc'
             ? aValue.localeCompare(bValue)
             : bValue.localeCompare(aValue);
+          console.log('🔄 String comparison result:', result);
+          return result;
         }
       });
   }, [affiliates, searchQuery, levelFilter, statusFilter, sourceFilter, sortField, sortDirection]);
@@ -777,7 +789,7 @@ const Affiliates = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table key={`${sortField}-${sortDirection}`} className="w-full">
               <thead>
                 <tr className="border-b border-gray-700">
                   <th 
