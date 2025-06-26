@@ -212,18 +212,17 @@ const JennaZImport: React.FC = () => {
       console.log('Fetching contacts from GHL API...');
       const startTime = new Date();
 
-      // Fetch contacts directly from GHL API using working skip-based pagination
+      // Fetch contacts directly from GHL API
       const baseUrl = 'https://rest.gohighlevel.com/v1';
       let allContacts: GHLContact[] = [];
-      let page = 1;
-      let hasMore = true;
+      let nextCursor: string | null = null;
       
-      while (hasMore && allContacts.length < 1000) { // Safety limit
-        console.log(`📥 Fetching page ${page}...`);
+      do {
+        const endpoint: string = `/contacts/?locationId=${credentials.locationId}&limit=100${
+          nextCursor ? `&cursor=${nextCursor}` : ''
+        }`;
         
-        const url = `${baseUrl}/contacts/?locationId=${credentials.locationId}&limit=100&skip=${(page - 1) * 100}`;
-        
-        const response = await fetch(url, {
+        const response: Response = await fetch(`${baseUrl}${endpoint}`, {
           headers: {
             'Authorization': `Bearer ${credentials.apiKey}`,
             'Content-Type': 'application/json'
@@ -235,36 +234,83 @@ const JennaZImport: React.FC = () => {
           throw new Error(`GHL API Error: ${response.status} ${response.statusText} - ${errorText}`);
         }
 
-        const responseData = await response.json();
+        const responseData: any = await response.json();
         
         if (responseData.contacts && Array.isArray(responseData.contacts)) {
           allContacts = allContacts.concat(responseData.contacts);
-          console.log(`📥 Page ${page}: ${responseData.contacts.length} contacts (total: ${allContacts.length})`);
-          
-          // Check if we got fewer contacts than the limit - means we're done
-          hasMore = responseData.contacts.length === 100;
-          page++;
-        } else {
-          hasMore = false;
+          console.log(`📥 Fetched ${responseData.contacts.length} contacts (total: ${allContacts.length})`);
         }
         
+        nextCursor = responseData.meta?.nextCursor || null;
+        
         // Rate limiting
-        if (hasMore) {
-          await new Promise(resolve => setTimeout(resolve, 250));
+        if (nextCursor) {
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
-      }
+        
+      } while (nextCursor);
 
       console.log(`✅ Total contacts fetched: ${allContacts.length}`);
 
-      setImportStatus(prev => ({ ...prev, currentOperation: 'Processing contacts into affiliate system...' }));
+      setImportStatus(prev => ({ ...prev, currentOperation: 'Filtering for affiliates only...' }));
 
-      // Process contacts into affiliate system
+      // Filter contacts to identify only actual affiliates
+      const isAffiliate = (contact: GHLContact): boolean => {
+        // Check multiple criteria to identify affiliates
+        const customFields = contact.customFields || {};
+        
+        // 1. Check for affiliate-specific tags or custom fields
+        const affiliateIndicators = [
+          'affiliate',
+          'partner',
+          'referral',
+          'commission',
+          'ambassador'
+        ];
+        
+        // Check custom fields for affiliate indicators
+        for (const [key, value] of Object.entries(customFields)) {
+          const keyLower = key.toLowerCase();
+          const valueLower = String(value).toLowerCase();
+          
+          if (affiliateIndicators.some(indicator => 
+            keyLower.includes(indicator) || valueLower.includes(indicator)
+          )) {
+            return true;
+          }
+        }
+        
+        // 2. Check if contact has a referral code
+        if (contact.referralCode) {
+          return true;
+        }
+        
+        // 3. Check for specific custom field that marks affiliates
+        // You can customize these field names based on your GHL setup
+        if (customFields['affiliate_status'] || 
+            customFields['is_affiliate'] || 
+            customFields['partner_type'] ||
+            customFields['referral_code']) {
+          return true;
+        }
+        
+        // 4. If none of the above, this is likely just a regular contact
+        return false;
+      };
+
+      // Filter to get only affiliates
+      const affiliateContacts = allContacts.filter(isAffiliate);
+      console.log(`🎯 Filtered to ${affiliateContacts.length} potential affiliates from ${allContacts.length} total contacts`);
+
+      setImportStatus(prev => ({ ...prev, currentOperation: `Processing ${affiliateContacts.length} affiliate contacts into system...` }));
+
+      // Process only affiliate contacts into affiliate system
       let recordsSuccessful = 0;
       let recordsFailed = 0;
       const recordsUpdated = 0;
       const errors: string[] = [];
 
-      for (const contact of allContacts) {
+      for (const contact of affiliateContacts) {
         try {
           // Generate referral code if not provided
           const generateReferralCode = (contact: GHLContact): string => {
@@ -316,7 +362,7 @@ const JennaZImport: React.FC = () => {
 
       const affiliatesResult: ImportResult = {
         success: recordsFailed === 0,
-        recordsProcessed: allContacts.length,
+        recordsProcessed: affiliateContacts.length,
         recordsImported: recordsSuccessful,
         recordsUpdated: recordsUpdated,
         recordsSkipped: recordsFailed,
@@ -354,6 +400,14 @@ const JennaZImport: React.FC = () => {
         
         // Trigger a page refresh for all data contexts by dispatching a custom event
         window.dispatchEvent(new CustomEvent('affiliate-data-updated'));
+        
+        // Also trigger a browser storage event to refresh other tabs/windows
+        window.dispatchEvent(new CustomEvent('affiliate-import-success', {
+          detail: { 
+            recordsImported: affiliatesResult.recordsImported,
+            source: 'ghl'
+          }
+        }));
       }
     } catch (error) {
       console.error('Detailed error information:', error);
@@ -481,18 +535,17 @@ const JennaZImport: React.FC = () => {
       console.log('Fetching contacts from GHL API...');
       const startTime = new Date();
 
-      // Fetch contacts directly from GHL API using working skip-based pagination
+      // Fetch contacts directly from GHL API
       const baseUrl = 'https://rest.gohighlevel.com/v1';
       let allContacts: GHLContact[] = [];
-      let page = 1;
-      let hasMore = true;
+      let nextCursor: string | null = null;
       
-      while (hasMore && allContacts.length < 1000) { // Safety limit
-        console.log(`📥 Fetching page ${page}...`);
+      do {
+        const endpoint: string = `/contacts/?locationId=${credentials.locationId}&limit=100${
+          nextCursor ? `&cursor=${nextCursor}` : ''
+        }`;
         
-        const url = `${baseUrl}/contacts/?locationId=${credentials.locationId}&limit=100&skip=${(page - 1) * 100}`;
-        
-        const response = await fetch(url, {
+        const response: Response = await fetch(`${baseUrl}${endpoint}`, {
           headers: {
             'Authorization': `Bearer ${credentials.apiKey}`,
             'Content-Type': 'application/json'
@@ -504,36 +557,83 @@ const JennaZImport: React.FC = () => {
           throw new Error(`GHL API Error: ${response.status} ${response.statusText} - ${errorText}`);
         }
 
-        const responseData = await response.json();
+        const responseData: any = await response.json();
         
         if (responseData.contacts && Array.isArray(responseData.contacts)) {
           allContacts = allContacts.concat(responseData.contacts);
-          console.log(`📥 Page ${page}: ${responseData.contacts.length} contacts (total: ${allContacts.length})`);
-          
-          // Check if we got fewer contacts than the limit - means we're done
-          hasMore = responseData.contacts.length === 100;
-          page++;
-        } else {
-          hasMore = false;
+          console.log(`📥 Fetched ${responseData.contacts.length} contacts (total: ${allContacts.length})`);
         }
         
+        nextCursor = responseData.meta?.nextCursor || null;
+        
         // Rate limiting
-        if (hasMore) {
-          await new Promise(resolve => setTimeout(resolve, 250));
+        if (nextCursor) {
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
-      }
+        
+      } while (nextCursor);
 
       console.log(`✅ Total contacts fetched: ${allContacts.length}`);
 
-      setImportStatus(prev => ({ ...prev, currentOperation: 'Processing contacts into affiliate system...' }));
+      setImportStatus(prev => ({ ...prev, currentOperation: 'Filtering for affiliates only...' }));
 
-      // Process contacts into affiliate system
+      // Filter contacts to identify only actual affiliates  
+      const isAffiliate = (contact: GHLContact): boolean => {
+        // Check multiple criteria to identify affiliates
+        const customFields = contact.customFields || {};
+        
+        // 1. Check for affiliate-specific tags or custom fields
+        const affiliateIndicators = [
+          'affiliate',
+          'partner',
+          'referral',
+          'commission',
+          'ambassador'
+        ];
+        
+        // Check custom fields for affiliate indicators
+        for (const [key, value] of Object.entries(customFields)) {
+          const keyLower = key.toLowerCase();
+          const valueLower = String(value).toLowerCase();
+          
+          if (affiliateIndicators.some(indicator => 
+            keyLower.includes(indicator) || valueLower.includes(indicator)
+          )) {
+            return true;
+          }
+        }
+        
+        // 2. Check if contact has a referral code
+        if (contact.referralCode) {
+          return true;
+        }
+        
+        // 3. Check for specific custom field that marks affiliates
+        // You can customize these field names based on your GHL setup
+        if (customFields['affiliate_status'] || 
+            customFields['is_affiliate'] || 
+            customFields['partner_type'] ||
+            customFields['referral_code']) {
+          return true;
+        }
+        
+        // 4. If none of the above, this is likely just a regular contact
+        return false;
+      };
+
+      // Filter to get only affiliates
+      const affiliateContacts = allContacts.filter(isAffiliate);
+      console.log(`🎯 Filtered to ${affiliateContacts.length} potential affiliates from ${allContacts.length} total contacts`);
+
+      setImportStatus(prev => ({ ...prev, currentOperation: `Processing ${affiliateContacts.length} affiliate contacts into system...` }));
+
+      // Process only affiliate contacts into affiliate system
       let recordsSuccessful = 0;
       let recordsFailed = 0;
       const recordsUpdated = 0;
       const errors: string[] = [];
 
-      for (const contact of allContacts) {
+      for (const contact of affiliateContacts) {
         try {
           // Generate referral code if not provided
           const generateReferralCode = (contact: GHLContact): string => {
@@ -585,7 +685,7 @@ const JennaZImport: React.FC = () => {
 
       const affiliatesResult: ImportResult = {
         success: recordsFailed === 0,
-        recordsProcessed: allContacts.length,
+        recordsProcessed: affiliateContacts.length,
         recordsImported: recordsSuccessful,
         recordsUpdated: recordsUpdated,
         recordsSkipped: recordsFailed,

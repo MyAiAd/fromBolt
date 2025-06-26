@@ -1,16 +1,16 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
-import { Eye, Users, Search, PlusCircle, ChevronDown, ChevronUp, Filter, Database, RefreshCw, Download } from 'lucide-react';
+import { Eye, Users, Search, PlusCircle, ChevronDown, ChevronUp, Filter, Database, RefreshCw, Download, Settings as SettingsIcon } from 'lucide-react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import { AffiliateAggregationService, AggregatedAffiliate } from '../services/affiliateAggregationService';
-import { UnifiedImportService } from '../services/unifiedImportService';
-import { GHLAnalysisService } from '../services/ghlAnalysisService';
+import JennaZImport from '../components/JennaZImport';
+import GoAffProImport from '../components/GoAffProImport';
 
-type AffiliateLevel = 'All' | 'Direct' | 'Level 2' | 'Level 3' | 'GoAFF Pro' | 'Mighty Networks';
+type AffiliateLevel = 'All' | 'Direct' | 'Level 2' | 'Level 3' | 'ReAction' | 'Bitcoin is BAE';
 type AffiliateStatus = 'All' | 'Active' | 'Pending' | 'Inactive';
-type AffiliateSource = 'All' | 'SHP' | 'MN' | 'GHL' | 'goaffpro' | 'mightynetworks' | 'native';
+type AffiliateSource = 'All' | 'goaffpro' | 'mightynetworks' | 'native';
 
 const Affiliates = () => {
   const { supabase, user, isAdmin } = useAuth();
@@ -23,6 +23,12 @@ const Affiliates = () => {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
+  const [showImportSection, setShowImportSection] = useState(false);
+  const [importNotification, setImportNotification] = useState<{
+    show: boolean;
+    message: string;
+    type: 'success' | 'info' | 'warning';
+  }>({ show: false, message: '', type: 'success' });
   const [demoUserForm, setDemoUserForm] = useState({
     email: 'sage@risewith.us',
     firstName: 'Sage',
@@ -31,17 +37,6 @@ const Affiliates = () => {
     source: 'manual' as 'manual' | 'ghl' | 'goaffpro'
   });
   const [isCreatingDemo, setIsCreatingDemo] = useState(false);
-  const [isImporting, setIsImporting] = useState(false);
-  const [importStatus, setImportStatus] = useState('');
-  const [analysisResults, setAnalysisResults] = useState<any>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [showCredentialsModal, setShowCredentialsModal] = useState(false);
-  const [credentials, setCredentials] = useState({
-    ghlApiKey: '',
-    ghlLocationId: 'w01Gc7T4b0tKSDQdKhuN',
-    goaffproApiKey: '',
-    goaffproStoreId: ''
-  });
   const [affiliates, setAffiliates] = useState<AggregatedAffiliate[]>([]);
   const [stats, setStats] = useState({
     total: 0,
@@ -56,11 +51,44 @@ const Affiliates = () => {
   });
 
   const aggregationService = useMemo(() => new AffiliateAggregationService(supabase), [supabase]);
-  const unifiedImportService = useMemo(() => new UnifiedImportService(supabase), [supabase]);
-  const ghlAnalysisService = useMemo(() => new GHLAnalysisService(supabase), [supabase]);
 
   useEffect(() => {
     loadAffiliates();
+    
+    // Listen for import success events to refresh data
+    const handleImportSuccess = (event: CustomEvent) => {
+      console.log('🎉 Import success detected, refreshing affiliates data...', event.detail);
+      const { recordsImported, source } = event.detail;
+      
+      // Show success notification
+      setImportNotification({
+        show: true,
+        message: `Successfully imported ${recordsImported} affiliates from ${source.toUpperCase()}! Data refreshed automatically.`,
+        type: 'success'
+      });
+      
+      // Hide notification after 5 seconds
+      setTimeout(() => {
+        setImportNotification(prev => ({ ...prev, show: false }));
+      }, 5000);
+      
+      setTimeout(() => {
+        loadAffiliates();
+      }, 1000); // Small delay to ensure import is fully committed
+    };
+    
+    const handleDataUpdated = () => {
+      console.log('🔄 Affiliate data updated event detected, refreshing...');
+      loadAffiliates();
+    };
+    
+    window.addEventListener('affiliate-import-success', handleImportSuccess as EventListener);
+    window.addEventListener('affiliate-data-updated', handleDataUpdated);
+    
+    return () => {
+      window.removeEventListener('affiliate-import-success', handleImportSuccess as EventListener);
+      window.removeEventListener('affiliate-data-updated', handleDataUpdated);
+    };
   }, [supabase]);
 
   const createDemoUser = async () => {
@@ -195,127 +223,6 @@ const Affiliates = () => {
     }
   };
 
-  const handleGHLAnalysis = async () => {
-    if (!isAdmin) {
-      alert('Only administrators can perform analysis');
-      return;
-    }
-
-    const ghlCredentials = {
-      apiKey: import.meta.env.VITE_GHL_API_KEY || '',
-      locationId: import.meta.env.VITE_GHL_LOCATION_ID || 'w01Gc7T4b0tKSDQdKhuN'
-    };
-
-    if (!ghlCredentials.apiKey || !ghlCredentials.locationId) {
-      alert('GHL API credentials not found. Please check environment variables.');
-      return;
-    }
-
-    setIsAnalyzing(true);
-    setAnalysisResults(null);
-
-    try {
-      console.log('🔍 Starting GHL contact analysis...');
-      const results = await ghlAnalysisService.analyzeGHLContacts(ghlCredentials);
-      console.log('📊 Analysis completed:', results);
-      setAnalysisResults(results);
-    } catch (error) {
-      console.error('❌ Analysis error:', error);
-      alert(`Analysis failed: ${error instanceof Error ? error.message : String(error)}`);
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  const handleUnifiedImport = async () => {
-    if (!isAdmin) {
-      alert('Only administrators can perform imports');
-      return;
-    }
-
-    // Use credentials from Vercel environment variables
-    const ghlCredentials = {
-      apiKey: import.meta.env.VITE_GHL_API_KEY || '',
-      locationId: import.meta.env.VITE_GHL_LOCATION_ID || 'w01Gc7T4b0tKSDQdKhuN'
-    };
-
-    const goaffproCredentials = {
-      apiKey: import.meta.env.VITE_GOAFFPRO_ACCESS_TOKEN || '',
-      storeId: import.meta.env.VITE_GOAFFPRO_PUBLIC_TOKEN || '' // storeId is actually the public token
-    };
-
-    // Check if we have credentials
-    const hasGhlCredentials = ghlCredentials.apiKey && ghlCredentials.locationId;
-    const hasGoaffproCredentials = goaffproCredentials.apiKey;
-
-    if (!hasGhlCredentials && !hasGoaffproCredentials) {
-      alert('No API credentials found. Please check environment variables.');
-      return;
-    }
-
-    setIsImporting(true);
-    setImportStatus('Starting import from all sources...');
-
-    try {
-      console.log('🚀 Starting unified import from Affiliates page...');
-      console.log('🔑 Available credentials:', { 
-        ghl: hasGhlCredentials, 
-        goaffpro: hasGoaffproCredentials 
-      });
-
-      setImportStatus('Executing imports...');
-
-      const result = await unifiedImportService.importAllData(
-        hasGhlCredentials ? ghlCredentials : undefined,
-        hasGoaffproCredentials ? goaffproCredentials : undefined
-      );
-
-      console.log('✅ Unified import completed:', result);
-
-      // Show results
-      let message = `Import completed!\n\n`;
-      message += `Total processed: ${result.totalRecordsProcessed}\n`;
-      message += `Successful: ${result.totalRecordsSuccessful}\n`;
-      message += `Failed: ${result.totalRecordsFailed}\n`;
-      message += `Duration: ${(result.duration / 1000).toFixed(2)}s\n\n`;
-
-      if (result.results.ghl) {
-        message += `GHL: ${result.results.ghl.recordsSuccessful}/${result.results.ghl.recordsProcessed} successful\n`;
-      }
-      if (result.results.goaffpro) {
-        message += `GoAffPro: ${result.results.goaffpro.recordsSuccessful}/${result.results.goaffpro.recordsProcessed} successful\n`;
-      }
-
-      if (result.errors.length > 0) {
-        message += `\nErrors:\n${result.errors.slice(0, 5).join('\n')}`;
-        if (result.errors.length > 5) {
-          message += `\n... and ${result.errors.length - 5} more errors`;
-        }
-      }
-
-      if (result.warnings.length > 0) {
-        message += `\nWarnings:\n${result.warnings.slice(0, 3).join('\n')}`;
-        if (result.warnings.length > 3) {
-          message += `\n... and ${result.warnings.length - 3} more warnings`;
-        }
-      }
-
-      alert(message);
-
-      // Reload affiliates to show the imported data
-      setImportStatus('Refreshing affiliate list...');
-      await loadAffiliates();
-
-    } catch (error) {
-      console.error('❌ Unified import error:', error);
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      alert(`Import failed: ${errorMessage}`);
-    } finally {
-      setIsImporting(false);
-      setImportStatus('');
-    }
-  };
-
   const loadAffiliates = async () => {
     console.log('🔄 Affiliates.tsx: loadAffiliates() called');
     console.log('🔄 Supabase client available:', !!supabase);
@@ -379,10 +286,9 @@ const Affiliates = () => {
           pending: affiliateData.filter(a => a.status === 'Pending').length,
           inactive: affiliateData.filter(a => a.status === 'Inactive').length,
           bySource: {
-            // Map both old and new source names to the expected UI format
-            goaffpro: affiliateData.filter(a => a.source === 'goaffpro' || a.source === 'SHP').length,
-            mightynetworks: affiliateData.filter(a => a.source === 'mightynetworks' || a.source === 'MN').length,
-            native: affiliateData.filter(a => a.source === 'native' || a.source === 'GHL').length,
+            goaffpro: affiliateData.filter(a => a.source === 'goaffpro').length,
+            mightynetworks: affiliateData.filter(a => a.source === 'mightynetworks').length,
+            native: affiliateData.filter(a => a.source === 'native').length,
           }
         };
         setStats(userStats);
@@ -419,20 +325,13 @@ const Affiliates = () => {
                             affiliate.email.toLowerCase().includes(searchQuery.toLowerCase());
       
       const matchesLevel = levelFilter === 'All' || 
-                          (levelFilter === 'GoAFF Pro' && affiliate.source === 'goaffpro') ||
-                          (levelFilter === 'Mighty Networks' && affiliate.source === 'mightynetworks') ||
+                          (levelFilter === 'ReAction' && affiliate.source === 'goaffpro') ||
+                          (levelFilter === 'Bitcoin is BAE' && affiliate.source === 'mightynetworks') ||
                           affiliate.level === levelFilter;
       
       const matchesStatus = statusFilter === 'All' || affiliate.status === statusFilter;
       
-      const matchesSource = sourceFilter === 'All' || 
-                            affiliate.source === sourceFilter ||
-                            (sourceFilter === 'SHP' && affiliate.source === 'goaffpro') ||
-                            (sourceFilter === 'MN' && affiliate.source === 'mightynetworks') ||
-                            (sourceFilter === 'GHL' && affiliate.source === 'native') ||
-                            (sourceFilter === 'goaffpro' && affiliate.source === 'SHP') ||
-                            (sourceFilter === 'mightynetworks' && affiliate.source === 'MN') ||
-                            (sourceFilter === 'native' && affiliate.source === 'GHL');
+      const matchesSource = sourceFilter === 'All' || affiliate.source === sourceFilter;
       
       return matchesSearch && matchesLevel && matchesStatus && matchesSource;
     })
@@ -462,15 +361,12 @@ const Affiliates = () => {
 
   const getSourceBadge = (source: string) => {
     switch (source) {
-      case 'SHP':
       case 'goaffpro':
-        return <span className="px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-400">SHP</span>;
-      case 'MN':
+        return <span className="px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-400">ReAction</span>;
       case 'mightynetworks':
-        return <span className="px-2 py-1 text-xs rounded-full bg-purple-500/20 text-purple-400">MN</span>;
-      case 'GHL':
+        return <span className="px-2 py-1 text-xs rounded-full bg-purple-500/20 text-purple-400">Bitcoin is BAE</span>;
       case 'native':
-        return <span className="px-2 py-1 text-xs rounded-full bg-green-500/20 text-green-400">GHL</span>;
+        return <span className="px-2 py-1 text-xs rounded-full bg-green-500/20 text-green-400">JennaZ.co</span>;
       default:
         return <span className="px-2 py-1 text-xs rounded-full bg-gray-500/20 text-gray-400">Unknown</span>;
     }
@@ -534,38 +430,16 @@ const Affiliates = () => {
         <div>
           <h1 className="text-2xl font-serif font-semibold text-white flex items-center">
             <Users className="mr-2 h-6 w-6 text-rise-gold" />
-            {isAdmin ? 'Raw Data' : 'My Affiliate Profile'}
+            {isAdmin ? 'Affiliate Network' : 'My Affiliate Profile'}
           </h1>
           <p className="text-gray-400">
             {isAdmin 
-              ? 'Import all of your affiliate partners from multiple sources'
+              ? 'Manage and track all your affiliate partners from multiple sources'
               : 'View and manage your affiliate profile and performance data'
             }
           </p>
         </div>
         <div className="flex items-center space-x-3 mt-4 md:mt-0">
-          {isAdmin && (
-            <>
-              <button
-                onClick={handleGHLAnalysis}
-                disabled={isAnalyzing}
-                className="btn btn-secondary flex items-center space-x-2"
-                title="Analyze GHL contacts to understand what should be imported"
-              >
-                <Search className={`h-4 w-4 ${isAnalyzing ? 'animate-pulse' : ''}`} />
-                <span>{isAnalyzing ? 'Analyzing...' : 'Analyze GHL'}</span>
-              </button>
-              <button
-                onClick={handleUnifiedImport}
-                disabled={isImporting}
-                className="btn btn-primary flex items-center space-x-2"
-                title="Import affiliate data from GHL and GoAffPro"
-              >
-                <Download className={`h-4 w-4 ${isImporting ? 'animate-pulse' : ''}`} />
-                <span>{isImporting ? 'Importing...' : 'Import All Data'}</span>
-              </button>
-            </>
-          )}
           <button
             onClick={() => {
               localStorage.clear();
@@ -586,6 +460,15 @@ const Affiliates = () => {
           </button>
           {isAdmin && (
             <button
+              onClick={() => setShowImportSection(!showImportSection)}
+              className={`btn ${showImportSection ? 'btn-primary' : 'btn-secondary'} flex items-center space-x-2`}
+            >
+              <Download size={16} />
+              <span>Import Data</span>
+            </button>
+          )}
+          {isAdmin && (
+            <button
               onClick={() => setIsDemoModalOpen(true)}
               className="btn btn-secondary flex items-center space-x-2"
             >
@@ -595,7 +478,7 @@ const Affiliates = () => {
           )}
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="btn btn-secondary flex items-center space-x-2"
+            className="btn btn-primary flex items-center space-x-2"
           >
             <PlusCircle size={16} />
             <span>Invite Affiliate</span>
@@ -603,127 +486,40 @@ const Affiliates = () => {
         </div>
       </motion.div>
 
-      {/* Import Status */}
-      {isImporting && (
-        <motion.div 
-          variants={itemVariants} 
-          className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 mb-6"
+      {/* Import Success Notification */}
+      {importNotification.show && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className={`card mb-6 ${
+            importNotification.type === 'success' ? 'bg-green-900/20 border-green-500/30' :
+            importNotification.type === 'warning' ? 'bg-yellow-900/20 border-yellow-500/30' :
+            'bg-blue-900/20 border-blue-500/30'
+          }`}
         >
-          <div className="flex items-center space-x-3">
-            <Download className="h-5 w-5 text-blue-400 animate-pulse" />
-            <div>
-              <p className="text-blue-400 font-medium">Import in Progress</p>
-              <p className="text-gray-300 text-sm">{importStatus}</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <CheckCircle className={`h-5 w-5 ${
+                importNotification.type === 'success' ? 'text-green-400' :
+                importNotification.type === 'warning' ? 'text-yellow-400' :
+                'text-blue-400'
+              }`} />
+              <div>
+                <h3 className={`text-sm font-medium ${
+                  importNotification.type === 'success' ? 'text-green-400' :
+                  importNotification.type === 'warning' ? 'text-yellow-400' :
+                  'text-blue-400'
+                }`}>Import Complete</h3>
+                <p className="text-sm text-gray-300">{importNotification.message}</p>
+              </div>
             </div>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Analysis Status */}
-      {isAnalyzing && (
-        <motion.div 
-          variants={itemVariants} 
-          className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-4 mb-6"
-        >
-          <div className="flex items-center space-x-3">
-            <Search className="h-5 w-5 text-purple-400 animate-pulse" />
-            <div>
-              <p className="text-purple-400 font-medium">Analysis in Progress</p>
-              <p className="text-gray-300 text-sm">Analyzing GHL contacts to understand affiliate patterns...</p>
-            </div>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Analysis Results */}
-      {analysisResults && (
-        <motion.div 
-          variants={itemVariants} 
-          className="bg-green-500/10 border border-green-500/20 rounded-lg p-6 mb-6"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-green-400">GHL Contact Analysis Results</h3>
             <button
-              onClick={() => setAnalysisResults(null)}
-              className="text-gray-400 hover:text-white"
+              onClick={() => setImportNotification(prev => ({ ...prev, show: false }))}
+              className="text-gray-400 hover:text-white transition-colors"
             >
-              ✕
+              ×
             </button>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="bg-rise-dark-light rounded-lg p-4">
-              <p className="text-gray-400 text-sm">Total Contacts Analyzed</p>
-              <p className="text-2xl font-bold text-white">{analysisResults.totalContacts}</p>
-            </div>
-            <div className="bg-rise-dark-light rounded-lg p-4">
-              <p className="text-gray-400 text-sm">With Referral Codes</p>
-              <p className="text-2xl font-bold text-green-400">{analysisResults.contactsWithReferralCodes}</p>
-            </div>
-            <div className="bg-rise-dark-light rounded-lg p-4">
-              <p className="text-gray-400 text-sm">Already in Database</p>
-              <p className="text-2xl font-bold text-blue-400">{analysisResults.contactsInDatabase}</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div className="bg-rise-dark-light rounded-lg p-4">
-              <p className="text-gray-400 text-sm">With Affiliate Tags</p>
-              <p className="text-xl font-bold text-yellow-400">{analysisResults.contactsWithAffiliateTags}</p>
-            </div>
-            <div className="bg-rise-dark-light rounded-lg p-4">
-              <p className="text-gray-400 text-sm">With Affiliate Custom Fields</p>
-              <p className="text-xl font-bold text-purple-400">{analysisResults.contactsWithAffiliateCustomFields}</p>
-            </div>
-          </div>
-
-          <div className="mb-4">
-            <h4 className="text-md font-semibold text-white mb-2">Recommendations:</h4>
-            <ul className="space-y-1">
-              {analysisResults.recommendations.map((rec: string, index: number) => (
-                <li key={index} className="text-gray-300 text-sm">• {rec}</li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h4 className="text-md font-semibold text-white mb-2">Sample Contacts:</h4>
-              <div className="max-h-60 overflow-y-auto space-y-2">
-                {analysisResults.sampleContacts.slice(0, 10).map((contact: any, index: number) => (
-                  <div key={index} className="bg-rise-dark rounded p-3 text-xs">
-                    <div className="flex justify-between items-start mb-1">
-                      <span className="text-white font-medium">{contact.name}</span>
-                      <span className={`px-2 py-1 rounded text-xs ${contact.isInDatabase ? 'bg-blue-500/20 text-blue-400' : 'bg-gray-500/20 text-gray-400'}`}>
-                        {contact.isInDatabase ? 'In DB' : 'New'}
-                      </span>
-                    </div>
-                    <p className="text-gray-400 mb-1">{contact.email}</p>
-                    {contact.hasReferralCode && (
-                      <p className="text-green-400">Referral: {contact.referralCode}</p>
-                    )}
-                    {contact.affiliateIndicators.length > 0 && (
-                      <p className="text-yellow-400">Indicators: {contact.affiliateIndicators.join(', ')}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div>
-              <h4 className="text-md font-semibold text-white mb-2">Most Common Tags:</h4>
-              <div className="max-h-60 overflow-y-auto">
-                {Object.entries(analysisResults.tagFrequency)
-                  .sort(([,a], [,b]) => (b as number) - (a as number))
-                  .slice(0, 15)
-                  .map(([tag, count], index) => (
-                    <div key={index} className="flex justify-between items-center py-1 text-sm">
-                      <span className="text-gray-300">{tag}</span>
-                      <span className="text-white font-medium">{count as number}</span>
-                    </div>
-                  ))}
-              </div>
-            </div>
           </div>
         </motion.div>
       )}
@@ -781,26 +577,85 @@ const Affiliates = () => {
           <div className="flex items-center justify-between p-3 bg-rise-dark-light rounded-lg">
             <div className="flex items-center space-x-3">
               <div className="h-3 w-3 rounded-full bg-blue-400"></div>
-              <span className="text-gray-300">Shopify</span>
+              <span className="text-gray-300">ReAction</span>
             </div>
             <span className="text-white font-semibold">{stats.bySource.goaffpro}</span>
           </div>
           <div className="flex items-center justify-between p-3 bg-rise-dark-light rounded-lg">
             <div className="flex items-center space-x-3">
               <div className="h-3 w-3 rounded-full bg-purple-400"></div>
-              <span className="text-gray-300">Mighty Networks</span>
+              <span className="text-gray-300">Bitcoin is BAE</span>
             </div>
             <span className="text-white font-semibold">{stats.bySource.mightynetworks}</span>
           </div>
           <div className="flex items-center justify-between p-3 bg-rise-dark-light rounded-lg">
             <div className="flex items-center space-x-3">
               <div className="h-3 w-3 rounded-full bg-green-400"></div>
-              <span className="text-gray-300">GHL</span>
+              <span className="text-gray-300">JennaZ.co</span>
             </div>
             <span className="text-white font-semibold">{stats.bySource.native}</span>
           </div>
         </div>
       </motion.div>
+
+      {/* Import Section */}
+      {showImportSection && isAdmin && (
+        <motion.div
+          variants={itemVariants}
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          className="card mb-6"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-lg font-medium text-white flex items-center">
+                <SettingsIcon className="mr-3 h-5 w-5 text-rise-gold" />
+                Data Import & Integration
+              </h3>
+              <p className="text-gray-400 text-sm">
+                Import and sync affiliate data from your platforms. Use proper filtering to import only affiliates, not all contacts.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowImportSection(false)}
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              <ChevronUp size={20} />
+            </button>
+          </div>
+          
+          <div className="space-y-8">
+            {/* JennaZ (GHL) Import Section */}
+            <div className="border border-gray-700 rounded-lg p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h4 className="text-lg font-medium text-white">JennaZ Import (Go High Level)</h4>
+                  <p className="text-gray-400 text-sm">Import affiliate contacts from your Go High Level platform with proper filtering</p>
+                </div>
+                <div className="w-8 h-8 bg-yellow-600 rounded-lg flex items-center justify-center">
+                  <Database className="h-4 w-4 text-white" />
+                </div>
+              </div>
+              <JennaZImport />
+            </div>
+
+            {/* GoAffPro Import Section */}
+            <div className="border border-gray-700 rounded-lg p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h4 className="text-lg font-medium text-white">ReAction Import (GoAffPro)</h4>
+                  <p className="text-gray-400 text-sm">Import affiliate data from your GoAffPro/Shopify platform</p>
+                </div>
+                <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
+                  <Database className="h-4 w-4 text-white" />
+                </div>
+              </div>
+              <GoAffProImport />
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       <motion.div variants={itemVariants} className="card mb-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
@@ -828,9 +683,9 @@ const Affiliates = () => {
                 className="bg-transparent text-gray-300 py-2 pr-8 text-sm appearance-none focus:outline-none"
               >
                 <option value="All">All Sources</option>
-                <option value="goaffpro">GoAFF Pro</option>
-                <option value="mightynetworks">Mighty Networks</option>
-                <option value="native">GHL</option>
+                <option value="goaffpro">ReAction</option>
+                <option value="mightynetworks">Bitcoin is BAE</option>
+                <option value="native">JennaZ.co</option>
               </select>
             </div>
             
@@ -844,8 +699,8 @@ const Affiliates = () => {
                 <option value="Direct">Direct</option>
                 <option value="Level 2">Level 2</option>
                 <option value="Level 3">Level 3</option>
-                <option value="GoAFF Pro">GoAFF Pro</option>
-                <option value="Mighty Networks">Mighty Networks</option>
+                <option value="ReAction">ReAction</option>
+                <option value="Bitcoin is BAE">Bitcoin is BAE</option>
               </select>
             </div>
             
@@ -915,7 +770,7 @@ const Affiliates = () => {
                     onClick={() => handleSort('referrals')}
                   >
                     <div className="flex items-center space-x-1">
-                      <span>Leads</span>
+                      <span>Referrals</span>
                       {getSortIcon('referrals')}
                     </div>
                   </th>
@@ -1198,9 +1053,9 @@ const Affiliates = () => {
                           value={demoUserForm.source}
                           onChange={(e) => setDemoUserForm(prev => ({ ...prev, source: e.target.value as 'manual' | 'ghl' | 'goaffpro' }))}
                         >
-                          <option value="manual">GHL (Manual)</option>
-                          <option value="ghl">GHL (Go High Level)</option>
-                          <option value="goaffpro">GoAFF Pro (GoAffPro)</option>
+                          <option value="manual">JennaZ.co (Manual)</option>
+                          <option value="ghl">JennaZ (Go High Level)</option>
+                          <option value="goaffpro">ReAction (GoAffPro)</option>
                         </select>
                       </div>
                     </div>
