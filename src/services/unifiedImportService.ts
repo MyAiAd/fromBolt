@@ -195,25 +195,25 @@ export class UnifiedImportService {
         const responseData = await response.json();
         
         if (responseData.contacts && Array.isArray(responseData.contacts)) {
-          // Filter to only include contacts with affiliate indicators
+          // Since we're searching for contacts tagged as "affiliate", they should be affiliates
+          // Let's be more inclusive and log what we're seeing
           const affiliateContacts = responseData.contacts.filter((contact: GHLContact) => {
             // Skip duplicates
             if (allContacts.some(existing => existing.id === contact.id)) {
               return false;
             }
             
-            // Check for affiliate indicators
-            const hasReferralCode = contact.referralCode && contact.referralCode.trim() !== '';
-            const hasAffiliateCustomFields = contact.customFields && (
-              contact.customFields.affiliate_id || 
-              contact.customFields.referral_code || 
-              contact.customFields.commission_rate ||
-              contact.customFields.affiliate_status ||
-              contact.customFields.payout_email
-            );
+            // Log first few contacts to understand the data structure
+            if (allContacts.length < 3) {
+              console.log(`🔍 GHL Contact sample: id=${contact.id}, email=${contact.email}, referralCode=${contact.referralCode}, customFields=${JSON.stringify(contact.customFields)}`);
+            }
             
-            // Only include if they have clear affiliate indicators
-            return hasReferralCode || hasAffiliateCustomFields;
+            // If they have the "affiliate" tag, they're likely affiliates
+            // Be more inclusive - include all contacts with affiliate tag unless they're clearly not affiliates
+            const hasEmail = contact.email && contact.email.trim() !== '';
+            
+            // Only exclude if they don't have an email (we need email for database)
+            return hasEmail;
           });
           
           allContacts.push(...affiliateContacts);
