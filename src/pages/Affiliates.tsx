@@ -8,7 +8,7 @@ import { AffiliateAggregationService, AggregatedAffiliate } from '../services/af
 
 type AffiliateLevel = 'All' | 'Direct' | 'Level 2' | 'Level 3' | 'GoAFF Pro' | 'Mighty Networks';
 type AffiliateStatus = 'All' | 'Active' | 'Pending' | 'Inactive';
-type AffiliateSource = 'All' | 'goaffpro' | 'mightynetworks' | 'native';
+type AffiliateSource = 'All' | 'SHP' | 'MN' | 'GHL' | 'goaffpro' | 'mightynetworks' | 'native';
 
 const Affiliates = () => {
   const { supabase, user, isAdmin } = useAuth();
@@ -288,7 +288,14 @@ const Affiliates = () => {
       
       const matchesStatus = statusFilter === 'All' || affiliate.status === statusFilter;
       
-      const matchesSource = sourceFilter === 'All' || affiliate.source === sourceFilter;
+      const matchesSource = sourceFilter === 'All' || 
+                            affiliate.source === sourceFilter ||
+                            (sourceFilter === 'SHP' && affiliate.source === 'goaffpro') ||
+                            (sourceFilter === 'MN' && affiliate.source === 'mightynetworks') ||
+                            (sourceFilter === 'GHL' && affiliate.source === 'native') ||
+                            (sourceFilter === 'goaffpro' && affiliate.source === 'SHP') ||
+                            (sourceFilter === 'mightynetworks' && affiliate.source === 'MN') ||
+                            (sourceFilter === 'native' && affiliate.source === 'GHL');
       
       return matchesSearch && matchesLevel && matchesStatus && matchesSource;
     })
@@ -318,10 +325,13 @@ const Affiliates = () => {
 
   const getSourceBadge = (source: string) => {
     switch (source) {
+      case 'SHP':
       case 'goaffpro':
         return <span className="px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-400">SHP</span>;
+      case 'MN':
       case 'mightynetworks':
         return <span className="px-2 py-1 text-xs rounded-full bg-purple-500/20 text-purple-400">MN</span>;
+      case 'GHL':
       case 'native':
         return <span className="px-2 py-1 text-xs rounded-full bg-green-500/20 text-green-400">GHL</span>;
       default:
