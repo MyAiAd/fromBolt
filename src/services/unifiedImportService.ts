@@ -270,19 +270,24 @@ export class UnifiedImportService {
               contact.customFields.affiliate_earnings
             );
             
-            // STRICT filtering - must have referral code OR very specific affiliate indicators
-            const isActualAffiliate = hasReferralCode || 
-              (hasAffiliateTags && hasAffiliateCustomFields); // Must have BOTH tags AND custom fields if no referral code
+            // ADJUSTED filtering based on analysis - your affiliates are identified by specific tags
+            const hasSpecificAffiliateTags = contact.tags && Array.isArray(contact.tags) && 
+              contact.tags.some(tag => {
+                const tagLower = tag.toLowerCase();
+                return tagLower === 'jennaz-affiliate' || 
+                       tagLower === 'reaction-affiliate' ||
+                       tagLower.includes('affiliate'); // Keep broader affiliate tag matching
+              });
+            
+            const isActualAffiliate = hasReferralCode || hasSpecificAffiliateTags;
             
             // Log every decision for the first 50 contacts to debug
             if (allContacts.length < 50) {
               console.log(`🔍 GHL Contact ${contact.id} (${contact.email}):`, {
                 hasReferralCode,
                 referralCode: contact.referralCode,
-                hasAffiliateTags,
+                hasSpecificAffiliateTags,
                 tags: contact.tags,
-                hasAffiliateCustomFields,
-                customFieldKeys: contact.customFields ? Object.keys(contact.customFields) : [],
                 isActualAffiliate
               });
             }
@@ -290,12 +295,11 @@ export class UnifiedImportService {
             if (isActualAffiliate) {
               console.log(`✅ GHL: Including affiliate ${contact.id} (${contact.email}) - reasons: ${[
                 hasReferralCode && 'referralCode',
-                hasAffiliateTags && 'affiliateTags',
-                hasAffiliateCustomFields && 'customFields'
+                hasSpecificAffiliateTags && 'specificAffiliateTags'
               ].filter(Boolean).join(', ')}`);
               
-              // EMERGENCY BRAKE: Stop if we find too many affiliates
-              if (allContacts.length >= 50) {
+              // EMERGENCY BRAKE: Increase limit since we expect ~320 affiliates
+              if (allContacts.length >= 350) {
                 console.error(`🚨 EMERGENCY BRAKE: Found ${allContacts.length} affiliates already - stopping to prevent spam!`);
                 hasMore = false; // This will break the outer while loop
                 return false; // Don't include this contact
@@ -319,9 +323,9 @@ export class UnifiedImportService {
           // Rate limiting
           await new Promise(resolve => setTimeout(resolve, 200));
           
-          // Safety break - limit to first 500 contacts to avoid long waits
-          if (page > 5) {
-            console.log(`🛑 GHL v1: Safety break at page 5 (500 contacts checked)`);
+          // Safety break - increase limit to capture all ~320 affiliates
+          if (page > 10) {
+            console.log(`🛑 GHL v1: Safety break at page 10 (1000 contacts checked)`);
             break;
           }
         }
@@ -330,10 +334,12 @@ export class UnifiedImportService {
       console.log(`✅ GHL v1: Total contacts fetched: ${allContacts.length}`);
       console.log(`🔍 GHL v1: These contacts will be inserted into database:`, allContacts.map(c => ({ id: c.id, email: c.email, hasReferralCode: !!c.referralCode, tags: c.tags })).slice(0, 10));
       
-      // SANITY CHECK: If we have more than 50 "affiliates", something is wrong
-      if (allContacts.length > 50) {
-        console.error(`🚨 SANITY CHECK FAILED: Found ${allContacts.length} affiliates - this seems too high. Limiting to first 50 to prevent spam.`);
-        allContacts.splice(50); // Keep only first 50
+      // SANITY CHECK: Based on analysis, we expect ~320 affiliates
+      if (allContacts.length > 350) {
+        console.error(`🚨 SANITY CHECK FAILED: Found ${allContacts.length} affiliates - limiting to first 350 to prevent spam.`);
+        allContacts.splice(350); // Keep only first 350
+      } else {
+        console.log(`✅ GHL: Found ${allContacts.length} affiliates - this matches expected range based on analysis`);
       }
       
       result.recordsProcessed = allContacts.length;
