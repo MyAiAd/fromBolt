@@ -314,36 +314,96 @@ const SyncStatusDashboard: React.FC<SyncStatusProps> = ({ className = '' }) => {
 
   // GHL contacts sync helper
   const syncGHLContacts = async (apiKey: string, locationId: string): Promise<number> => {
-    console.log('📥 Fetching GHL contacts...');
+    console.log('📥 Fetching GHL affiliate contacts...');
 
     let allContacts: any[] = [];
-    let page = 1;
-    let hasMore = true;
+    
+    // Define affiliate-related tags to search for
+    const affiliateTags = ['affiliate', 'partner', 'referrer', 'ambassador', 'influencer'];
+    
+    console.log(`🎯 Searching for affiliate contacts with tags: ${affiliateTags.join(', ')}`);
+    
+    // We'll make multiple requests for different affiliate tags to be more targeted
+    for (const tag of affiliateTags) {
+      console.log(`🏷️ Searching for contacts with tag: "${tag}"`);
+      
+      let nextUrl: string | null = null;
+      // Start with the initial URL for this tag
+      let currentUrl = `https://rest.gohighlevel.com/v1/contacts/?locationId=${locationId}&limit=100&tags=${encodeURIComponent(tag)}`;
+      let tagPage = 1;
+      
+      do {
+        console.log(`📥 Fetching page ${tagPage} for tag "${tag}"...`);
+        
+        const response = await fetch(currentUrl, {
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+          }
+        });
 
-    while (hasMore && page <= 100) { // Increased safety limit
-      const response = await fetch(`https://rest.gohighlevel.com/v1/contacts/?locationId=${locationId}&limit=100&page=${page}`, {
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`GHL API Error for tag "${tag}": ${response.status} ${response.statusText} - ${errorText}`);
+          break; // Skip this tag and continue with others
         }
-      });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`GHL API Error: ${response.status} ${response.statusText} - ${errorText}`);
-      }
+        const data = await response.json();
+        const contacts = data.contacts || [];
+        
+        console.log(`🔍 API Response for tag "${tag}":`, {
+          contactsCount: contacts.length,
+          hasNextPageUrl: !!data.meta?.nextPageUrl,
+        });
+        
+        if (contacts.length > 0) {
+          // Filter out duplicates based on contact ID
+          const newContacts = contacts.filter((contact: any) => 
+            !allContacts.some(existing => existing.id === contact.id)
+          );
+          
+          allContacts.push(...newContacts);
+          console.log(`✅ Added ${newContacts.length} new contacts for tag "${tag}" (total: ${allContacts.length})`);
+          
+          // Use the nextPageUrl directly if available
+          nextUrl = data.meta?.nextPageUrl || null;
+          
+          if (nextUrl) {
+            currentUrl = nextUrl;
+            console.log(`🔄 Next page URL for tag "${tag}": ${nextUrl}`);
+          } else {
+            console.log(`🏁 No nextPageUrl found for tag "${tag}" - reached end`);
+            break;
+          }
+          
+          // If we got less than the limit, we're at the end
+          if (contacts.length < 100) {
+            console.log(`🏁 Got ${contacts.length} < 100 contacts for tag "${tag}", reached end`);
+            break;
+          }
+        } else {
+          console.log(`❌ No contacts found for tag "${tag}" - stopping`);
+          break;
+        }
 
-      const data = await response.json();
-      const contacts = data.contacts || [];
-      allContacts.push(...contacts);
-
-      console.log(`📥 Fetched ${contacts.length} contacts (page ${page}, total: ${allContacts.length})`);
-
-      hasMore = contacts.length === 1000;
-      page++;
+        tagPage++;
+        
+        // Rate limiting - be more conservative
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Safety break to prevent infinite loops per tag
+        if (tagPage > 20) {
+          console.log(`🛑 Safety break at page 20 for tag "${tag}"`);
+          break;
+        }
+        
+      } while (nextUrl);
+      
+      // Rate limiting between different tag searches
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
 
-    console.log(`✅ Total contacts fetched: ${allContacts.length}`);
+    console.log(`✅ Total affiliate contacts fetched: ${allContacts.length}`);
 
     // Upsert contacts to Supabase
     let successCount = 0;
@@ -376,7 +436,7 @@ const SyncStatusDashboard: React.FC<SyncStatusProps> = ({ className = '' }) => {
       }
     }
 
-    console.log(`✅ GHL contacts sync completed: ${successCount}/${allContacts.length} successful`);
+    console.log(`✅ GHL affiliate contacts sync completed: ${successCount}/${allContacts.length} successful`);
     return successCount;
   };
 
