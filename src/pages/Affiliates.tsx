@@ -8,7 +8,7 @@ import { AffiliateAggregationService, AggregatedAffiliate } from '../services/af
 import JennaZImport from '../components/JennaZImport';
 import GoAffProImport from '../components/GoAffProImport';
 
-type AffiliateLevel = 'All' | 'Direct' | 'Level 2' | 'Level 3' | 'ReAction' | 'Bitcoin is BAE';
+type AffiliateLevel = 'All' | 'Aligned' | 'Activated' | 'Ascended' | 'Magnetic' | 'Luminary' | 'Visionary' | 'Oracle' | 'Sovereign';
 type AffiliateStatus = 'All' | 'Active' | 'Pending' | 'Inactive';
 type AffiliateSource = 'All' | 'goaffpro' | 'mightynetworks' | 'native' | 'ghl';
 
@@ -340,10 +340,7 @@ const Affiliates = () => {
       const matchesSearch = affiliate.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                             affiliate.email.toLowerCase().includes(searchQuery.toLowerCase());
       
-      const matchesLevel = levelFilter === 'All' || 
-                          (levelFilter === 'ReAction' && affiliate.source === 'goaffpro') ||
-                          (levelFilter === 'Bitcoin is BAE' && affiliate.source === 'mightynetworks') ||
-                          affiliate.level === levelFilter;
+      const matchesLevel = levelFilter === 'All' || affiliate.level === levelFilter;
       
       const matchesStatus = statusFilter === 'All' || affiliate.status === statusFilter;
       
@@ -386,6 +383,29 @@ const Affiliates = () => {
         return <span className="px-2 py-1 text-xs rounded-full bg-yellow-500/20 text-yellow-400">GHL</span>;
       default:
         return <span className="px-2 py-1 text-xs rounded-full bg-gray-500/20 text-gray-400">Unknown</span>;
+    }
+  };
+
+  const getLevelBadge = (level: string) => {
+    switch (level) {
+      case 'Aligned':
+        return <span className="px-2 py-1 text-xs rounded-full bg-gray-500/20 text-gray-400">Aligned</span>;
+      case 'Activated':
+        return <span className="px-2 py-1 text-xs rounded-full bg-green-500/20 text-green-400">Activated</span>;
+      case 'Ascended':
+        return <span className="px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-400">Ascended</span>;
+      case 'Magnetic':
+        return <span className="px-2 py-1 text-xs rounded-full bg-purple-500/20 text-purple-400">Magnetic</span>;
+      case 'Luminary':
+        return <span className="px-2 py-1 text-xs rounded-full bg-yellow-500/20 text-yellow-400">Luminary</span>;
+      case 'Visionary':
+        return <span className="px-2 py-1 text-xs rounded-full bg-orange-500/20 text-orange-400">Visionary</span>;
+      case 'Oracle':
+        return <span className="px-2 py-1 text-xs rounded-full bg-red-500/20 text-red-400">Oracle</span>;
+      case 'Sovereign':
+        return <span className="px-2 py-1 text-xs rounded-full bg-rise-gold/20 text-rise-gold">Sovereign</span>;
+      default:
+        return <span className="px-2 py-1 text-xs rounded-full bg-gray-500/20 text-gray-400">{level}</span>;
     }
   };
 
@@ -713,11 +733,14 @@ const Affiliates = () => {
                 className="bg-transparent text-gray-300 py-2 pr-8 text-sm appearance-none focus:outline-none"
               >
                 <option value="All">All Levels</option>
-                <option value="Direct">Direct</option>
-                <option value="Level 2">Level 2</option>
-                <option value="Level 3">Level 3</option>
-                <option value="ReAction">ReAction</option>
-                <option value="Bitcoin is BAE">Bitcoin is BAE</option>
+                <option value="Aligned">Aligned ($0-$1K)</option>
+                <option value="Activated">Activated ($1K-$5K)</option>
+                <option value="Ascended">Ascended ($5K-$25K)</option>
+                <option value="Magnetic">Magnetic ($25K-$50K)</option>
+                <option value="Luminary">Luminary ($50K-$100K)</option>
+                <option value="Visionary">Visionary ($100K-$500K)</option>
+                <option value="Oracle">Oracle ($500K-$1M)</option>
+                <option value="Sovereign">Sovereign ($1M+)</option>
               </select>
             </div>
             
@@ -837,7 +860,7 @@ const Affiliates = () => {
                       {getSourceBadge(affiliate.source)}
                     </td>
                     <td className="py-3 px-4">
-                      <div className="text-gray-300">{affiliate.level}</div>
+                      {getLevelBadge(affiliate.level)}
                     </td>
                     <td className="py-3 px-4">
                       <div className="text-gray-300">{affiliate.referrals}</div>
