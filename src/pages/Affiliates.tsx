@@ -44,10 +44,9 @@ const Affiliates = () => {
     pending: 0,
     inactive: 0,
     bySource: {
-      goaffpro: 0,
+      shopify: 0,  // Combined goaffpro 
       mightynetworks: 0,
-      native: 0,
-      ghl: 0
+      ghl: 0  // Combined ghl + native
     }
   });
 
@@ -252,7 +251,7 @@ const Affiliates = () => {
             active: 0,
             pending: 0,
             inactive: 0,
-            bySource: { goaffpro: 0, mightynetworks: 0, native: 0, ghl: 0 }
+            bySource: { shopify: 0, mightynetworks: 0, ghl: 0 }
           });
           return;
         }
@@ -265,7 +264,7 @@ const Affiliates = () => {
           active: 0,
           pending: 0,
           inactive: 0,
-          bySource: { goaffpro: 0, mightynetworks: 0, native: 0, ghl: 0 }
+          bySource: { shopify: 0, mightynetworks: 0, ghl: 0 }
         });
       }
       
@@ -287,16 +286,31 @@ const Affiliates = () => {
           pending: affiliateData.filter(a => a.status === 'Pending').length,
           inactive: affiliateData.filter(a => a.status === 'Inactive').length,
           bySource: {
-            goaffpro: affiliateData.filter(a => a.source === 'goaffpro').length,
+            shopify: affiliateData.filter(a => a.source === 'goaffpro').length,
             mightynetworks: affiliateData.filter(a => a.source === 'mightynetworks').length,
-            native: affiliateData.filter(a => a.source === 'native').length,
-            ghl: affiliateData.filter(a => a.source === 'ghl').length,
+            ghl: affiliateData.filter(a => a.source === 'ghl' || a.source === 'native').length, // Combine GHL and native
           }
         };
         setStats(userStats);
         console.log('🔄 Calculated user stats:', userStats);
       } else {
-        setStats(statsData);
+        // For admin users, consolidate the stats from statsData
+        if (statsData) {
+          const consolidatedStats = {
+            total: statsData.total,
+            active: statsData.active,
+            pending: statsData.pending,
+            inactive: statsData.inactive,
+            bySource: {
+              shopify: (statsData.bySource as any)?.goaffpro || (statsData.bySource as any)?.shopify || 0,
+              mightynetworks: statsData.bySource?.mightynetworks || 0,
+              ghl: ((statsData.bySource as any)?.ghl || 0) + ((statsData.bySource as any)?.native || 0) // Combine GHL and native
+            }
+          };
+          setStats(consolidatedStats);
+        } else {
+          setStats(statsData);
+        }
       }
       
       console.log('🔄 Setting affiliates state...');
@@ -364,13 +378,12 @@ const Affiliates = () => {
   const getSourceBadge = (source: string) => {
     switch (source) {
       case 'goaffpro':
-        return <span className="px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-400">ReAction</span>;
+        return <span className="px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-400">SHP</span>;
       case 'mightynetworks':
-        return <span className="px-2 py-1 text-xs rounded-full bg-purple-500/20 text-purple-400">Bitcoin is BAE</span>;
+        return <span className="px-2 py-1 text-xs rounded-full bg-purple-500/20 text-purple-400">MN</span>;
       case 'ghl':
-        return <span className="px-2 py-1 text-xs rounded-full bg-yellow-500/20 text-yellow-400">GHL</span>;
       case 'native':
-        return <span className="px-2 py-1 text-xs rounded-full bg-green-500/20 text-green-400">JennaZ.co</span>;
+        return <span className="px-2 py-1 text-xs rounded-full bg-yellow-500/20 text-yellow-400">GHL</span>;
       default:
         return <span className="px-2 py-1 text-xs rounded-full bg-gray-500/20 text-gray-400">Unknown</span>;
     }
@@ -434,7 +447,7 @@ const Affiliates = () => {
         <div>
           <h1 className="text-2xl font-serif font-semibold text-white flex items-center">
             <Users className="mr-2 h-6 w-6 text-rise-gold" />
-            {isAdmin ? 'Affiliate Network' : 'My Affiliate Profile'}
+            {isAdmin ? 'Raw Data' : 'My Affiliate Profile'}
           </h1>
           <p className="text-gray-400">
             {isAdmin 
@@ -528,7 +541,35 @@ const Affiliates = () => {
         </motion.div>
       )}
 
-      {/* Stats Cards */}
+      {/* Source Breakdown - Primary prominence */}
+      <motion.div variants={itemVariants} className="card mb-6">
+        <h3 className="text-xl font-bold text-white mb-6">Affiliates by Source</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="flex items-center justify-between p-4 bg-rise-dark-light rounded-lg">
+            <div className="flex items-center space-x-3">
+              <div className="h-4 w-4 rounded-full bg-blue-400"></div>
+              <span className="text-gray-300 font-medium">Shopify</span>
+            </div>
+            <span className="text-white font-bold text-lg">{stats.bySource.shopify}</span>
+          </div>
+          <div className="flex items-center justify-between p-4 bg-rise-dark-light rounded-lg">
+            <div className="flex items-center space-x-3">
+              <div className="h-4 w-4 rounded-full bg-purple-400"></div>
+              <span className="text-gray-300 font-medium">Mighty Networks</span>
+            </div>
+            <span className="text-white font-bold text-lg">{stats.bySource.mightynetworks}</span>
+          </div>
+          <div className="flex items-center justify-between p-4 bg-rise-dark-light rounded-lg">
+            <div className="flex items-center space-x-3">
+              <div className="h-4 w-4 rounded-full bg-yellow-400"></div>
+              <span className="text-gray-300 font-medium">GHL</span>
+            </div>
+            <span className="text-white font-bold text-lg">{stats.bySource.ghl}</span>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Stats Cards - Secondary visibility */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="card">
           <div className="flex items-center justify-between">
@@ -570,41 +611,6 @@ const Affiliates = () => {
             <div className="h-8 w-8 rounded-full bg-red-500/20 flex items-center justify-center">
               <div className="h-3 w-3 rounded-full bg-red-400"></div>
             </div>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Source Breakdown */}
-      <motion.div variants={itemVariants} className="card mb-6">
-        <h3 className="text-lg font-semibold text-white mb-4">Affiliates by Source</h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="flex items-center justify-between p-3 bg-rise-dark-light rounded-lg">
-            <div className="flex items-center space-x-3">
-              <div className="h-3 w-3 rounded-full bg-blue-400"></div>
-              <span className="text-gray-300">ReAction</span>
-            </div>
-            <span className="text-white font-semibold">{stats.bySource.goaffpro}</span>
-          </div>
-          <div className="flex items-center justify-between p-3 bg-rise-dark-light rounded-lg">
-            <div className="flex items-center space-x-3">
-              <div className="h-3 w-3 rounded-full bg-purple-400"></div>
-              <span className="text-gray-300">Bitcoin is BAE</span>
-            </div>
-            <span className="text-white font-semibold">{stats.bySource.mightynetworks}</span>
-          </div>
-          <div className="flex items-center justify-between p-3 bg-rise-dark-light rounded-lg">
-            <div className="flex items-center space-x-3">
-              <div className="h-3 w-3 rounded-full bg-yellow-400"></div>
-              <span className="text-gray-300">GHL</span>
-            </div>
-            <span className="text-white font-semibold">{stats.bySource.ghl}</span>
-          </div>
-          <div className="flex items-center justify-between p-3 bg-rise-dark-light rounded-lg">
-            <div className="flex items-center space-x-3">
-              <div className="h-3 w-3 rounded-full bg-green-400"></div>
-              <span className="text-gray-300">JennaZ.co</span>
-            </div>
-            <span className="text-white font-semibold">{stats.bySource.native}</span>
           </div>
         </div>
       </motion.div>
@@ -694,10 +700,9 @@ const Affiliates = () => {
                 className="bg-transparent text-gray-300 py-2 pr-8 text-sm appearance-none focus:outline-none"
               >
                 <option value="All">All Sources</option>
-                <option value="goaffpro">ReAction</option>
-                <option value="mightynetworks">Bitcoin is BAE</option>
+                <option value="goaffpro">SHP</option>
+                <option value="mightynetworks">MN</option>
                 <option value="ghl">GHL</option>
-                <option value="native">JennaZ.co</option>
               </select>
             </div>
             
