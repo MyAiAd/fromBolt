@@ -236,12 +236,22 @@ const JennaZImport: React.FC = () => {
 
         const responseData = await response.json();
         
+        // Debug: Log the response structure to understand pagination
+        console.log(`🔍 API Response structure:`, {
+          contactsCount: responseData.contacts?.length || 0,
+          metaKeys: responseData.meta ? Object.keys(responseData.meta) : 'no meta',
+          meta: responseData.meta,
+          hasNextCursor: !!responseData.meta?.nextCursor,
+          nextCursor: responseData.meta?.nextCursor
+        });
+        
         if (responseData.contacts && Array.isArray(responseData.contacts)) {
           allContacts = allContacts.concat(responseData.contacts);
           console.log(`📥 Fetched ${responseData.contacts.length} contacts (total: ${allContacts.length})`);
         }
         
         cursor = responseData.meta?.nextCursor || null;
+        console.log(`🔄 Next cursor: ${cursor ? cursor.substring(0, 20) + '...' : 'null'}`);
         
         // Rate limiting
         if (cursor) {
@@ -527,12 +537,22 @@ const JennaZImport: React.FC = () => {
 
         const responseData = await response.json();
         
+        // Debug: Log the response structure to understand pagination
+        console.log(`🔍 API Response structure:`, {
+          contactsCount: responseData.contacts?.length || 0,
+          metaKeys: responseData.meta ? Object.keys(responseData.meta) : 'no meta',
+          meta: responseData.meta,
+          hasNextCursor: !!responseData.meta?.nextCursor,
+          nextCursor: responseData.meta?.nextCursor
+        });
+        
         if (responseData.contacts && Array.isArray(responseData.contacts)) {
           allContacts = allContacts.concat(responseData.contacts);
           console.log(`📥 Fetched ${responseData.contacts.length} contacts (total: ${allContacts.length})`);
         }
         
         cursor = responseData.meta?.nextCursor || null;
+        console.log(`🔄 Next cursor: ${cursor ? cursor.substring(0, 20) + '...' : 'null'}`);
         
         // Rate limiting
         if (cursor) {

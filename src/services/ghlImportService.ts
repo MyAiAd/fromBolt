@@ -183,12 +183,22 @@ export class GHLImportService {
         
         console.log(`📊 Response: ${data.contacts?.length || 0} contacts, cursor: ${data.meta?.nextCursor ? 'present' : 'none'}`);
         
+        // Debug: Log the response structure to understand pagination
+        console.log(`🔍 API Response structure:`, {
+          contactsCount: data.contacts?.length || 0,
+          metaKeys: data.meta ? Object.keys(data.meta) : 'no meta',
+          meta: data.meta,
+          hasNextCursor: !!data.meta?.nextCursor,
+          nextCursor: data.meta?.nextCursor
+        });
+        
         if (data.contacts && Array.isArray(data.contacts) && data.contacts.length > 0) {
           allContacts.push(...data.contacts);
           console.log(`✅ Added ${data.contacts.length} contacts (total: ${allContacts.length})`);
           
           // Extract cursor for next page from meta.nextCursor
           cursor = data.meta?.nextCursor || null;
+          console.log(`🔄 Next cursor: ${cursor ? cursor.substring(0, 20) + '...' : 'null'}`);
           
           // If we got less than the limit, we're at the end
           if (data.contacts.length < limit) {
