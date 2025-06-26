@@ -30,7 +30,7 @@ Execute the `database_performance_level_migration.sql` file in your Supabase SQL
 |-------|---------------|------------------|
 | Aligned | $0 - $999 | Entry Level |
 | Activated | $1,000 - $4,999 | Building Momentum |
-| Ascended | $5,000 - $9,999 | Growing Impact |
+| Ascended | $5,000 - $24,999 | Growing Impact (EXPANDED) |
 | Magnetic | $25,000 - $49,999 | Strong Performance |
 | Luminary | $50,000 - $99,999 | Community Leader |
 | Visionary | $100,000 - $499,999 | Leader of Leaders |
@@ -185,6 +185,27 @@ GROUP BY current_performance_level;
 After implementation:
 - ✅ Affiliates page shows **"Magnetic"**, **"Aligned"**, etc. instead of **"ReAction"**
 - ✅ Levels update automatically **on the 1st of each month**
-- ✅ Performance levels based on **actual monthly earnings**
+- ✅ Performance levels based on **monthly commission earnings** (not total earnings)
+- ✅ **Ascended level expanded** to cover $5K-$24K range (eliminates gap)
 - ✅ Historical tracking of level changes over time
-- ✅ Admin can view performance level distribution and trends 
+- ✅ Admin can view performance level distribution and trends
+
+## 🆕 Recent Updates (Latest)
+
+### Performance Level Threshold Fix
+- **Fixed calculation source**: Now uses monthly commission earnings instead of total earnings
+- **Expanded Ascended range**: $5,000 - $24,999 (was $5,000 - $9,999)
+- **Eliminated gap**: No more missing range between $10K-$25K
+- **Immediate effect**: Changes take effect immediately upon running migration
+
+### Files Updated:
+1. `database_performance_level_migration_fix.sql` - New migration with corrected thresholds
+2. `monthly-scheduler.js` - Updated logging to show new ranges
+3. `test-performance-levels.js` - Test suite to verify calculations
+4. `PERFORMANCE_LEVEL_IMPLEMENTATION_GUIDE.md` - Updated documentation
+
+### Testing:
+Run the test suite to verify everything works:
+```bash
+node test-performance-levels.js
+``` 

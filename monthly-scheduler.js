@@ -50,6 +50,16 @@ function shouldRunCalculation() {
  */
 async function runMonthlyCalculation() {
     console.log('🚀 Starting monthly performance level calculation...');
+    console.log('📋 Performance Level Ranges (Updated):');
+    console.log('   • Aligned: $0 - $999');
+    console.log('   • Activated: $1,000 - $4,999');
+    console.log('   • Ascended: $5,000 - $24,999 (expanded range)');
+    console.log('   • Magnetic: $25,000 - $49,999');
+    console.log('   • Luminary: $50,000 - $99,999');
+    console.log('   • Visionary: $100,000 - $499,999');
+    console.log('   • Oracle: $500,000 - $999,999');
+    console.log('   • Sovereign: $1,000,000+');
+    console.log('💰 Calculation based on monthly commission earnings');
     console.log(`📊 Current time: ${new Date().toISOString()}`);
     
     try {
