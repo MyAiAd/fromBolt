@@ -4,7 +4,7 @@ export interface AggregatedAffiliate {
   id: string;
   name: string;
   email: string;
-  source: 'SHP' | 'MN' | 'GHL';
+  source: 'SHP' | 'MN' | 'GHL' | 'goaffpro' | 'mightynetworks' | 'native';
   level: string;
   referrals: number;
   commission: string;
@@ -24,10 +24,16 @@ export class AffiliateAggregationService {
     const affiliates: AggregatedAffiliate[] = [];
 
     try {
-      // Get GoAffPro affiliates
-      console.log('📊 Fetching ReAction affiliates...');
+      // First, get affiliates from the new unified table (from our import)
+      console.log('📊 Fetching affiliates from unified table...');
+      const unifiedAffiliates = await this.getUnifiedAffiliates();
+      console.log(`✅ Found ${unifiedAffiliates.length} unified affiliates`);
+      affiliates.push(...unifiedAffiliates);
+
+      // Get GoAffPro affiliates (legacy)
+      console.log('📊 Fetching ReAction affiliates (legacy)...');
       const goaffproAffiliates = await this.getGoAffProAffiliates();
-      console.log(`✅ Found ${goaffproAffiliates.length} ReAction affiliates`);
+      console.log(`✅ Found ${goaffproAffiliates.length} ReAction affiliates (legacy)`);
       affiliates.push(...goaffproAffiliates);
 
       // Get MightyNetworks affiliates (placeholder for future implementation)
@@ -36,10 +42,10 @@ export class AffiliateAggregationService {
       console.log(`✅ Found ${mightyNetworksAffiliates.length} The RISE affiliates`);
       affiliates.push(...mightyNetworksAffiliates);
 
-      // Get GHL affiliates
-      console.log('📊 Fetching GHL affiliates...');
+      // Get GHL affiliates (legacy)
+      console.log('📊 Fetching GHL affiliates (legacy)...');
       const ghlAffiliates = await this.getGHLAffiliates();
-      console.log(`✅ Found ${ghlAffiliates.length} GHL affiliates`);
+      console.log(`✅ Found ${ghlAffiliates.length} GHL affiliates (legacy)`);
       affiliates.push(...ghlAffiliates);
 
       // Get native platform affiliates
@@ -54,6 +60,90 @@ export class AffiliateAggregationService {
     } catch (error) {
       console.error('❌ Error aggregating affiliates:', error);
       throw error;
+    }
+  }
+
+  private async getUnifiedAffiliates(): Promise<AggregatedAffiliate[]> {
+    try {
+      console.log('🔍 Querying affiliate_system_users table...');
+      const { data: unifiedData, error } = await this.supabase
+        .from('affiliate_system_users')
+        .select('*');
+
+      if (error) {
+        console.error('❌ Error fetching unified affiliates:', error);
+        return [];
+      }
+
+      console.log(`📊 Raw unified data: ${unifiedData?.length || 0} records`);
+      
+      if (!unifiedData || unifiedData.length === 0) {
+        console.log('ℹ️ No unified affiliates found');
+        return [];
+      }
+
+      const processed = unifiedData.map(affiliate => {
+        // Handle name with better fallbacks
+        let displayName = 'Unknown';
+        if (affiliate.first_name && affiliate.last_name) {
+          displayName = `${affiliate.first_name} ${affiliate.last_name}`.trim();
+        } else if (affiliate.first_name) {
+          displayName = affiliate.first_name;
+        } else if (affiliate.last_name) {
+          displayName = affiliate.last_name;
+        } else if (affiliate.email) {
+          displayName = affiliate.email.split('@')[0];
+        }
+
+        // Map primary_source to display source
+        let mappedSource: 'SHP' | 'MN' | 'GHL' = 'GHL';
+        if (affiliate.primary_source === 'SHP') {
+          mappedSource = 'SHP';
+        } else if (affiliate.primary_source === 'MN') {
+          mappedSource = 'MN';
+        } else if (affiliate.primary_source === 'GHL') {
+          mappedSource = 'GHL';
+        }
+
+        // Handle date
+        let joinDate = new Date(affiliate.created_at).toISOString().split('T')[0];
+        if (affiliate.signup_date) {
+          joinDate = new Date(affiliate.signup_date).toISOString().split('T')[0];
+        }
+
+        return {
+          id: `unified_${affiliate.id}`,
+          name: displayName,
+          email: affiliate.email,
+          source: mappedSource,
+          level: 'Unified',
+          referrals: 0, // TODO: Calculate from referrals
+          commission: `$${(affiliate.total_earnings || 0).toFixed(2)}`,
+          dateJoined: joinDate,
+          status: this.mapUnifiedStatus(affiliate.status),
+          originalData: affiliate
+        };
+      });
+
+      console.log(`✅ Processed ${processed.length} unified affiliates`);
+      return processed;
+    } catch (error) {
+      console.error('❌ Error processing unified affiliates:', error);
+      return [];
+    }
+  }
+
+  private mapUnifiedStatus(status: string): 'Active' | 'Pending' | 'Inactive' {
+    switch (status?.toLowerCase()) {
+      case 'active':
+        return 'Active';
+      case 'pending':
+        return 'Pending';
+      case 'inactive':
+      case 'suspended':
+        return 'Inactive';
+      default:
+        return 'Active';
     }
   }
 
@@ -421,9 +511,10 @@ export class AffiliateAggregationService {
       pending: allAffiliates.filter(a => a.status === 'Pending').length,
       inactive: allAffiliates.filter(a => a.status === 'Inactive').length,
       bySource: {
-        goaffpro: allAffiliates.filter(a => a.source === 'goaffpro').length,
-        mightynetworks: allAffiliates.filter(a => a.source === 'mightynetworks').length,
-        native: allAffiliates.filter(a => a.source === 'native').length
+        // Map both old and new source names to the expected UI format
+        goaffpro: allAffiliates.filter(a => a.source === 'goaffpro' || a.source === 'SHP').length,
+        mightynetworks: allAffiliates.filter(a => a.source === 'mightynetworks' || a.source === 'MN').length,
+        native: allAffiliates.filter(a => a.source === 'native' || a.source === 'GHL').length
       }
     };
 

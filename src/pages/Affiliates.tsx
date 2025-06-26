@@ -343,9 +343,10 @@ const Affiliates = () => {
           pending: affiliateData.filter(a => a.status === 'Pending').length,
           inactive: affiliateData.filter(a => a.status === 'Inactive').length,
           bySource: {
-            goaffpro: affiliateData.filter(a => a.source === 'goaffpro').length,
-            mightynetworks: affiliateData.filter(a => a.source === 'mightynetworks').length,
-            native: affiliateData.filter(a => a.source === 'native').length,
+            // Map both old and new source names to the expected UI format
+            goaffpro: affiliateData.filter(a => a.source === 'goaffpro' || a.source === 'SHP').length,
+            mightynetworks: affiliateData.filter(a => a.source === 'mightynetworks' || a.source === 'MN').length,
+            native: affiliateData.filter(a => a.source === 'native' || a.source === 'GHL').length,
           }
         };
         setStats(userStats);
