@@ -30,29 +30,29 @@ export class AffiliateAggregationService {
       console.log(`✅ Found ${unifiedAffiliates.length} unified affiliates`);
       affiliates.push(...unifiedAffiliates);
 
-      // TEMPORARILY DISABLED: Get GoAffPro affiliates (legacy) to avoid duplication
-      // console.log('📊 Fetching ReAction affiliates (legacy)...');
-      // const goaffproAffiliates = await this.getGoAffProAffiliates();
-      // console.log(`✅ Found ${goaffproAffiliates.length} ReAction affiliates (legacy)`);
-      // affiliates.push(...goaffproAffiliates);
+      // Get GoAffPro affiliates (legacy) - now safe to re-enable
+      console.log('📊 Fetching ReAction affiliates (legacy)...');
+      const goaffproAffiliates = await this.getGoAffProAffiliates();
+      console.log(`✅ Found ${goaffproAffiliates.length} ReAction affiliates (legacy)`);
+      affiliates.push(...goaffproAffiliates);
 
-      // TEMPORARILY DISABLED: Get MightyNetworks affiliates (placeholder for future implementation)
-      // console.log('📊 Fetching The RISE affiliates...');
-      // const mightyNetworksAffiliates = await this.getMightyNetworksAffiliates();
-      // console.log(`✅ Found ${mightyNetworksAffiliates.length} The RISE affiliates`);
-      // affiliates.push(...mightyNetworksAffiliates);
+      // Get MightyNetworks affiliates (placeholder for future implementation)
+      console.log('📊 Fetching The RISE affiliates...');
+      const mightyNetworksAffiliates = await this.getMightyNetworksAffiliates();
+      console.log(`✅ Found ${mightyNetworksAffiliates.length} The RISE affiliates`);
+      affiliates.push(...mightyNetworksAffiliates);
 
-      // TEMPORARILY DISABLED: Get GHL affiliates (legacy) to avoid duplication
-      // console.log('📊 Fetching GHL affiliates (legacy)...');
-      // const ghlAffiliates = await this.getGHLAffiliates();
-      // console.log(`✅ Found ${ghlAffiliates.length} GHL affiliates (legacy)`);
-      // affiliates.push(...ghlAffiliates);
+      // Get GHL affiliates (legacy) - now safe to re-enable
+      console.log('📊 Fetching GHL affiliates (legacy)...');
+      const ghlAffiliates = await this.getGHLAffiliates();
+      console.log(`✅ Found ${ghlAffiliates.length} GHL affiliates (legacy)`);
+      affiliates.push(...ghlAffiliates);
 
-      // TEMPORARILY DISABLED: Get native platform affiliates to avoid duplication
-      // console.log('📊 Fetching JennaZ.co affiliates...');
-      // const nativeAffiliates = await this.getNativeAffiliates();
-      // console.log(`✅ Found ${nativeAffiliates.length} JennaZ.co affiliates`);
-      // affiliates.push(...nativeAffiliates);
+      // Get native platform affiliates
+      console.log('📊 Fetching JennaZ.co affiliates...');
+      const nativeAffiliates = await this.getNativeAffiliates();
+      console.log(`✅ Found ${nativeAffiliates.length} JennaZ.co affiliates`);
+      affiliates.push(...nativeAffiliates);
 
       console.log(`🎉 Total aggregated affiliates: ${affiliates.length}`);
       console.log('🎉 Sample affiliate data:', affiliates.length > 0 ? affiliates[0] : 'none');
