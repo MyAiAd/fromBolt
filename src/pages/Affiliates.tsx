@@ -345,7 +345,7 @@ const Affiliates = () => {
   const filteredAffiliates = useMemo(() => {
     console.log('🔄 Recalculating filteredAffiliates with sort:', sortField, sortDirection);
     
-    return affiliates
+    const filtered = affiliates
       .filter(affiliate => {
         const matchesSearch = affiliate.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                               affiliate.email.toLowerCase().includes(searchQuery.toLowerCase());
@@ -357,40 +357,43 @@ const Affiliates = () => {
         const matchesSource = sourceFilter === 'All' || affiliate.source === sourceFilter;
         
         return matchesSearch && matchesLevel && matchesStatus && matchesSource;
-      })
-      .sort((a, b) => {
-        console.log('🔄 Sorting by field:', sortField, 'direction:', sortDirection);
-        console.log('🔄 Comparing values:', a[sortField], 'vs', b[sortField]);
-        
+      });
+
+    // Log data distribution to help debug sorting issues
+    if (filtered.length > 0) {
+      const levels = [...new Set(filtered.map(a => a.level))];
+      const referrals = [...new Set(filtered.map(a => a.referrals))];
+      const commissions = [...new Set(filtered.map(a => a.commission))];
+      
+      console.log('📊 Data distribution:');
+      console.log('  Levels:', levels);
+      console.log('  Referrals range:', Math.min(...referrals), 'to', Math.max(...referrals));
+      console.log('  Commissions:', commissions.slice(0, 5), commissions.length > 5 ? '...' : '');
+    }
+    
+    return filtered.sort((a, b) => {
         if (sortField === 'commission') {
           // Strip the $ and convert to number for commission sorting
           const valueA = parseFloat(a[sortField].replace('$', '').replace(',', ''));
           const valueB = parseFloat(b[sortField].replace('$', '').replace(',', ''));
-          console.log('🔄 Commission parsed values:', valueA, 'vs', valueB);
           return sortDirection === 'asc' ? valueA - valueB : valueB - valueA;
         } else if (sortField === 'dateJoined') {
           // Date comparison
           const dateA = new Date(a[sortField]).getTime();
           const dateB = new Date(b[sortField]).getTime();
-          console.log('🔄 Date parsed values:', dateA, 'vs', dateB);
           return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
         } else if (sortField === 'referrals') {
           // Number comparison
-          console.log('🔄 Referrals raw values:', a[sortField], 'vs', b[sortField], 'types:', typeof a[sortField], typeof b[sortField]);
           const numA = Number(a[sortField]) || 0;
           const numB = Number(b[sortField]) || 0;
-          console.log('🔄 Referrals converted values:', numA, 'vs', numB);
           return sortDirection === 'asc' ? numA - numB : numB - numA;
         } else {
           // String comparison (includes level)
           const aValue = (a[sortField] || '').toString().toLowerCase();
           const bValue = (b[sortField] || '').toString().toLowerCase();
-          console.log('🔄 String comparison values:', aValue, 'vs', bValue);
-          const result = sortDirection === 'asc'
+          return sortDirection === 'asc'
             ? aValue.localeCompare(bValue)
             : bValue.localeCompare(aValue);
-          console.log('🔄 String comparison result:', result);
-          return result;
         }
       });
   }, [affiliates, searchQuery, levelFilter, statusFilter, sourceFilter, sortField, sortDirection]);
