@@ -216,14 +216,15 @@ const JennaZImport: React.FC = () => {
       // Fetch contacts directly from GHL API
       const baseUrl = 'https://rest.gohighlevel.com/v1';
       let allContacts: GHLContact[] = [];
-      let cursor: string | null = null;
+      let nextUrl: string | null = null;
+      
+      // Start with the initial URL
+      let currentUrl = `${baseUrl}/contacts/?locationId=${credentials.locationId}&limit=100`;
       
       do {
-        const endpoint = `/contacts/?locationId=${credentials.locationId}&limit=100${
-          cursor ? `&cursor=${cursor}` : ''
-        }`;
+        console.log(`🔗 Request URL: ${currentUrl}`);
         
-        const response = await fetch(`${baseUrl}${endpoint}`, {
+        const response = await fetch(currentUrl, {
           headers: {
             'Authorization': `Bearer ${credentials.apiKey}`,
             'Content-Type': 'application/json'
@@ -242,8 +243,8 @@ const JennaZImport: React.FC = () => {
           contactsCount: responseData.contacts?.length || 0,
           metaKeys: responseData.meta ? Object.keys(responseData.meta) : 'no meta',
           meta: responseData.meta,
-          hasNextCursor: !!responseData.meta?.nextCursor,
-          nextCursor: responseData.meta?.nextCursor
+          hasNextPageUrl: !!responseData.meta?.nextPageUrl,
+          nextPageUrl: responseData.meta?.nextPageUrl
         });
         
         // Debug: Log all meta fields to identify pagination fields
@@ -259,27 +260,21 @@ const JennaZImport: React.FC = () => {
           console.log(`📥 Fetched ${responseData.contacts.length} contacts (total: ${allContacts.length})`);
         }
         
-        cursor = responseData.meta?.nextCursor || null;
+        // Use the nextPageUrl directly if available
+        nextUrl = responseData.meta?.nextPageUrl || null;
         
-        // GHL API v1 might use different field names for pagination
-        if (!cursor && responseData.meta) {
-          // Try common pagination field names
-          cursor = responseData.meta.nextCursor || 
-                   responseData.meta.next_cursor || 
-                   responseData.meta.cursor || 
-                   responseData.meta.startAfter || 
-                   responseData.meta.startAfterId || 
-                   null;
+        if (nextUrl) {
+          currentUrl = nextUrl;
+          console.log(`🔄 Next page URL: ${nextUrl}`);
+        } else {
+          console.log(`🏁 No nextPageUrl found - reached end`);
+          break;
         }
-        
-        console.log(`🔄 Next cursor: ${cursor ? (typeof cursor === 'string' ? cursor.substring(0, 20) + '...' : cursor) : 'null'}`);
         
         // Rate limiting
-        if (cursor) {
-          await new Promise(resolve => setTimeout(resolve, 200));
-        }
+        await new Promise(resolve => setTimeout(resolve, 200));
         
-      } while (cursor);
+      } while (nextUrl);
 
       console.log(`✅ Total contacts fetched: ${allContacts.length}`);
 
@@ -562,14 +557,15 @@ const JennaZImport: React.FC = () => {
       // Fetch contacts directly from GHL API
       const baseUrl = 'https://rest.gohighlevel.com/v1';
       let allContacts: GHLContact[] = [];
-      let cursor: string | null = null;
+      let nextUrl: string | null = null;
+      
+      // Start with the initial URL
+      let currentUrl = `${baseUrl}/contacts/?locationId=${credentials.locationId}&limit=100`;
       
       do {
-        const endpoint = `/contacts/?locationId=${credentials.locationId}&limit=100${
-          cursor ? `&cursor=${cursor}` : ''
-        }`;
+        console.log(`🔗 Request URL: ${currentUrl}`);
         
-        const response = await fetch(`${baseUrl}${endpoint}`, {
+        const response = await fetch(currentUrl, {
           headers: {
             'Authorization': `Bearer ${credentials.apiKey}`,
             'Content-Type': 'application/json'
@@ -588,8 +584,8 @@ const JennaZImport: React.FC = () => {
           contactsCount: responseData.contacts?.length || 0,
           metaKeys: responseData.meta ? Object.keys(responseData.meta) : 'no meta',
           meta: responseData.meta,
-          hasNextCursor: !!responseData.meta?.nextCursor,
-          nextCursor: responseData.meta?.nextCursor
+          hasNextPageUrl: !!responseData.meta?.nextPageUrl,
+          nextPageUrl: responseData.meta?.nextPageUrl
         });
         
         // Debug: Log all meta fields to identify pagination fields
@@ -605,27 +601,21 @@ const JennaZImport: React.FC = () => {
           console.log(`📥 Fetched ${responseData.contacts.length} contacts (total: ${allContacts.length})`);
         }
         
-        cursor = responseData.meta?.nextCursor || null;
+        // Use the nextPageUrl directly if available
+        nextUrl = responseData.meta?.nextPageUrl || null;
         
-        // GHL API v1 might use different field names for pagination
-        if (!cursor && responseData.meta) {
-          // Try common pagination field names
-          cursor = responseData.meta.nextCursor || 
-                   responseData.meta.next_cursor || 
-                   responseData.meta.cursor || 
-                   responseData.meta.startAfter || 
-                   responseData.meta.startAfterId || 
-                   null;
+        if (nextUrl) {
+          currentUrl = nextUrl;
+          console.log(`🔄 Next page URL: ${nextUrl}`);
+        } else {
+          console.log(`🏁 No nextPageUrl found - reached end`);
+          break;
         }
-        
-        console.log(`🔄 Next cursor: ${cursor ? (typeof cursor === 'string' ? cursor.substring(0, 20) + '...' : cursor) : 'null'}`);
         
         // Rate limiting
-        if (cursor) {
-          await new Promise(resolve => setTimeout(resolve, 200));
-        }
+        await new Promise(resolve => setTimeout(resolve, 200));
         
-      } while (cursor);
+      } while (nextUrl);
 
       console.log(`✅ Total contacts fetched: ${allContacts.length}`);
 

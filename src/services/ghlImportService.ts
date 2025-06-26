@@ -60,6 +60,7 @@ interface GHLAPIResponse {
   contact?: GHLContact;
   meta?: {
     nextCursor?: string;
+    nextPageUrl?: string;
   };
 }
 
@@ -152,23 +153,19 @@ export class GHLImportService {
     console.log('🔄 Fetching all contacts from Go High Level...');
     
     const allContacts: GHLContact[] = [];
-    let cursor: string | null = null;
+    let nextUrl: string | null = null;
     let page = 1;
     const limit = 100;
 
+    // Start with the initial URL
+    let currentUrl = `${this.config.baseUrl}/contacts/?locationId=${this.config.locationId}&limit=${limit}`;
+
     do {
       try {
-        console.log(`📥 Fetching page ${page}${cursor ? ` with cursor: ${cursor.substring(0, 20)}...` : ''}...`);
+        console.log(`📥 Fetching page ${page}...`);
+        console.log(`🔗 Request URL: ${currentUrl}`);
         
-        // Build URL with proper cursor pagination parameter
-        let url = `${this.config.baseUrl}/contacts/?locationId=${this.config.locationId}&limit=${limit}`;
-        
-        // Add cursor parameter if we have one
-        if (cursor) {
-          url += `&cursor=${cursor}`;
-        }
-
-        const response = await fetch(url, {
+        const response = await fetch(currentUrl, {
           headers: {
             'Authorization': `Bearer ${this.config.apiKey}`,
             'Content-Type': 'application/json'
@@ -181,36 +178,38 @@ export class GHLImportService {
 
         const data = await response.json();
         
-        console.log(`📊 Response: ${data.contacts?.length || 0} contacts, cursor: ${data.meta?.nextCursor ? 'present' : 'none'}`);
-        
         // Debug: Log the response structure to understand pagination
         console.log(`🔍 API Response structure:`, {
           contactsCount: data.contacts?.length || 0,
           metaKeys: data.meta ? Object.keys(data.meta) : 'no meta',
           meta: data.meta,
-          hasNextCursor: !!data.meta?.nextCursor,
-          nextCursor: data.meta?.nextCursor
+          hasNextPageUrl: !!data.meta?.nextPageUrl,
+          nextPageUrl: data.meta?.nextPageUrl
         });
+        
+        // Debug: Log all meta fields
+        if (data.meta) {
+          console.log(`🔍 All meta fields:`, data.meta);
+          Object.keys(data.meta).forEach(key => {
+            console.log(`  ${key}: ${data.meta[key]}`);
+          });
+        }
         
         if (data.contacts && Array.isArray(data.contacts) && data.contacts.length > 0) {
           allContacts.push(...data.contacts);
           console.log(`✅ Added ${data.contacts.length} contacts (total: ${allContacts.length})`);
           
-          // Extract cursor for next page from meta.nextCursor
-          cursor = data.meta?.nextCursor || null;
+          // Use the nextPageUrl directly if available
+          nextUrl = data.meta?.nextPageUrl || null;
           
-          // GHL API v1 might use different field names for pagination
-          if (!cursor && data.meta) {
-            // Try common pagination field names
-            cursor = data.meta.nextCursor || 
-                     data.meta.next_cursor || 
-                     data.meta.cursor || 
-                     data.meta.startAfter || 
-                     data.meta.startAfterId || 
-                     null;
+          // If we have a nextPageUrl, use it for the next request
+          if (nextUrl) {
+            currentUrl = nextUrl;
+            console.log(`🔄 Next page URL: ${nextUrl}`);
+          } else {
+            console.log(`🏁 No nextPageUrl found - reached end`);
+            break;
           }
-          
-          console.log(`🔄 Next cursor: ${cursor ? (typeof cursor === 'string' ? cursor.substring(0, 20) + '...' : cursor) : 'null'}`);
           
           // If we got less than the limit, we're at the end
           if (data.contacts.length < limit) {
@@ -237,7 +236,7 @@ export class GHLImportService {
         console.error(`❌ Error fetching page ${page}:`, error);
         break;
       }
-    } while (cursor && allContacts.length < 2000); // Continue while we have cursor and under safety limit
+    } while (nextUrl && allContacts.length < 2000); // Continue while we have nextUrl and under safety limit
 
     console.log(`✅ Total contacts fetched: ${allContacts.length}`);
     
