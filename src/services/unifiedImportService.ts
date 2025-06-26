@@ -155,7 +155,7 @@ export class UnifiedImportService {
   }
 
   private async importFromGHL(credentials: { apiKey: string; locationId: string }): Promise<ImportResult> {
-    console.log('🔵 Starting GHL import...');
+    console.log('🔵 Starting GHL v2 import...');
     const startTime = Date.now();
     
     const result: ImportResult = {
@@ -171,76 +171,100 @@ export class UnifiedImportService {
 
     try {
       // Only fetch contacts that are actual affiliates (not just prospects)
-      console.log(`🏷️ GHL: Searching for actual affiliates only...`);
+      console.log(`🏷️ GHL v2: Searching for actual affiliates only...`);
       const allContacts: GHLContact[] = [];
       
-      // Search only for "affiliate" tag (most specific)
-      let currentUrl = `https://rest.gohighlevel.com/v1/contacts/?locationId=${credentials.locationId}&limit=100&tags=affiliate`;
-      let tagPage = 1;
+      // Use GHL v2 API with proper pagination
+      let page = 1;
+      let hasMore = true;
+      const limit = 100;
       
-      do {
-        console.log(`📥 GHL: Fetching page ${tagPage} for affiliates...`);
+      while (hasMore) {
+        console.log(`📥 GHL v2: Fetching page ${page} for affiliates...`);
         
-        const response = await fetch(currentUrl, {
+        // GHL v2 API endpoint with proper pagination
+        const url = `https://services.leadconnectorhq.com/contacts/?locationId=${credentials.locationId}&limit=${limit}&page=${page}&tags=affiliate`;
+        
+        const response = await fetch(url, {
           headers: {
             'Authorization': `Bearer ${credentials.apiKey}`,
+            'Version': '2021-07-28',
             'Content-Type': 'application/json'
           }
         });
 
         if (!response.ok) {
-          throw new Error(`GHL API Error: ${response.status} ${response.statusText}`);
+          throw new Error(`GHL v2 API Error: ${response.status} ${response.statusText}`);
         }
 
         const responseData = await response.json();
         
         if (responseData.contacts && Array.isArray(responseData.contacts)) {
-          // Since we're searching for contacts tagged as "affiliate", they should be affiliates
-          // Let's be more inclusive and log what we're seeing
+          // Filter to only include ACTUAL affiliates, not just contacts with affiliate tag
           const affiliateContacts = responseData.contacts.filter((contact: GHLContact) => {
             // Skip duplicates
             if (allContacts.some(existing => existing.id === contact.id)) {
               return false;
             }
             
-            // Log first few contacts to understand the data structure
-            if (allContacts.length < 3) {
-              console.log(`🔍 GHL Contact sample: id=${contact.id}, email=${contact.email}, referralCode=${contact.referralCode}, customFields=${JSON.stringify(contact.customFields)}`);
+            // Must have email
+            const hasEmail = contact.email && contact.email.trim() !== '';
+            if (!hasEmail) {
+              return false;
             }
             
-            // If they have the "affiliate" tag, they're likely affiliates
-            // Be more inclusive - include all contacts with affiliate tag unless they're clearly not affiliates
-            const hasEmail = contact.email && contact.email.trim() !== '';
+            // Log first few contacts to understand the data structure
+            if (allContacts.length < 10) {
+              console.log(`🔍 GHL Contact sample: id=${contact.id}, email=${contact.email}, referralCode=${contact.referralCode}, customFields=${contact.customFields ? Object.keys(contact.customFields) : 'none'}`);
+            }
             
-            // Only exclude if they don't have an email (we need email for database)
-            return hasEmail;
+            // STRICT FILTERING: Only include contacts that have clear affiliate indicators
+            const hasReferralCode = contact.referralCode && contact.referralCode.trim() !== '';
+            const hasAffiliateCustomFields = contact.customFields && (
+              contact.customFields.referral_code ||
+              contact.customFields.affiliate_id ||
+              contact.customFields.commission_rate ||
+              contact.customFields.affiliate_status ||
+              contact.customFields.payout_email ||
+              contact.customFields.referral_link ||
+              contact.customFields.affiliate_commission ||
+              contact.customFields.affiliate_earnings
+            );
+            
+            // Only include if they have CLEAR affiliate indicators
+            const isActualAffiliate = hasReferralCode || hasAffiliateCustomFields;
+            
+            if (!isActualAffiliate) {
+              // Log why we're excluding this contact
+              console.log(`❌ GHL: Excluding contact ${contact.id} (${contact.email}) - no affiliate indicators`);
+            }
+            
+            return isActualAffiliate;
           });
           
           allContacts.push(...affiliateContacts);
-          console.log(`✅ GHL: Added ${affiliateContacts.length} actual affiliates from page ${tagPage} (filtered from ${responseData.contacts.length} contacts, total: ${allContacts.length})`);
+          console.log(`✅ GHL v2: Added ${affiliateContacts.length} actual affiliates from page ${page} (filtered from ${responseData.contacts.length} contacts, total: ${allContacts.length})`);
         }
         
-        // Use nextPageUrl if available, but ensure it's HTTPS
-        const nextUrl = responseData.meta?.nextPageUrl;
-        if (nextUrl) {
-          // Fix mixed content issue by ensuring HTTPS
-          currentUrl = nextUrl.replace('http://', 'https://');
-          tagPage++;
+        // GHL v2 pagination: check if we got a full page of results
+        const contactsReceived = responseData.contacts?.length || 0;
+        hasMore = contactsReceived === limit;
+        
+        if (hasMore) {
+          page++;
           
           // Rate limiting
           await new Promise(resolve => setTimeout(resolve, 200));
           
           // Safety break
-          if (tagPage > 20) {
-            console.log(`🛑 GHL: Safety break at page 20`);
+          if (page > 20) {
+            console.log(`🛑 GHL v2: Safety break at page 20`);
             break;
           }
-        } else {
-          break;
         }
-      } while (true);
+      }
 
-      console.log(`✅ GHL: Total contacts fetched: ${allContacts.length}`);
+      console.log(`✅ GHL v2: Total contacts fetched: ${allContacts.length}`);
       result.recordsProcessed = allContacts.length;
 
       // Process contacts into Supabase
@@ -276,14 +300,18 @@ export class UnifiedImportService {
             });
 
           if (error) {
-            result.errors.push(`GHL: Contact ${contact.id} - ${error.message}`);
+            console.error('🚨 GHL Database error:', error);
+            console.error('🚨 GHL Data that failed:', affiliateData);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            result.errors.push(`GHL: Contact ${contact.id} - ${errorMessage}`);
             result.recordsFailed++;
           } else {
             result.recordsSuccessful++;
           }
 
         } catch (error) {
-          result.errors.push(`GHL: Contact ${contact.id} - ${error instanceof Error ? error.message : String(error)}`);
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          result.errors.push(`GHL: Contact ${contact.id} - ${errorMessage}`);
           result.recordsFailed++;
         }
       }
@@ -291,7 +319,7 @@ export class UnifiedImportService {
       result.success = result.recordsFailed === 0;
       result.duration = Date.now() - startTime;
       
-      console.log('✅ GHL import completed:', {
+      console.log('✅ GHL v2 import completed:', {
         processed: result.recordsProcessed,
         successful: result.recordsSuccessful,
         failed: result.recordsFailed
@@ -300,9 +328,9 @@ export class UnifiedImportService {
       return result;
 
     } catch (error) {
-      result.errors.push(`GHL import failed: ${error instanceof Error ? error.message : String(error)}`);
+      result.errors.push(`GHL v2 import failed: ${error instanceof Error ? error.message : String(error)}`);
       result.duration = Date.now() - startTime;
-      console.error('❌ GHL import error:', error);
+      console.error('❌ GHL v2 import error:', error);
       return result;
     }
   }
@@ -403,6 +431,8 @@ export class UnifiedImportService {
             });
 
           if (error) {
+            console.error('🚨 GoAffPro Database error:', error);
+            console.error('🚨 GoAffPro Data that failed:', affiliateData);
             result.errors.push(`GoAffPro: Affiliate ${affiliate.id} - ${error.message}`);
             result.recordsFailed++;
           } else {
