@@ -1188,6 +1188,8 @@ const JennaZImport: React.FC = () => {
                     nextCursor ? `&cursor=${nextCursor}` : ''
                   }`;
                   
+                  console.log(`🔍 Fetching: ${endpoint}`);
+                  
                   const response = await fetch(`${baseUrl}${endpoint}`, {
                     headers: {
                       'Authorization': `Bearer ${credentials.apiKey}`,
@@ -1201,14 +1203,26 @@ const JennaZImport: React.FC = () => {
 
                   const responseData = await response.json();
                   
+                  console.log(`📥 Response data:`, {
+                    contactsCount: responseData.contacts?.length || 0,
+                    totalSoFar: allContacts.length,
+                    hasMore: !!responseData.meta?.nextCursor,
+                    cursor: responseData.meta?.nextCursor?.substring(0, 20) + '...'
+                  });
+                  
                   if (responseData.contacts && Array.isArray(responseData.contacts)) {
                     allContacts = allContacts.concat(responseData.contacts);
+                    console.log(`📊 Progress: ${allContacts.length} total contacts fetched`);
                   }
                   
+                  // IMPORTANT: Properly handle pagination
                   nextCursor = responseData.meta?.nextCursor || null;
                   
                   if (nextCursor) {
-                    await new Promise(resolve => setTimeout(resolve, 200));
+                    console.log(`⏭️ More pages available, continuing with cursor: ${nextCursor.substring(0, 30)}...`);
+                    await new Promise(resolve => setTimeout(resolve, 300)); // Rate limiting
+                  } else {
+                    console.log(`✅ Pagination complete - no more pages`);
                   }
                   
                 } while (nextCursor);

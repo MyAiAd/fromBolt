@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
-import { Eye, Users, Search, PlusCircle, ChevronDown, ChevronUp, Filter, Database, RefreshCw, Download, Settings as SettingsIcon } from 'lucide-react';
+import { Eye, Users, Search, PlusCircle, ChevronDown, ChevronUp, Filter, Database, RefreshCw, Download, Settings as SettingsIcon, CheckCircle, X } from 'lucide-react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import { AffiliateAggregationService, AggregatedAffiliate } from '../services/affiliateAggregationService';
@@ -10,7 +10,7 @@ import GoAffProImport from '../components/GoAffProImport';
 
 type AffiliateLevel = 'All' | 'Direct' | 'Level 2' | 'Level 3' | 'ReAction' | 'Bitcoin is BAE';
 type AffiliateStatus = 'All' | 'Active' | 'Pending' | 'Inactive';
-type AffiliateSource = 'All' | 'goaffpro' | 'mightynetworks' | 'native';
+type AffiliateSource = 'All' | 'goaffpro' | 'mightynetworks' | 'native' | 'ghl';
 
 const Affiliates = () => {
   const { supabase, user, isAdmin } = useAuth();
@@ -46,7 +46,8 @@ const Affiliates = () => {
     bySource: {
       goaffpro: 0,
       mightynetworks: 0,
-      native: 0
+      native: 0,
+      ghl: 0
     }
   });
 
@@ -251,7 +252,7 @@ const Affiliates = () => {
             active: 0,
             pending: 0,
             inactive: 0,
-            bySource: { goaffpro: 0, mightynetworks: 0, native: 0 }
+            bySource: { goaffpro: 0, mightynetworks: 0, native: 0, ghl: 0 }
           });
           return;
         }
@@ -264,7 +265,7 @@ const Affiliates = () => {
           active: 0,
           pending: 0,
           inactive: 0,
-          bySource: { goaffpro: 0, mightynetworks: 0, native: 0 }
+          bySource: { goaffpro: 0, mightynetworks: 0, native: 0, ghl: 0 }
         });
       }
       
@@ -289,6 +290,7 @@ const Affiliates = () => {
             goaffpro: affiliateData.filter(a => a.source === 'goaffpro').length,
             mightynetworks: affiliateData.filter(a => a.source === 'mightynetworks').length,
             native: affiliateData.filter(a => a.source === 'native').length,
+            ghl: affiliateData.filter(a => a.source === 'ghl').length,
           }
         };
         setStats(userStats);
@@ -365,6 +367,8 @@ const Affiliates = () => {
         return <span className="px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-400">ReAction</span>;
       case 'mightynetworks':
         return <span className="px-2 py-1 text-xs rounded-full bg-purple-500/20 text-purple-400">Bitcoin is BAE</span>;
+      case 'ghl':
+        return <span className="px-2 py-1 text-xs rounded-full bg-yellow-500/20 text-yellow-400">GHL</span>;
       case 'native':
         return <span className="px-2 py-1 text-xs rounded-full bg-green-500/20 text-green-400">JennaZ.co</span>;
       default:
@@ -573,7 +577,7 @@ const Affiliates = () => {
       {/* Source Breakdown */}
       <motion.div variants={itemVariants} className="card mb-6">
         <h3 className="text-lg font-semibold text-white mb-4">Affiliates by Source</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="flex items-center justify-between p-3 bg-rise-dark-light rounded-lg">
             <div className="flex items-center space-x-3">
               <div className="h-3 w-3 rounded-full bg-blue-400"></div>
@@ -587,6 +591,13 @@ const Affiliates = () => {
               <span className="text-gray-300">Bitcoin is BAE</span>
             </div>
             <span className="text-white font-semibold">{stats.bySource.mightynetworks}</span>
+          </div>
+          <div className="flex items-center justify-between p-3 bg-rise-dark-light rounded-lg">
+            <div className="flex items-center space-x-3">
+              <div className="h-3 w-3 rounded-full bg-yellow-400"></div>
+              <span className="text-gray-300">GHL</span>
+            </div>
+            <span className="text-white font-semibold">{stats.bySource.ghl}</span>
           </div>
           <div className="flex items-center justify-between p-3 bg-rise-dark-light rounded-lg">
             <div className="flex items-center space-x-3">
@@ -685,6 +696,7 @@ const Affiliates = () => {
                 <option value="All">All Sources</option>
                 <option value="goaffpro">ReAction</option>
                 <option value="mightynetworks">Bitcoin is BAE</option>
+                <option value="ghl">GHL</option>
                 <option value="native">JennaZ.co</option>
               </select>
             </div>
