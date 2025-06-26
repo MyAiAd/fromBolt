@@ -745,10 +745,10 @@ const Affiliates = () => {
                 onChange={(e) => setSourceFilter(e.target.value as AffiliateSource)}
                 className="bg-transparent text-white py-2 pr-8 text-sm appearance-none focus:outline-none cursor-pointer"
               >
-                <option value="All">All Sources</option>
-                <option value="goaffpro">SHP</option>
-                <option value="mightynetworks">MN</option>
-                <option value="ghl">GHL</option>
+                <option value="All" className="text-black">All Sources</option>
+                <option value="goaffpro" className="text-black">SHP</option>
+                <option value="mightynetworks" className="text-black">MN</option>
+                <option value="ghl" className="text-black">GHL</option>
               </select>
             </div>
             
@@ -758,15 +758,15 @@ const Affiliates = () => {
                 onChange={(e) => setLevelFilter(e.target.value as AffiliateLevel)}
                 className="bg-transparent text-white py-2 pr-8 text-sm appearance-none focus:outline-none cursor-pointer"
               >
-                <option value="All">All Levels</option>
-                <option value="Aligned">Aligned ($0-$1K)</option>
-                <option value="Activated">Activated ($1K-$5K)</option>
-                <option value="Ascended">Ascended ($5K-$25K)</option>
-                <option value="Magnetic">Magnetic ($25K-$50K)</option>
-                <option value="Luminary">Luminary ($50K-$100K)</option>
-                <option value="Visionary">Visionary ($100K-$500K)</option>
-                <option value="Oracle">Oracle ($500K-$1M)</option>
-                <option value="Sovereign">Sovereign ($1M+)</option>
+                <option value="All" className="text-black">All Levels</option>
+                <option value="Aligned" className="text-black">Aligned ($0-$1K)</option>
+                <option value="Activated" className="text-black">Activated ($1K-$5K)</option>
+                <option value="Ascended" className="text-black">Ascended ($5K-$25K)</option>
+                <option value="Magnetic" className="text-black">Magnetic ($25K-$50K)</option>
+                <option value="Luminary" className="text-black">Luminary ($50K-$100K)</option>
+                <option value="Visionary" className="text-black">Visionary ($100K-$500K)</option>
+                <option value="Oracle" className="text-black">Oracle ($500K-$1M)</option>
+                <option value="Sovereign" className="text-black">Sovereign ($1M+)</option>
               </select>
             </div>
             
@@ -776,10 +776,10 @@ const Affiliates = () => {
                 onChange={(e) => setStatusFilter(e.target.value as AffiliateStatus)}
                 className="bg-transparent text-white py-2 pr-8 text-sm appearance-none focus:outline-none cursor-pointer"
               >
-                <option value="All">All Status</option>
-                <option value="Active">Active</option>
-                <option value="Pending">Pending</option>
-                <option value="Inactive">Inactive</option>
+                <option value="All" className="text-black">All Status</option>
+                <option value="Active" className="text-black">Active</option>
+                <option value="Pending" className="text-black">Pending</option>
+                <option value="Inactive" className="text-black">Inactive</option>
               </select>
             </div>
           </div>
