@@ -210,7 +210,7 @@ export class GHLImportService {
                      null;
           }
           
-          console.log(`🔄 Next cursor: ${cursor ? cursor.substring(0, 20) + '...' : 'null'}`);
+          console.log(`🔄 Next cursor: ${cursor ? (typeof cursor === 'string' ? cursor.substring(0, 20) + '...' : cursor) : 'null'}`);
           
           // If we got less than the limit, we're at the end
           if (data.contacts.length < limit) {
@@ -240,7 +240,33 @@ export class GHLImportService {
     } while (cursor && allContacts.length < 2000); // Continue while we have cursor and under safety limit
 
     console.log(`✅ Total contacts fetched: ${allContacts.length}`);
-    return allContacts;
+    
+    // Filter for affiliate contacts only
+    const isAffiliate = (contact: GHLContact): boolean => {
+      // Check for affiliate-related tags
+      const affiliateTags = ['affiliate', 'partner', 'referrer', 'ambassador', 'influencer'];
+      if (contact.tags && Array.isArray(contact.tags)) {
+        return contact.tags.some(tag => 
+          affiliateTags.some(affiliateTag => 
+            tag.toLowerCase().includes(affiliateTag.toLowerCase())
+          )
+        );
+      }
+      
+      // Check for affiliate-related custom fields
+      if (contact.customFields) {
+        const customFieldsStr = JSON.stringify(contact.customFields).toLowerCase();
+        return affiliateTags.some(tag => customFieldsStr.includes(tag));
+      }
+      
+      // If no clear affiliate indicators, include if they have a referral code
+      return !!contact.referralCode;
+    };
+
+    const affiliateContacts = allContacts.filter(isAffiliate);
+    console.log(`🎯 Filtered to ${affiliateContacts.length} affiliate contacts out of ${allContacts.length} total contacts`);
+    
+    return affiliateContacts;
   }
 
   async importAffiliates(userId: string): Promise<ImportResult> {

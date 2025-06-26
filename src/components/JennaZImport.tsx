@@ -59,6 +59,7 @@ interface GHLContact {
   dateAdded?: string;
   lastActivity?: string;
   customFields?: Record<string, unknown>;
+  tags?: string[];
 }
 
 const JennaZImport: React.FC = () => {
@@ -271,7 +272,7 @@ const JennaZImport: React.FC = () => {
                    null;
         }
         
-        console.log(`🔄 Next cursor: ${cursor ? cursor.substring(0, 20) + '...' : 'null'}`);
+        console.log(`🔄 Next cursor: ${cursor ? (typeof cursor === 'string' ? cursor.substring(0, 20) + '...' : cursor) : 'null'}`);
         
         // Rate limiting
         if (cursor) {
@@ -282,15 +283,40 @@ const JennaZImport: React.FC = () => {
 
       console.log(`✅ Total contacts fetched: ${allContacts.length}`);
 
-      setImportStatus(prev => ({ ...prev, currentOperation: 'Processing contacts into affiliate system...' }));
+      // Filter for affiliate contacts only
+      const isAffiliate = (contact: GHLContact): boolean => {
+        // Check for affiliate-related tags
+        const affiliateTags = ['affiliate', 'partner', 'referrer', 'ambassador', 'influencer'];
+        if (contact.tags && Array.isArray(contact.tags)) {
+          return contact.tags.some(tag => 
+            affiliateTags.some(affiliateTag => 
+              tag.toLowerCase().includes(affiliateTag.toLowerCase())
+            )
+          );
+        }
+        
+        // Check for affiliate-related custom fields
+        if (contact.customFields) {
+          const customFieldsStr = JSON.stringify(contact.customFields).toLowerCase();
+          return affiliateTags.some(tag => customFieldsStr.includes(tag));
+        }
+        
+        // If no clear affiliate indicators, include if they have a referral code
+        return !!contact.referralCode;
+      };
 
-      // Process contacts into affiliate system
+      const affiliateContacts = allContacts.filter(isAffiliate);
+      console.log(`🎯 Filtered to ${affiliateContacts.length} affiliate contacts out of ${allContacts.length} total contacts`);
+
+      setImportStatus(prev => ({ ...prev, currentOperation: 'Processing affiliate contacts into system...' }));
+
+      // Process affiliate contacts into affiliate system
       let recordsSuccessful = 0;
       let recordsFailed = 0;
       const recordsUpdated = 0;
       const errors: string[] = [];
 
-      for (const contact of allContacts) {
+      for (const contact of affiliateContacts) {
         try {
           // Skip contacts without email addresses since affiliate_system_users requires email
           if (!contact.email || contact.email.trim() === '') {
@@ -368,7 +394,7 @@ const JennaZImport: React.FC = () => {
 
       const affiliatesResult: ImportResult = {
         success: recordsFailed === 0,
-        recordsProcessed: allContacts.length,
+        recordsProcessed: affiliateContacts.length,
         recordsImported: recordsSuccessful,
         recordsUpdated: recordsUpdated,
         recordsSkipped: recordsFailed,
@@ -592,7 +618,7 @@ const JennaZImport: React.FC = () => {
                    null;
         }
         
-        console.log(`🔄 Next cursor: ${cursor ? cursor.substring(0, 20) + '...' : 'null'}`);
+        console.log(`🔄 Next cursor: ${cursor ? (typeof cursor === 'string' ? cursor.substring(0, 20) + '...' : cursor) : 'null'}`);
         
         // Rate limiting
         if (cursor) {
@@ -603,15 +629,40 @@ const JennaZImport: React.FC = () => {
 
       console.log(`✅ Total contacts fetched: ${allContacts.length}`);
 
-      setImportStatus(prev => ({ ...prev, currentOperation: 'Processing contacts into affiliate system...' }));
+      // Filter for affiliate contacts only
+      const isAffiliate = (contact: GHLContact): boolean => {
+        // Check for affiliate-related tags
+        const affiliateTags = ['affiliate', 'partner', 'referrer', 'ambassador', 'influencer'];
+        if (contact.tags && Array.isArray(contact.tags)) {
+          return contact.tags.some(tag => 
+            affiliateTags.some(affiliateTag => 
+              tag.toLowerCase().includes(affiliateTag.toLowerCase())
+            )
+          );
+        }
+        
+        // Check for affiliate-related custom fields
+        if (contact.customFields) {
+          const customFieldsStr = JSON.stringify(contact.customFields).toLowerCase();
+          return affiliateTags.some(tag => customFieldsStr.includes(tag));
+        }
+        
+        // If no clear affiliate indicators, include if they have a referral code
+        return !!contact.referralCode;
+      };
 
-      // Process contacts into affiliate system
+      const affiliateContacts = allContacts.filter(isAffiliate);
+      console.log(`🎯 Filtered to ${affiliateContacts.length} affiliate contacts out of ${allContacts.length} total contacts`);
+
+      setImportStatus(prev => ({ ...prev, currentOperation: 'Processing affiliate contacts into system...' }));
+
+      // Process affiliate contacts into affiliate system
       let recordsSuccessful = 0;
       let recordsFailed = 0;
       const recordsUpdated = 0;
       const errors: string[] = [];
 
-      for (const contact of allContacts) {
+      for (const contact of affiliateContacts) {
         try {
           // Skip contacts without email addresses since affiliate_system_users requires email
           if (!contact.email || contact.email.trim() === '') {
@@ -689,7 +740,7 @@ const JennaZImport: React.FC = () => {
 
       const affiliatesResult: ImportResult = {
         success: recordsFailed === 0,
-        recordsProcessed: allContacts.length,
+        recordsProcessed: affiliateContacts.length,
         recordsImported: recordsSuccessful,
         recordsUpdated: recordsUpdated,
         recordsSkipped: recordsFailed,
