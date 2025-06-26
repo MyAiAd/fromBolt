@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
-import { Eye, Users, Search, PlusCircle, ChevronDown, ChevronUp, Filter, Database, RefreshCw } from 'lucide-react';
+import { Eye, Users, Search, PlusCircle, ChevronDown, ChevronUp, Filter, Database, RefreshCw, Download } from 'lucide-react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import { AffiliateAggregationService, AggregatedAffiliate } from '../services/affiliateAggregationService';
+import { UnifiedImportService } from '../services/unifiedImportService';
 
 type AffiliateLevel = 'All' | 'Direct' | 'Level 2' | 'Level 3' | 'GoAFF Pro' | 'Mighty Networks';
 type AffiliateStatus = 'All' | 'Active' | 'Pending' | 'Inactive';
@@ -29,6 +30,8 @@ const Affiliates = () => {
     source: 'manual' as 'manual' | 'ghl' | 'goaffpro'
   });
   const [isCreatingDemo, setIsCreatingDemo] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importStatus, setImportStatus] = useState('');
   const [affiliates, setAffiliates] = useState<AggregatedAffiliate[]>([]);
   const [stats, setStats] = useState({
     total: 0,
@@ -43,6 +46,7 @@ const Affiliates = () => {
   });
 
   const aggregationService = useMemo(() => new AffiliateAggregationService(supabase), [supabase]);
+  const unifiedImportService = useMemo(() => new UnifiedImportService(supabase), [supabase]);
 
   useEffect(() => {
     loadAffiliates();
@@ -177,6 +181,92 @@ const Affiliates = () => {
       alert(`Error creating demo user:\n${errorMessage}`);
     } finally {
       setIsCreatingDemo(false);
+    }
+  };
+
+  const handleUnifiedImport = async () => {
+    if (!isAdmin) {
+      alert('Only administrators can perform imports');
+      return;
+    }
+
+    setIsImporting(true);
+    setImportStatus('Starting import from all sources...');
+
+    try {
+      console.log('🚀 Starting unified import from Affiliates page...');
+
+      // For now, we'll use hardcoded credentials or environment variables
+      // In a real app, these would come from a secure configuration
+      const ghlCredentials = {
+        apiKey: process.env.REACT_APP_GHL_API_KEY || '',
+        locationId: process.env.REACT_APP_GHL_LOCATION_ID || 'w01Gc7T4b0tKSDQdKhuN'
+      };
+
+      const goaffproCredentials = {
+        apiKey: process.env.REACT_APP_GOAFFPRO_API_KEY || '',
+        storeId: process.env.REACT_APP_GOAFFPRO_STORE_ID || ''
+      };
+
+      // Check if we have any credentials
+      const hasGhlCredentials = ghlCredentials.apiKey && ghlCredentials.locationId;
+      const hasGoaffproCredentials = goaffproCredentials.apiKey && goaffproCredentials.storeId;
+
+      if (!hasGhlCredentials && !hasGoaffproCredentials) {
+        // For demo purposes, let's use the known GHL credentials
+        ghlCredentials.apiKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2NhdGlvbl9pZCI6IncwMUdjN1Q0YjB0S1NEUWRLaHVOIiwiY29tcGFueV9pZCI6IjY2ZTcxZmYzZjI5YzU0MjY0MzZmMjMzNSIsInZlcnNpb24iOjEsImlhdCI6MTczNzU0Mzg5MCwiZXhwIjoxNzM4MTQ4NjkwfQ.QhvPGwvFxlQ6QGIcFHhwfLsOyiPT4rVJ2G3mhfFPEWg';
+      }
+
+      setImportStatus('Executing imports...');
+
+      const result = await unifiedImportService.importAllData(
+        hasGhlCredentials ? ghlCredentials : undefined,
+        hasGoaffproCredentials ? goaffproCredentials : undefined
+      );
+
+      console.log('✅ Unified import completed:', result);
+
+      // Show results
+      let message = `Import completed!\n\n`;
+      message += `Total processed: ${result.totalRecordsProcessed}\n`;
+      message += `Successful: ${result.totalRecordsSuccessful}\n`;
+      message += `Failed: ${result.totalRecordsFailed}\n`;
+      message += `Duration: ${(result.duration / 1000).toFixed(2)}s\n\n`;
+
+      if (result.results.ghl) {
+        message += `GHL: ${result.results.ghl.recordsSuccessful}/${result.results.ghl.recordsProcessed} successful\n`;
+      }
+      if (result.results.goaffpro) {
+        message += `GoAffPro: ${result.results.goaffpro.recordsSuccessful}/${result.results.goaffpro.recordsProcessed} successful\n`;
+      }
+
+      if (result.errors.length > 0) {
+        message += `\nErrors:\n${result.errors.slice(0, 5).join('\n')}`;
+        if (result.errors.length > 5) {
+          message += `\n... and ${result.errors.length - 5} more errors`;
+        }
+      }
+
+      if (result.warnings.length > 0) {
+        message += `\nWarnings:\n${result.warnings.slice(0, 3).join('\n')}`;
+        if (result.warnings.length > 3) {
+          message += `\n... and ${result.warnings.length - 3} more warnings`;
+        }
+      }
+
+      alert(message);
+
+      // Reload affiliates to show the imported data
+      setImportStatus('Refreshing affiliate list...');
+      await loadAffiliates();
+
+    } catch (error) {
+      console.error('❌ Unified import error:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      alert(`Import failed: ${errorMessage}`);
+    } finally {
+      setIsImporting(false);
+      setImportStatus('');
     }
   };
 
@@ -407,6 +497,17 @@ const Affiliates = () => {
           </p>
         </div>
         <div className="flex items-center space-x-3 mt-4 md:mt-0">
+          {isAdmin && (
+            <button
+              onClick={handleUnifiedImport}
+              disabled={isImporting}
+              className="btn btn-primary flex items-center space-x-2"
+              title="Import all affiliate data from GHL and GoAffPro"
+            >
+              <Download className={`h-4 w-4 ${isImporting ? 'animate-pulse' : ''}`} />
+              <span>{isImporting ? 'Importing...' : 'Import All Data'}</span>
+            </button>
+          )}
           <button
             onClick={() => {
               localStorage.clear();
@@ -436,13 +537,29 @@ const Affiliates = () => {
           )}
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="btn btn-primary flex items-center space-x-2"
+            className="btn btn-secondary flex items-center space-x-2"
           >
             <PlusCircle size={16} />
             <span>Invite Affiliate</span>
           </button>
         </div>
       </motion.div>
+
+      {/* Import Status */}
+      {isImporting && (
+        <motion.div 
+          variants={itemVariants} 
+          className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 mb-6"
+        >
+          <div className="flex items-center space-x-3">
+            <Download className="h-5 w-5 text-blue-400 animate-pulse" />
+            <div>
+              <p className="text-blue-400 font-medium">Import in Progress</p>
+              <p className="text-gray-300 text-sm">{importStatus}</p>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Stats Cards */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
