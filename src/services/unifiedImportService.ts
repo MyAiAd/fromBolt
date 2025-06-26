@@ -271,9 +271,8 @@ export class UnifiedImportService {
 
           const { error } = await this.supabase
             .from('affiliate_system_users')
-            .upsert([affiliateData], { 
-              onConflict: 'email',
-              ignoreDuplicates: false 
+            .upsert(affiliateData, { 
+              onConflict: 'email'
             });
 
           if (error) {
@@ -399,9 +398,8 @@ export class UnifiedImportService {
 
           const { error } = await this.supabase
             .from('affiliate_system_users')
-            .upsert([affiliateData], { 
-              onConflict: 'email',
-              ignoreDuplicates: false 
+            .upsert(affiliateData, { 
+              onConflict: 'email'
             });
 
           if (error) {
