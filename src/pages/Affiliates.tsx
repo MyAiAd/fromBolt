@@ -319,9 +319,9 @@ const Affiliates = () => {
   const getSourceBadge = (source: string) => {
     switch (source) {
       case 'goaffpro':
-        return <span className="px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-400">GoAFF Pro</span>;
+        return <span className="px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-400">SHP</span>;
       case 'mightynetworks':
-        return <span className="px-2 py-1 text-xs rounded-full bg-purple-500/20 text-purple-400">Mighty Networks</span>;
+        return <span className="px-2 py-1 text-xs rounded-full bg-purple-500/20 text-purple-400">MN</span>;
       case 'native':
         return <span className="px-2 py-1 text-xs rounded-full bg-green-500/20 text-green-400">GHL</span>;
       default:
@@ -487,7 +487,7 @@ const Affiliates = () => {
           <div className="flex items-center justify-between p-3 bg-rise-dark-light rounded-lg">
             <div className="flex items-center space-x-3">
               <div className="h-3 w-3 rounded-full bg-blue-400"></div>
-              <span className="text-gray-300">GoAFF Pro</span>
+              <span className="text-gray-300">Shopify</span>
             </div>
             <span className="text-white font-semibold">{stats.bySource.goaffpro}</span>
           </div>

@@ -4,7 +4,7 @@ export interface AggregatedAffiliate {
   id: string;
   name: string;
   email: string;
-  source: 'goaffpro' | 'mightynetworks' | 'native';
+  source: 'SHP' | 'MN' | 'GHL';
   level: string;
   referrals: number;
   commission: string;
@@ -106,8 +106,8 @@ export class AffiliateAggregationService {
           id: `goaffpro_${affiliate.id}`,
           name: displayName,
           email: affiliate.email,
-          source: 'goaffpro' as const,
-          level: 'ReAction',
+          source: 'SHP' as const,
+          level: affiliate.current_performance_level || 'Aligned',
           referrals: affiliate.total_orders || 0,
           commission: `$${(affiliate.total_earnings || 0).toFixed(2)}`,
           dateJoined: joinDate,
@@ -177,8 +177,8 @@ export class AffiliateAggregationService {
           id: `mighty_${affiliate.id}`,
           name: displayName,
           email: affiliate.email,
-          source: 'mightynetworks' as const,
-          level: 'Bitcoin is BAE',
+          source: 'MN' as const,
+          level: affiliate.current_performance_level || 'Aligned',
           referrals: affiliate.total_referrals || 0,
           commission: `$${(affiliate.total_earnings || 0).toFixed(2)}`,
           dateJoined: joinDate,
@@ -259,9 +259,9 @@ export class AffiliateAggregationService {
           id: `ghl_${affiliate.id}`,
           name: displayName,
           email: affiliate.email,
-          source: 'native' as const, // Map GHL to native for now since we don't have a 'ghl' source type
-          level: 'GHL Import',
-          referrals: affiliate.total_orders || 0,
+          source: 'GHL' as const,
+          level: affiliate.current_performance_level || 'Aligned',
+          referrals: affiliate.total_l1_affiliates || 0,
           commission: `$${(affiliate.total_earnings || 0).toFixed(2)}`,
           dateJoined: joinDate,
           status: this.mapGHLStatus(affiliate.status),
@@ -335,7 +335,7 @@ export class AffiliateAggregationService {
           name: user.full_name || user.email?.split('@')[0] || 'Unknown',
           email: user.email || '',
           source: 'native' as const,
-          level: 'JennaZ.co',
+          level: user.affiliates[0]?.level || 'Aligned',
           referrals: 0, // TODO: Calculate from referrals table
           commission: '$0.00', // TODO: Calculate from commissions
           dateJoined: new Date(user.affiliates[0]?.created_at || user.created_at).toISOString().split('T')[0],
@@ -518,7 +518,7 @@ export class AffiliateAggregationService {
           name: displayName,
           email: affiliate.email,
           source: 'goaffpro' as const,
-          level: 'ReAction',
+          level: affiliate.current_performance_level || 'Aligned',
           referrals: affiliate.total_orders || 0,
           commission: `$${(affiliate.total_earnings || 0).toFixed(2)}`,
           dateJoined: joinDate,
@@ -581,7 +581,7 @@ export class AffiliateAggregationService {
           name: displayName,
           email: affiliate.email,
           source: 'mightynetworks' as const,
-          level: 'Bitcoin is BAE',
+          level: affiliate.current_performance_level || 'Aligned',
           referrals: affiliate.total_referrals || 0,
           commission: `$${(affiliate.total_earnings || 0).toFixed(2)}`,
           dateJoined: joinDate,
@@ -639,7 +639,7 @@ export class AffiliateAggregationService {
           name: displayName,
           email: affiliate.email,
           source: 'native' as const,
-          level: `Level ${affiliate.level || '1'}`,
+          level: affiliate.current_performance_level || 'Aligned',
           referrals: affiliate.total_team_size || 0,
           commission: `$${(affiliate.total_earnings || 0).toFixed(2)}`,
           dateJoined: joinDate,
@@ -697,7 +697,7 @@ export class AffiliateAggregationService {
           name: displayName,
           email: affiliate.email,
           source: 'native' as const,
-          level: `Level ${affiliate.level || '1'}`,
+          level: affiliate.current_performance_level || 'Aligned',
           referrals: affiliate.total_team_size || 0,
           commission: `$${(affiliate.total_earnings || 0).toFixed(2)}`,
           dateJoined: joinDate,
