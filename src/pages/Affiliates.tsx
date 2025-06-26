@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
 import { Eye, Users, Search, PlusCircle, ChevronDown, ChevronUp, Filter, Database, RefreshCw, Download, Settings as SettingsIcon, CheckCircle, X } from 'lucide-react';
@@ -326,51 +326,62 @@ const Affiliates = () => {
     }
   };
 
-  const handleSort = (field: keyof AggregatedAffiliate) => {
+  const handleSort = useCallback((field: keyof AggregatedAffiliate) => {
+    console.log('🔄 Sort clicked:', field, 'Current sortField:', sortField, 'Current direction:', sortDirection);
+    
     if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+      // Same field clicked, toggle direction
+      const newDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+      console.log('🔄 Toggling direction to:', newDirection);
+      setSortDirection(newDirection);
     } else {
+      // Different field clicked, set new field and reset to asc
+      console.log('🔄 Setting new field:', field, 'direction: asc');
       setSortField(field);
       setSortDirection('asc');
     }
-  };
+  }, [sortField, sortDirection]);
 
-  const filteredAffiliates = affiliates
-    .filter(affiliate => {
-      const matchesSearch = affiliate.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                            affiliate.email.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      const matchesLevel = levelFilter === 'All' || affiliate.level === levelFilter;
-      
-      const matchesStatus = statusFilter === 'All' || affiliate.status === statusFilter;
-      
-      const matchesSource = sourceFilter === 'All' || affiliate.source === sourceFilter;
-      
-      return matchesSearch && matchesLevel && matchesStatus && matchesSource;
-    })
-    .sort((a, b) => {
-      if (sortField === 'commission') {
-        // Strip the $ and convert to number for commission sorting
-        const valueA = parseFloat(a[sortField].replace('$', '').replace(',', ''));
-        const valueB = parseFloat(b[sortField].replace('$', '').replace(',', ''));
-        return sortDirection === 'asc' ? valueA - valueB : valueB - valueA;
-      } else if (sortField === 'dateJoined') {
-        // Date comparison
-        return sortDirection === 'asc' 
-          ? new Date(a[sortField]).getTime() - new Date(b[sortField]).getTime()
-          : new Date(b[sortField]).getTime() - new Date(a[sortField]).getTime();
-      } else if (sortField === 'referrals') {
-        // Number comparison
-        return sortDirection === 'asc' ? a[sortField] - b[sortField] : b[sortField] - a[sortField];
-      } else {
-        // String comparison
-        const aValue = (a[sortField] || '').toString().toLowerCase();
-        const bValue = (b[sortField] || '').toString().toLowerCase();
-        return sortDirection === 'asc'
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
-      }
-    });
+  const filteredAffiliates = useMemo(() => {
+    console.log('🔄 Recalculating filteredAffiliates with sort:', sortField, sortDirection);
+    
+    return affiliates
+      .filter(affiliate => {
+        const matchesSearch = affiliate.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                              affiliate.email.toLowerCase().includes(searchQuery.toLowerCase());
+        
+        const matchesLevel = levelFilter === 'All' || affiliate.level === levelFilter;
+        
+        const matchesStatus = statusFilter === 'All' || affiliate.status === statusFilter;
+        
+        const matchesSource = sourceFilter === 'All' || affiliate.source === sourceFilter;
+        
+        return matchesSearch && matchesLevel && matchesStatus && matchesSource;
+      })
+      .sort((a, b) => {
+        if (sortField === 'commission') {
+          // Strip the $ and convert to number for commission sorting
+          const valueA = parseFloat(a[sortField].replace('$', '').replace(',', ''));
+          const valueB = parseFloat(b[sortField].replace('$', '').replace(',', ''));
+          return sortDirection === 'asc' ? valueA - valueB : valueB - valueA;
+        } else if (sortField === 'dateJoined') {
+          // Date comparison
+          return sortDirection === 'asc' 
+            ? new Date(a[sortField]).getTime() - new Date(b[sortField]).getTime()
+            : new Date(b[sortField]).getTime() - new Date(a[sortField]).getTime();
+        } else if (sortField === 'referrals') {
+          // Number comparison
+          return sortDirection === 'asc' ? a[sortField] - b[sortField] : b[sortField] - a[sortField];
+        } else {
+          // String comparison
+          const aValue = (a[sortField] || '').toString().toLowerCase();
+          const bValue = (b[sortField] || '').toString().toLowerCase();
+          return sortDirection === 'asc'
+            ? aValue.localeCompare(bValue)
+            : bValue.localeCompare(aValue);
+        }
+      });
+  }, [affiliates, searchQuery, levelFilter, statusFilter, sourceFilter, sortField, sortDirection]);
 
   const getSourceBadge = (source: string) => {
     switch (source) {
@@ -445,10 +456,10 @@ const Affiliates = () => {
     },
   };
 
-  const getSortIcon = (field: keyof AggregatedAffiliate) => {
+  const getSortIcon = useCallback((field: keyof AggregatedAffiliate) => {
     if (sortField !== field) return <ChevronDown size={14} className="opacity-40" />;
     return sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />;
-  };
+  }, [sortField, sortDirection]);
 
   // Debug logging
   console.log('🔄 About to render. Affiliates state:', affiliates);
@@ -810,7 +821,7 @@ const Affiliates = () => {
                     onClick={() => handleSort('referrals')}
                   >
                     <div className="flex items-center space-x-1">
-                      <span>Referrals</span>
+                      <span>Leads</span>
                       {getSortIcon('referrals')}
                     </div>
                   </th>
