@@ -293,6 +293,7 @@ export class UnifiedImportService {
       }
 
       console.log(`✅ GHL v1: Total contacts fetched: ${allContacts.length}`);
+      console.log(`🔍 GHL v1: These contacts will be inserted into database:`, allContacts.map(c => ({ id: c.id, email: c.email, hasReferralCode: !!c.referralCode, tags: c.tags })).slice(0, 5));
       result.recordsProcessed = allContacts.length;
 
       // Process contacts into Supabase
