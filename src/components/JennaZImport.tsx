@@ -272,14 +272,14 @@ const JennaZImport: React.FC = () => {
 
           const referralCode = contact.referralCode || generateReferralCode(contact);
 
-          // Import into main affiliate system using user client
+          // Import into main affiliate system
           const affiliateData = {
             email: contact.email,
             first_name: contact.firstName || null,
             last_name: contact.lastName || null,
             phone: contact.phone || null,
             referral_code: referralCode,
-            primary_source: 'ghl',
+            primary_source: 'GHL',
             ghl_contact_id: contact.id,
             status: 'active',
             signup_date: contact.dateAdded ? new Date(contact.dateAdded).toISOString() : new Date().toISOString(),
@@ -537,14 +537,14 @@ const JennaZImport: React.FC = () => {
 
           const referralCode = contact.referralCode || generateReferralCode(contact);
 
-          // Import into main affiliate system using user client
+          // Import into main affiliate system
           const affiliateData = {
             email: contact.email,
             first_name: contact.firstName || null,
             last_name: contact.lastName || null,
             phone: contact.phone || null,
             referral_code: referralCode,
-            primary_source: 'ghl',
+            primary_source: 'GHL',
             ghl_contact_id: contact.id,
             status: 'active',
             signup_date: contact.dateAdded ? new Date(contact.dateAdded).toISOString() : new Date().toISOString(),

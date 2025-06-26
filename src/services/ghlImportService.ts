@@ -152,45 +152,85 @@ export class GHLImportService {
     console.log('🔄 Fetching all contacts from Go High Level...');
     
     const allContacts: GHLContact[] = [];
-    let cursor: string | null = null;
+    let startAfter: string | null = null;
+    let startAfterId: string | null = null;
     let page = 1;
-    const limit = 100; // Standard limit for both APIs
+    const limit = 100;
 
     do {
       try {
         console.log(`📥 Fetching page ${page}...`);
         
-        const endpoint = this.config.apiVersion === 'v2'
-          ? `/contacts/?locationId=${this.config.locationId}&limit=${limit}`
-          : `/contacts/?locationId=${this.config.locationId}&limit=${limit}`;
-
-        const response = await this.makeGHLRequest(endpoint, cursor);
+        // Build URL with proper cursor pagination parameters
+        let url = `${this.config.baseUrl}/contacts/?locationId=${this.config.locationId}&limit=${limit}`;
         
-        if (response.contacts && Array.isArray(response.contacts)) {
-          allContacts.push(...response.contacts);
-          console.log(`✅ Fetched ${response.contacts.length} contacts (total: ${allContacts.length})`);
+        // Add cursor parameters if we have them
+        if (startAfter && startAfterId) {
+          url += `&startAfter=${startAfter}&startAfterId=${startAfterId}`;
+          console.log(`🔍 Using cursor: startAfter=${startAfter}, startAfterId=${startAfterId}`);
         }
 
-        // Handle pagination differently for v1 vs v2
-        if (this.config.apiVersion === 'v2') {
-          cursor = response.meta?.nextCursor || null;
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${this.config.apiKey}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`GHL API Error: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        
+        console.log(`📊 Response: ${data.contacts?.length || 0} contacts`);
+        
+        if (data.contacts && Array.isArray(data.contacts) && data.contacts.length > 0) {
+          allContacts.push(...data.contacts);
+          console.log(`✅ Added ${data.contacts.length} contacts (total: ${allContacts.length})`);
+          
+          // Extract cursor for next page from meta
+          if (data.meta && data.meta.startAfter && data.meta.startAfterId) {
+            startAfter = data.meta.startAfter;
+            startAfterId = data.meta.startAfterId;
+          } else {
+            console.log(`⚠️ No cursor info in response - checking if we reached end`);
+            // If we got less than the limit, we're probably at the end
+            if (data.contacts.length < limit) {
+              console.log(`🏁 Got ${data.contacts.length} < ${limit} contacts, reached end`);
+              break;
+            }
+            // If no cursor but we got a full page, something might be wrong
+            console.log(`❌ No cursor but got full page - stopping to prevent infinite loop`);
+            break;
+          }
+          
+          // If we got less than the limit, we're at the end
+          if (data.contacts.length < limit) {
+            console.log(`🏁 Got ${data.contacts.length} < ${limit} contacts, reached end`);
+            break;
+          }
         } else {
-          // v1 pagination - check if we got fewer results than limit
-          cursor = response.contacts?.length === limit ? `${allContacts.length}` : null;
+          console.log(`❌ No contacts in response - stopping`);
+          break;
         }
 
         page++;
         
         // Rate limiting - be more conservative
-        if (cursor) {
-          await new Promise(resolve => setTimeout(resolve, 250));
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Safety break to prevent infinite loops
+        if (page > 100) {
+          console.log('🛑 Safety break at page 100');
+          break;
         }
         
       } catch (error) {
         console.error(`❌ Error fetching page ${page}:`, error);
         break;
       }
-    } while (cursor && allContacts.length < 1000); // Safety limit
+    } while (startAfter && startAfterId && allContacts.length < 2000); // Reasonable safety limit
 
     console.log(`✅ Total contacts fetched: ${allContacts.length}`);
     return allContacts;
@@ -199,6 +239,13 @@ export class GHLImportService {
   async importAffiliates(userId: string): Promise<ImportResult> {
     console.log('🔄 Starting import process...');
     console.log(`🔧 Using API ${this.config.apiVersion} with base URL: ${this.config.baseUrl}`);
+    
+    // Create import log at the start
+    const logId = await this.createImportLog({
+      import_source: 'ghl',
+      import_type: 'affiliates',
+      started_by: userId
+    });
     
     const result: ImportResult = {
       success: false,
@@ -252,14 +299,14 @@ export class GHLImportService {
           // Generate referral code if not provided
           const referralCode = contact.referralCode || this.generateReferralCode(contact);
 
-          // Import into main affiliate system
+          // Import into main affiliate system with correct primary_source value
           const affiliateData = {
             email: contact.email,
             first_name: contact.firstName || null,
             last_name: contact.lastName || null,
             phone: contact.phone || null,
             referral_code: referralCode,
-            primary_source: 'ghl',
+            primary_source: 'GHL', // Updated to match new constraint
             ghl_contact_id: contact.id,
             status: 'active',
             signup_date: contact.dateAdded ? new Date(contact.dateAdded).toISOString() : new Date().toISOString(),

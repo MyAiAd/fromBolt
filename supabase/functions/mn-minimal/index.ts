@@ -82,7 +82,7 @@ serve(async (req) => {
         email: payload.email,
         first_name: payload.first_name || null,
         last_name: payload.last_name || null,
-        primary_source: 'mightynetworks',
+        primary_source: 'MN',
         status: 'active',
         signup_date: new Date().toISOString(),
         referral_code: referralCode,
