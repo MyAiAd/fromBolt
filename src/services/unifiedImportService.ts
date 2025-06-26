@@ -170,65 +170,75 @@ export class UnifiedImportService {
     };
 
     try {
-      // Fetch affiliate contacts from GHL using targeted tag searches
-      const affiliateTags = ['affiliate', 'partner', 'referrer', 'ambassador', 'influencer'];
+      // Only fetch contacts that are actual affiliates (not just prospects)
+      console.log(`🏷️ GHL: Searching for actual affiliates only...`);
       const allContacts: GHLContact[] = [];
       
-      for (const tag of affiliateTags) {
-        console.log(`🏷️ GHL: Searching for contacts with tag: "${tag}"`);
+      // Search only for "affiliate" tag (most specific)
+      let currentUrl = `https://rest.gohighlevel.com/v1/contacts/?locationId=${credentials.locationId}&limit=100&tags=affiliate`;
+      let tagPage = 1;
+      
+      do {
+        console.log(`📥 GHL: Fetching page ${tagPage} for affiliates...`);
         
-        let currentUrl = `https://rest.gohighlevel.com/v1/contacts/?locationId=${credentials.locationId}&limit=100&tags=${encodeURIComponent(tag)}`;
-        let tagPage = 1;
-        
-        do {
-          console.log(`📥 GHL: Fetching page ${tagPage} for tag "${tag}"...`);
-          
-          const response = await fetch(currentUrl, {
-            headers: {
-              'Authorization': `Bearer ${credentials.apiKey}`,
-              'Content-Type': 'application/json'
-            }
-          });
-
-          if (!response.ok) {
-            throw new Error(`GHL API Error: ${response.status} ${response.statusText}`);
+        const response = await fetch(currentUrl, {
+          headers: {
+            'Authorization': `Bearer ${credentials.apiKey}`,
+            'Content-Type': 'application/json'
           }
+        });
 
-          const responseData = await response.json();
-          
-          if (responseData.contacts && Array.isArray(responseData.contacts)) {
-            // Filter out duplicates based on contact ID
-            const newContacts = responseData.contacts.filter((contact: GHLContact) => 
-              !allContacts.some(existing => existing.id === contact.id)
+        if (!response.ok) {
+          throw new Error(`GHL API Error: ${response.status} ${response.statusText}`);
+        }
+
+        const responseData = await response.json();
+        
+        if (responseData.contacts && Array.isArray(responseData.contacts)) {
+          // Filter to only include contacts with affiliate indicators
+          const affiliateContacts = responseData.contacts.filter((contact: GHLContact) => {
+            // Skip duplicates
+            if (allContacts.some(existing => existing.id === contact.id)) {
+              return false;
+            }
+            
+            // Check for affiliate indicators
+            const hasReferralCode = contact.referralCode && contact.referralCode.trim() !== '';
+            const hasAffiliateCustomFields = contact.customFields && (
+              contact.customFields.affiliate_id || 
+              contact.customFields.referral_code || 
+              contact.customFields.commission_rate ||
+              contact.customFields.affiliate_status ||
+              contact.customFields.payout_email
             );
             
-            allContacts.push(...newContacts);
-            console.log(`✅ GHL: Added ${newContacts.length} new contacts for tag "${tag}" (total: ${allContacts.length})`);
-          }
+            // Only include if they have clear affiliate indicators
+            return hasReferralCode || hasAffiliateCustomFields;
+          });
           
-          // Use nextPageUrl if available, but ensure it's HTTPS
-          const nextUrl = responseData.meta?.nextPageUrl;
-          if (nextUrl) {
-            // Fix mixed content issue by ensuring HTTPS
-            currentUrl = nextUrl.replace('http://', 'https://');
-            tagPage++;
-            
-            // Rate limiting
-            await new Promise(resolve => setTimeout(resolve, 200));
-            
-            // Safety break
-            if (tagPage > 20) {
-              console.log(`🛑 GHL: Safety break at page 20 for tag "${tag}"`);
-              break;
-            }
-          } else {
+          allContacts.push(...affiliateContacts);
+          console.log(`✅ GHL: Added ${affiliateContacts.length} actual affiliates from page ${tagPage} (filtered from ${responseData.contacts.length} contacts, total: ${allContacts.length})`);
+        }
+        
+        // Use nextPageUrl if available, but ensure it's HTTPS
+        const nextUrl = responseData.meta?.nextPageUrl;
+        if (nextUrl) {
+          // Fix mixed content issue by ensuring HTTPS
+          currentUrl = nextUrl.replace('http://', 'https://');
+          tagPage++;
+          
+          // Rate limiting
+          await new Promise(resolve => setTimeout(resolve, 200));
+          
+          // Safety break
+          if (tagPage > 20) {
+            console.log(`🛑 GHL: Safety break at page 20`);
             break;
           }
-        } while (true);
-        
-        // Rate limiting between tag searches
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
+        } else {
+          break;
+        }
+      } while (true);
 
       console.log(`✅ GHL: Total contacts fetched: ${allContacts.length}`);
       result.recordsProcessed = allContacts.length;
