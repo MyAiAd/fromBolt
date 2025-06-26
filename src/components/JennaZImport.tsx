@@ -254,18 +254,26 @@ const JennaZImport: React.FC = () => {
 
       setImportStatus(prev => ({ ...prev, currentOperation: 'Filtering for affiliates only...' }));
 
-      // Filter contacts to identify only actual affiliates
+      // Filter contacts to identify only actual affiliates  
       const isAffiliate = (contact: GHLContact): boolean => {
         // Check multiple criteria to identify affiliates
         const customFields = contact.customFields || {};
         
-        // 1. Check for affiliate-specific tags or custom fields
+        // More inclusive approach - any contact with meaningful data could be an affiliate
+        
+        // 1. Check for affiliate-specific tags or custom fields (more inclusive)
         const affiliateIndicators = [
           'affiliate',
           'partner',
           'referral',
           'commission',
-          'ambassador'
+          'ambassador',
+          'agent',
+          'rep',
+          'distributor',
+          'member',
+          'customer',
+          'lead'
         ];
         
         // Check custom fields for affiliate indicators
@@ -276,25 +284,45 @@ const JennaZImport: React.FC = () => {
           if (affiliateIndicators.some(indicator => 
             keyLower.includes(indicator) || valueLower.includes(indicator)
           )) {
+            console.log(`✅ Affiliate indicator found: ${key}=${value}`);
             return true;
           }
         }
         
         // 2. Check if contact has a referral code
         if (contact.referralCode) {
+          console.log(`✅ Referral code found: ${contact.referralCode}`);
           return true;
         }
         
-        // 3. Check for specific custom field that marks affiliates
-        // You can customize these field names based on your GHL setup
+        // 3. Check for specific custom field that marks affiliates (more options)
         if (customFields['affiliate_status'] || 
             customFields['is_affiliate'] || 
             customFields['partner_type'] ||
-            customFields['referral_code']) {
+            customFields['referral_code'] ||
+            customFields['affiliate_id'] ||
+            customFields['commission_rate'] ||
+            customFields['status'] ||
+            customFields['tier'] ||
+            customFields['level']) {
+          console.log(`✅ Specific affiliate field found in custom fields`);
           return true;
         }
         
-        // 4. If none of the above, this is likely just a regular contact
+        // 4. Check if contact has meaningful engagement (phone, first name, last name)
+        if (contact.phone && contact.firstName && contact.lastName) {
+          console.log(`✅ Complete contact info found: ${contact.firstName} ${contact.lastName} - ${contact.phone}`);
+          return true;
+        }
+        
+        // 5. More inclusive - if contact has both first and last name, they're likely legitimate
+        if (contact.firstName && contact.lastName && contact.firstName.trim() !== '' && contact.lastName.trim() !== '') {
+          console.log(`✅ Valid name found: ${contact.firstName} ${contact.lastName}`);
+          return true;
+        }
+        
+        // Debug: Log contacts that are being filtered OUT
+        console.log(`❌ Contact filtered out - Email: ${contact.email}, Name: ${contact.firstName || 'N/A'} ${contact.lastName || 'N/A'}, Fields: ${Object.keys(customFields).length}`);
         return false;
       };
 
@@ -582,13 +610,21 @@ const JennaZImport: React.FC = () => {
         // Check multiple criteria to identify affiliates
         const customFields = contact.customFields || {};
         
-        // 1. Check for affiliate-specific tags or custom fields
+        // More inclusive approach - any contact with meaningful data could be an affiliate
+        
+        // 1. Check for affiliate-specific tags or custom fields (more inclusive)
         const affiliateIndicators = [
           'affiliate',
           'partner',
           'referral',
           'commission',
-          'ambassador'
+          'ambassador',
+          'agent',
+          'rep',
+          'distributor',
+          'member',
+          'customer',
+          'lead'
         ];
         
         // Check custom fields for affiliate indicators
@@ -599,25 +635,45 @@ const JennaZImport: React.FC = () => {
           if (affiliateIndicators.some(indicator => 
             keyLower.includes(indicator) || valueLower.includes(indicator)
           )) {
+            console.log(`✅ Affiliate indicator found: ${key}=${value}`);
             return true;
           }
         }
         
         // 2. Check if contact has a referral code
         if (contact.referralCode) {
+          console.log(`✅ Referral code found: ${contact.referralCode}`);
           return true;
         }
         
-        // 3. Check for specific custom field that marks affiliates
-        // You can customize these field names based on your GHL setup
+        // 3. Check for specific custom field that marks affiliates (more options)
         if (customFields['affiliate_status'] || 
             customFields['is_affiliate'] || 
             customFields['partner_type'] ||
-            customFields['referral_code']) {
+            customFields['referral_code'] ||
+            customFields['affiliate_id'] ||
+            customFields['commission_rate'] ||
+            customFields['status'] ||
+            customFields['tier'] ||
+            customFields['level']) {
+          console.log(`✅ Specific affiliate field found in custom fields`);
           return true;
         }
         
-        // 4. If none of the above, this is likely just a regular contact
+        // 4. Check if contact has meaningful engagement (phone, first name, last name)
+        if (contact.phone && contact.firstName && contact.lastName) {
+          console.log(`✅ Complete contact info found: ${contact.firstName} ${contact.lastName} - ${contact.phone}`);
+          return true;
+        }
+        
+        // 5. More inclusive - if contact has both first and last name, they're likely legitimate
+        if (contact.firstName && contact.lastName && contact.firstName.trim() !== '' && contact.lastName.trim() !== '') {
+          console.log(`✅ Valid name found: ${contact.firstName} ${contact.lastName}`);
+          return true;
+        }
+        
+        // Debug: Log contacts that are being filtered OUT
+        console.log(`❌ Contact filtered out - Email: ${contact.email}, Name: ${contact.firstName || 'N/A'} ${contact.lastName || 'N/A'}, Fields: ${Object.keys(customFields).length}`);
         return false;
       };
 
@@ -1102,7 +1158,163 @@ const JennaZImport: React.FC = () => {
           className="flex items-center justify-center p-4 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:opacity-50 text-white rounded-lg transition-colors font-semibold"
         >
           <Download className="w-5 h-5 mr-2" />
-          Import All Data
+          Import All Data (Filtered)
+        </button>
+
+        <button
+          onClick={() => {
+            // Create a modified version with no filtering for testing
+            const originalSkipFiltering = handleImportAll;
+            // Temporarily modify the function to skip filtering
+            const testImport = async () => {
+              console.log('🧪 TEST IMPORT: Running with minimal filtering to import more contacts');
+              if (!isCredentialsValid) {
+                setErrorMessage('Please configure GHL credentials first');
+                return;
+              }
+
+              setImportStatus(prev => ({ ...prev, isImporting: true, currentOperation: 'Starting TEST import (minimal filtering)...' }));
+              setErrorMessage('');
+              
+              try {
+                setImportStatus(prev => ({ ...prev, currentOperation: 'Fetching contacts from GHL API...' }));
+                
+                const startTime = new Date();
+                const baseUrl = 'https://rest.gohighlevel.com/v1';
+                let allContacts: GHLContact[] = [];
+                let nextCursor: string | null = null;
+                
+                do {
+                  const endpoint = `/contacts/?locationId=${credentials.locationId}&limit=100${
+                    nextCursor ? `&cursor=${nextCursor}` : ''
+                  }`;
+                  
+                  const response = await fetch(`${baseUrl}${endpoint}`, {
+                    headers: {
+                      'Authorization': `Bearer ${credentials.apiKey}`,
+                      'Content-Type': 'application/json'
+                    }
+                  });
+
+                  if (!response.ok) {
+                    throw new Error(`GHL API Error: ${response.status} ${response.statusText}`);
+                  }
+
+                  const responseData = await response.json();
+                  
+                  if (responseData.contacts && Array.isArray(responseData.contacts)) {
+                    allContacts = allContacts.concat(responseData.contacts);
+                  }
+                  
+                  nextCursor = responseData.meta?.nextCursor || null;
+                  
+                  if (nextCursor) {
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                  }
+                  
+                } while (nextCursor);
+
+                console.log(`✅ Total contacts fetched: ${allContacts.length}`);
+                
+                // MINIMAL FILTERING - only exclude obviously bad contacts
+                const minimalFilter = (contact: GHLContact): boolean => {
+                  // Only exclude contacts that are clearly invalid
+                  if (!contact.email || !contact.email.includes('@')) return false;
+                  if (contact.email.includes('test') || contact.email.includes('noreply')) return false;
+                  return true; // Include almost everything else
+                };
+
+                const testContacts = allContacts.filter(minimalFilter);
+                console.log(`🧪 TEST: Importing ${testContacts.length} contacts with minimal filtering (was ${allContacts.length} total)`);
+
+                setImportStatus(prev => ({ ...prev, currentOperation: `TEST: Processing ${testContacts.length} contacts with minimal filtering...` }));
+
+                let recordsSuccessful = 0;
+                let recordsFailed = 0;
+                const errors: string[] = [];
+
+                // Process a smaller sample for testing (first 50)
+                const sampleContacts = testContacts.slice(0, 50);
+                console.log(`🧪 Processing sample of ${sampleContacts.length} contacts for testing`);
+
+                for (const contact of sampleContacts) {
+                  try {
+                    const referralCode = contact.referralCode || `TEST${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+
+                    const affiliateData = {
+                      email: contact.email,
+                      first_name: contact.firstName || null,
+                      last_name: contact.lastName || null,
+                      phone: contact.phone || null,
+                      referral_code: referralCode,
+                      primary_source: 'ghl',
+                      ghl_contact_id: contact.id,
+                      status: 'active',
+                      signup_date: contact.dateAdded ? new Date(contact.dateAdded).toISOString() : new Date().toISOString(),
+                      last_active: contact.lastActivity ? new Date(contact.lastActivity).toISOString() : null,
+                      custom_fields: contact.customFields ? JSON.stringify(contact.customFields) : null
+                    };
+
+                    const { error: affiliateError } = await supabase
+                      .from('affiliate_system_users')
+                      .upsert([affiliateData], { 
+                        onConflict: 'email',
+                        ignoreDuplicates: false 
+                      });
+
+                    if (affiliateError) {
+                      errors.push(`Contact ${contact.id}: ${affiliateError.message}`);
+                      recordsFailed++;
+                    } else {
+                      recordsSuccessful++;
+                    }
+
+                  } catch (error) {
+                    errors.push(`Contact ${contact.id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                    recordsFailed++;
+                  }
+                }
+
+                const endTime = new Date();
+                const duration = endTime.getTime() - startTime.getTime();
+
+                const result = {
+                  success: recordsFailed === 0,
+                  recordsProcessed: sampleContacts.length,
+                  recordsImported: recordsSuccessful,
+                  recordsUpdated: 0,
+                  recordsSkipped: recordsFailed,
+                  errors: errors || [],
+                  startTime,
+                  endTime,
+                  duration
+                };
+
+                setImportStatus(prev => ({ 
+                  ...prev, 
+                  isImporting: false, 
+                  currentOperation: '',
+                  results: { ...prev.results, affiliates: result }
+                }));
+                
+                setErrorMessage(`🧪 TEST IMPORT: Processed ${result.recordsImported} of ${sampleContacts.length} sample contacts. Total available: ${testContacts.length}`);
+                
+                window.dispatchEvent(new CustomEvent('affiliate-data-updated'));
+                
+              } catch (error) {
+                console.error('Test import error:', error);
+                setErrorMessage(`Test import failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                setImportStatus(prev => ({ ...prev, isImporting: false, currentOperation: '' }));
+              }
+            };
+            
+            testImport();
+          }}
+          disabled={importStatus.isImporting}
+          className="flex items-center justify-center p-4 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 disabled:opacity-50 text-white rounded-lg transition-colors"
+        >
+          <Eye className="w-5 h-5 mr-2" />
+          Test Import (50 Samples)
         </button>
 
         <button
