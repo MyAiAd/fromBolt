@@ -213,68 +213,85 @@ const JennaZImport: React.FC = () => {
       console.log('Fetching contacts from GHL API...');
       const startTime = new Date();
 
-      // Fetch contacts directly from GHL API
+      // Fetch affiliate contacts directly from GHL API using targeted tag searches
       const baseUrl = 'https://rest.gohighlevel.com/v1';
       let allContacts: GHLContact[] = [];
       let nextUrl: string | null = null;
       
-      // Start with the initial URL
-      let currentUrl = `${baseUrl}/contacts/?locationId=${credentials.locationId}&limit=100`;
+      // Define affiliate-related tags to search for
+      const affiliateTags = ['affiliate', 'partner', 'referrer', 'ambassador', 'influencer'];
       
-      do {
-        console.log(`🔗 Request URL: ${currentUrl}`);
+      // We'll make multiple requests for different affiliate tags to be more targeted
+      for (const tag of affiliateTags) {
+        console.log(`🏷️ Searching for contacts with tag: "${tag}"`);
         
-        const response = await fetch(currentUrl, {
-          headers: {
-            'Authorization': `Bearer ${credentials.apiKey}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`GHL API Error: ${response.status} ${response.statusText} - ${errorText}`);
-        }
-
-        const responseData = await response.json();
+        // Start with the initial URL for this tag
+        let currentUrl = `${baseUrl}/contacts/?locationId=${credentials.locationId}&limit=100&tags=${encodeURIComponent(tag)}`;
+        let tagPage = 1;
         
-        // Debug: Log the response structure to understand pagination
-        console.log(`🔍 API Response structure:`, {
-          contactsCount: responseData.contacts?.length || 0,
-          metaKeys: responseData.meta ? Object.keys(responseData.meta) : 'no meta',
-          meta: responseData.meta,
-          hasNextPageUrl: !!responseData.meta?.nextPageUrl,
-          nextPageUrl: responseData.meta?.nextPageUrl
-        });
-        
-        // Debug: Log all meta fields to identify pagination fields
-        if (responseData.meta) {
-          console.log(`🔍 All meta fields:`, responseData.meta);
-          Object.keys(responseData.meta).forEach(key => {
-            console.log(`  ${key}: ${responseData.meta[key]}`);
+        do {
+          console.log(`📥 Fetching page ${tagPage} for tag "${tag}"...`);
+          console.log(`🔗 Request URL: ${currentUrl}`);
+          
+          const response = await fetch(currentUrl, {
+            headers: {
+              'Authorization': `Bearer ${credentials.apiKey}`,
+              'Content-Type': 'application/json'
+            }
           });
-        }
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`GHL API Error: ${response.status} ${response.statusText} - ${errorText}`);
+          }
+
+          const responseData = await response.json();
+          
+          console.log(`🔍 API Response for tag "${tag}":`, {
+            contactsCount: responseData.contacts?.length || 0,
+            hasNextPageUrl: !!responseData.meta?.nextPageUrl,
+          });
+          
+          if (responseData.contacts && Array.isArray(responseData.contacts)) {
+            // Filter out duplicates based on contact ID
+            const newContacts = responseData.contacts.filter((contact: GHLContact) => 
+              !allContacts.some(existing => existing.id === contact.id)
+            );
+            
+            allContacts = allContacts.concat(newContacts);
+            console.log(`📥 Added ${newContacts.length} new contacts for tag "${tag}" (total: ${allContacts.length})`);
+          }
+          
+          // Use the nextPageUrl directly if available
+          nextUrl = responseData.meta?.nextPageUrl || null;
+          
+          if (nextUrl) {
+            currentUrl = nextUrl;
+            console.log(`🔄 Next page URL for tag "${tag}": ${nextUrl}`);
+          } else {
+            console.log(`🏁 No nextPageUrl found for tag "${tag}" - reached end`);
+            break;
+          }
+          
+          tagPage++;
+          
+          // Rate limiting
+          await new Promise(resolve => setTimeout(resolve, 200));
+          
+          // Safety break per tag
+          if (tagPage > 20) {
+            console.log(`🛑 Safety break at page 20 for tag "${tag}"`);
+            break;
+          }
+          
+        } while (nextUrl);
         
-        if (responseData.contacts && Array.isArray(responseData.contacts)) {
-          allContacts = allContacts.concat(responseData.contacts);
-          console.log(`📥 Fetched ${responseData.contacts.length} contacts (total: ${allContacts.length})`);
-        }
+        // Reset for next tag
+        nextUrl = null;
         
-        // Use the nextPageUrl directly if available
-        nextUrl = responseData.meta?.nextPageUrl || null;
-        
-        if (nextUrl) {
-          currentUrl = nextUrl;
-          console.log(`🔄 Next page URL: ${nextUrl}`);
-        } else {
-          console.log(`🏁 No nextPageUrl found - reached end`);
-          break;
-        }
-        
-        // Rate limiting
-        await new Promise(resolve => setTimeout(resolve, 200));
-        
-      } while (nextUrl);
+        // Rate limiting between different tag searches
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
 
       console.log(`✅ Total contacts fetched: ${allContacts.length}`);
 
@@ -554,68 +571,85 @@ const JennaZImport: React.FC = () => {
       console.log('Fetching contacts from GHL API...');
       const startTime = new Date();
 
-      // Fetch contacts directly from GHL API
+      // Fetch affiliate contacts directly from GHL API using targeted tag searches
       const baseUrl = 'https://rest.gohighlevel.com/v1';
       let allContacts: GHLContact[] = [];
       let nextUrl: string | null = null;
       
-      // Start with the initial URL
-      let currentUrl = `${baseUrl}/contacts/?locationId=${credentials.locationId}&limit=100`;
+      // Define affiliate-related tags to search for
+      const affiliateTags = ['affiliate', 'partner', 'referrer', 'ambassador', 'influencer'];
       
-      do {
-        console.log(`🔗 Request URL: ${currentUrl}`);
+      // We'll make multiple requests for different affiliate tags to be more targeted
+      for (const tag of affiliateTags) {
+        console.log(`🏷️ Searching for contacts with tag: "${tag}"`);
         
-        const response = await fetch(currentUrl, {
-          headers: {
-            'Authorization': `Bearer ${credentials.apiKey}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`GHL API Error: ${response.status} ${response.statusText} - ${errorText}`);
-        }
-
-        const responseData = await response.json();
+        // Start with the initial URL for this tag
+        let currentUrl = `${baseUrl}/contacts/?locationId=${credentials.locationId}&limit=100&tags=${encodeURIComponent(tag)}`;
+        let tagPage = 1;
         
-        // Debug: Log the response structure to understand pagination
-        console.log(`🔍 API Response structure:`, {
-          contactsCount: responseData.contacts?.length || 0,
-          metaKeys: responseData.meta ? Object.keys(responseData.meta) : 'no meta',
-          meta: responseData.meta,
-          hasNextPageUrl: !!responseData.meta?.nextPageUrl,
-          nextPageUrl: responseData.meta?.nextPageUrl
-        });
-        
-        // Debug: Log all meta fields to identify pagination fields
-        if (responseData.meta) {
-          console.log(`🔍 All meta fields:`, responseData.meta);
-          Object.keys(responseData.meta).forEach(key => {
-            console.log(`  ${key}: ${responseData.meta[key]}`);
+        do {
+          console.log(`📥 Fetching page ${tagPage} for tag "${tag}"...`);
+          console.log(`🔗 Request URL: ${currentUrl}`);
+          
+          const response = await fetch(currentUrl, {
+            headers: {
+              'Authorization': `Bearer ${credentials.apiKey}`,
+              'Content-Type': 'application/json'
+            }
           });
-        }
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`GHL API Error: ${response.status} ${response.statusText} - ${errorText}`);
+          }
+
+          const responseData = await response.json();
+          
+          console.log(`🔍 API Response for tag "${tag}":`, {
+            contactsCount: responseData.contacts?.length || 0,
+            hasNextPageUrl: !!responseData.meta?.nextPageUrl,
+          });
+          
+          if (responseData.contacts && Array.isArray(responseData.contacts)) {
+            // Filter out duplicates based on contact ID
+            const newContacts = responseData.contacts.filter((contact: GHLContact) => 
+              !allContacts.some(existing => existing.id === contact.id)
+            );
+            
+            allContacts = allContacts.concat(newContacts);
+            console.log(`📥 Added ${newContacts.length} new contacts for tag "${tag}" (total: ${allContacts.length})`);
+          }
+          
+          // Use the nextPageUrl directly if available
+          nextUrl = responseData.meta?.nextPageUrl || null;
+          
+          if (nextUrl) {
+            currentUrl = nextUrl;
+            console.log(`🔄 Next page URL for tag "${tag}": ${nextUrl}`);
+          } else {
+            console.log(`🏁 No nextPageUrl found for tag "${tag}" - reached end`);
+            break;
+          }
+          
+          tagPage++;
+          
+          // Rate limiting
+          await new Promise(resolve => setTimeout(resolve, 200));
+          
+          // Safety break per tag
+          if (tagPage > 20) {
+            console.log(`🛑 Safety break at page 20 for tag "${tag}"`);
+            break;
+          }
+          
+        } while (nextUrl);
         
-        if (responseData.contacts && Array.isArray(responseData.contacts)) {
-          allContacts = allContacts.concat(responseData.contacts);
-          console.log(`📥 Fetched ${responseData.contacts.length} contacts (total: ${allContacts.length})`);
-        }
+        // Reset for next tag
+        nextUrl = null;
         
-        // Use the nextPageUrl directly if available
-        nextUrl = responseData.meta?.nextPageUrl || null;
-        
-        if (nextUrl) {
-          currentUrl = nextUrl;
-          console.log(`🔄 Next page URL: ${nextUrl}`);
-        } else {
-          console.log(`🏁 No nextPageUrl found - reached end`);
-          break;
-        }
-        
-        // Rate limiting
-        await new Promise(resolve => setTimeout(resolve, 200));
-        
-      } while (nextUrl);
+        // Rate limiting between different tag searches
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
 
       console.log(`✅ Total contacts fetched: ${allContacts.length}`);
 

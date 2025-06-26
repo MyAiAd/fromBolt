@@ -150,122 +150,133 @@ export class GHLImportService {
   }
 
   async fetchAllContacts(): Promise<GHLContact[]> {
-    console.log('🔄 Fetching all contacts from Go High Level...');
+    console.log('🔄 Fetching affiliate contacts from Go High Level...');
     
     const allContacts: GHLContact[] = [];
     let nextUrl: string | null = null;
     let page = 1;
     const limit = 100;
 
-    // Start with the initial URL
-    let currentUrl = `${this.config.baseUrl}/contacts/?locationId=${this.config.locationId}&limit=${limit}`;
-
-    do {
-      try {
-        console.log(`📥 Fetching page ${page}...`);
-        console.log(`🔗 Request URL: ${currentUrl}`);
-        
-        const response = await fetch(currentUrl, {
-          headers: {
-            'Authorization': `Bearer ${this.config.apiKey}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error(`GHL API Error: ${response.status} ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        
-        // Debug: Log the response structure to understand pagination
-        console.log(`🔍 API Response structure:`, {
-          contactsCount: data.contacts?.length || 0,
-          metaKeys: data.meta ? Object.keys(data.meta) : 'no meta',
-          meta: data.meta,
-          hasNextPageUrl: !!data.meta?.nextPageUrl,
-          nextPageUrl: data.meta?.nextPageUrl
-        });
-        
-        // Debug: Log all meta fields
-        if (data.meta) {
-          console.log(`🔍 All meta fields:`, data.meta);
-          Object.keys(data.meta).forEach(key => {
-            console.log(`  ${key}: ${data.meta[key]}`);
-          });
-        }
-        
-        if (data.contacts && Array.isArray(data.contacts) && data.contacts.length > 0) {
-          allContacts.push(...data.contacts);
-          console.log(`✅ Added ${data.contacts.length} contacts (total: ${allContacts.length})`);
-          
-          // Use the nextPageUrl directly if available
-          nextUrl = data.meta?.nextPageUrl || null;
-          
-          // If we have a nextPageUrl, use it for the next request
-          if (nextUrl) {
-            currentUrl = nextUrl;
-            console.log(`🔄 Next page URL: ${nextUrl}`);
-          } else {
-            console.log(`🏁 No nextPageUrl found - reached end`);
-            break;
-          }
-          
-          // If we got less than the limit, we're at the end
-          if (data.contacts.length < limit) {
-            console.log(`🏁 Got ${data.contacts.length} < ${limit} contacts, reached end`);
-            break;
-          }
-        } else {
-          console.log(`❌ No contacts in response - stopping`);
-          break;
-        }
-
-        page++;
-        
-        // Rate limiting - be more conservative
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
-        // Safety break to prevent infinite loops
-        if (page > 50) {
-          console.log('🛑 Safety break at page 50');
-          break;
-        }
-        
-      } catch (error) {
-        console.error(`❌ Error fetching page ${page}:`, error);
-        break;
-      }
-    } while (nextUrl && allContacts.length < 2000); // Continue while we have nextUrl and under safety limit
-
-    console.log(`✅ Total contacts fetched: ${allContacts.length}`);
+    // Define affiliate-related tags to search for
+    const affiliateTags = ['affiliate', 'partner', 'referrer', 'ambassador', 'influencer'];
     
-    // Filter for affiliate contacts only
+    // We'll make multiple requests for different affiliate tags to be more targeted
+    for (const tag of affiliateTags) {
+      console.log(`🏷️ Searching for contacts with tag: "${tag}"`);
+      
+      // Start with the initial URL for this tag
+      let currentUrl = `${this.config.baseUrl}/contacts/?locationId=${this.config.locationId}&limit=${limit}&tags=${encodeURIComponent(tag)}`;
+      let tagPage = 1;
+      
+      do {
+        try {
+          console.log(`📥 Fetching page ${tagPage} for tag "${tag}"...`);
+          console.log(`🔗 Request URL: ${currentUrl}`);
+          
+          const response = await fetch(currentUrl, {
+            headers: {
+              'Authorization': `Bearer ${this.config.apiKey}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (!response.ok) {
+            throw new Error(`GHL API Error: ${response.status} ${response.statusText}`);
+          }
+
+          const data = await response.json();
+          
+          console.log(`🔍 API Response for tag "${tag}":`, {
+            contactsCount: data.contacts?.length || 0,
+            hasNextPageUrl: !!data.meta?.nextPageUrl,
+          });
+          
+          if (data.contacts && Array.isArray(data.contacts) && data.contacts.length > 0) {
+            // Filter out duplicates based on contact ID
+            const newContacts = data.contacts.filter((contact: GHLContact) => 
+              !allContacts.some(existing => existing.id === contact.id)
+            );
+            
+            allContacts.push(...newContacts);
+            console.log(`✅ Added ${newContacts.length} new contacts for tag "${tag}" (total: ${allContacts.length})`);
+            
+            // Use the nextPageUrl directly if available
+            nextUrl = data.meta?.nextPageUrl || null;
+            
+            // If we have a nextPageUrl, use it for the next request
+            if (nextUrl) {
+              currentUrl = nextUrl;
+              console.log(`🔄 Next page URL for tag "${tag}": ${nextUrl}`);
+            } else {
+              console.log(`🏁 No nextPageUrl found for tag "${tag}" - reached end`);
+              break;
+            }
+            
+            // If we got less than the limit, we're at the end
+            if (data.contacts.length < limit) {
+              console.log(`🏁 Got ${data.contacts.length} < ${limit} contacts for tag "${tag}", reached end`);
+              break;
+            }
+          } else {
+            console.log(`❌ No contacts found for tag "${tag}" - stopping`);
+            break;
+          }
+
+          tagPage++;
+          
+          // Rate limiting - be more conservative
+          await new Promise(resolve => setTimeout(resolve, 300));
+          
+          // Safety break to prevent infinite loops per tag
+          if (tagPage > 20) {
+            console.log(`🛑 Safety break at page 20 for tag "${tag}"`);
+            break;
+          }
+          
+        } catch (error) {
+          console.error(`❌ Error fetching page ${tagPage} for tag "${tag}":`, error);
+          break;
+        }
+      } while (nextUrl);
+      
+      // Reset for next tag
+      nextUrl = null;
+      
+      // Rate limiting between different tag searches
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    console.log(`✅ Total affiliate contacts fetched: ${allContacts.length}`);
+    
+    // Additional filtering for any contacts that might have slipped through
     const isAffiliate = (contact: GHLContact): boolean => {
       // Check for affiliate-related tags
-      const affiliateTags = ['affiliate', 'partner', 'referrer', 'ambassador', 'influencer'];
       if (contact.tags && Array.isArray(contact.tags)) {
-        return contact.tags.some(tag => 
+        const hasAffiliateTag = contact.tags.some(tag => 
           affiliateTags.some(affiliateTag => 
             tag.toLowerCase().includes(affiliateTag.toLowerCase())
           )
         );
+        if (hasAffiliateTag) return true;
       }
       
       // Check for affiliate-related custom fields
       if (contact.customFields) {
         const customFieldsStr = JSON.stringify(contact.customFields).toLowerCase();
-        return affiliateTags.some(tag => customFieldsStr.includes(tag));
+        const hasAffiliateField = affiliateTags.some(tag => customFieldsStr.includes(tag));
+        if (hasAffiliateField) return true;
       }
       
-      // If no clear affiliate indicators, include if they have a referral code
-      return !!contact.referralCode;
+      // Include if they have a referral code
+      if (contact.referralCode) return true;
+      
+      return false;
     };
 
-    const affiliateContacts = allContacts.filter(isAffiliate);
-    console.log(`🎯 Filtered to ${affiliateContacts.length} affiliate contacts out of ${allContacts.length} total contacts`);
+    const finalAffiliateContacts = allContacts.filter(isAffiliate);
+    console.log(`🎯 Final filtered affiliate contacts: ${finalAffiliateContacts.length} out of ${allContacts.length} fetched contacts`);
     
-    return affiliateContacts;
+    return finalAffiliateContacts;
   }
 
   async importAffiliates(userId: string): Promise<ImportResult> {
