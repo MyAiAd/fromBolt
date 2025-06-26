@@ -251,12 +251,12 @@ export class UnifiedImportService {
             last_name: contact.lastName || null,
             phone: contact.phone || null,
             referral_code: referralCode,
-            primary_source: 'GHL',
+            primary_source: 'ghl', // Must be lowercase to match database constraint
             ghl_contact_id: contact.id,
             status: 'active',
             signup_date: contact.dateAdded ? new Date(contact.dateAdded).toISOString() : new Date().toISOString(),
             last_active: contact.lastActivity ? new Date(contact.lastActivity).toISOString() : null,
-            custom_fields: contact.customFields ? JSON.stringify(contact.customFields) : null
+            custom_fields: contact.customFields || null // Store as JSONB, not stringified
           };
 
           const { error } = await this.supabase
@@ -374,15 +374,17 @@ export class UnifiedImportService {
             email: affiliate.email,
             first_name: affiliate.first_name || null,
             last_name: affiliate.last_name || null,
+            phone: affiliate.phone || null,
             referral_code: affiliate.referral_code || this.generateReferralCode(affiliate.first_name, affiliate.last_name, affiliate.email),
-            primary_source: 'goaffpro',
+            primary_source: 'goaffpro', // Must match database constraint
             goaffpro_affiliate_id: affiliate.id,
-            status: affiliate.status || 'active',
+            status: this.mapGoAffProStatus(affiliate.status), // Ensure status matches database constraint
             signup_date: affiliate.signup_date ? new Date(affiliate.signup_date).toISOString() : new Date().toISOString(),
             last_active: null, // GoAffPro doesn't provide last_active in the response
             total_earnings: affiliate.total_earnings || 0,
             pending_earnings: affiliate.balance || 0,
-            paid_earnings: (affiliate.total_earnings || 0) - (affiliate.balance || 0)
+            paid_earnings: (affiliate.total_earnings || 0) - (affiliate.balance || 0),
+            custom_fields: affiliate.custom_fields || null
           };
 
           const { error } = await this.supabase
@@ -421,6 +423,30 @@ export class UnifiedImportService {
       result.duration = Date.now() - startTime;
       console.error('❌ GoAffPro import error:', error);
       return result;
+    }
+  }
+
+  private mapGoAffProStatus(status?: string): string {
+    // Map GoAffPro status to database constraint values: 'active', 'inactive', 'suspended', 'pending'
+    if (!status) return 'active';
+    
+    const lowerStatus = status.toLowerCase();
+    switch (lowerStatus) {
+      case 'active':
+      case 'approved':
+        return 'active';
+      case 'inactive':
+      case 'disabled':
+        return 'inactive';
+      case 'suspended':
+      case 'banned':
+        return 'suspended';
+      case 'pending':
+      case 'waiting':
+      case 'review':
+        return 'pending';
+      default:
+        return 'active';
     }
   }
 
