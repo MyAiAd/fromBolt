@@ -738,48 +738,69 @@ const Affiliates = () => {
 
           {/* Filters */}
           <div className="flex flex-wrap md:flex-nowrap gap-3">
-            <div className="flex items-center bg-rise-dark-light rounded-md px-3">
+            <div className="flex items-center bg-rise-dark-light border border-gray-600 rounded-md px-3 hover:border-gray-500 transition-colors">
               <Filter size={14} className="text-gray-400 mr-2" />
               <select
                 value={sourceFilter}
                 onChange={(e) => setSourceFilter(e.target.value as AffiliateSource)}
-                className="bg-transparent text-gray-300 py-2 pr-8 text-sm appearance-none focus:outline-none"
+                className="bg-rise-dark text-white py-2 pr-8 text-sm border-none focus:outline-none focus:ring-0 cursor-pointer"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: 'right 0.5rem center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '1.5em 1.5em',
+                  paddingRight: '2.5rem'
+                }}
               >
-                <option value="All">All Sources</option>
-                <option value="goaffpro">SHP</option>
-                <option value="mightynetworks">MN</option>
-                <option value="ghl">GHL</option>
+                <option value="All" className="bg-rise-dark text-white">All Sources</option>
+                <option value="goaffpro" className="bg-rise-dark text-white">SHP</option>
+                <option value="mightynetworks" className="bg-rise-dark text-white">MN</option>
+                <option value="ghl" className="bg-rise-dark text-white">GHL</option>
               </select>
             </div>
             
-            <div className="flex items-center bg-rise-dark-light rounded-md px-3">
+            <div className="flex items-center bg-rise-dark-light border border-gray-600 rounded-md px-3 hover:border-gray-500 transition-colors">
               <select
                 value={levelFilter}
                 onChange={(e) => setLevelFilter(e.target.value as AffiliateLevel)}
-                className="bg-transparent text-gray-300 py-2 pr-8 text-sm appearance-none focus:outline-none"
+                className="bg-rise-dark text-white py-2 pr-8 text-sm border-none focus:outline-none focus:ring-0 cursor-pointer"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: 'right 0.5rem center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '1.5em 1.5em',
+                  paddingRight: '2.5rem'
+                }}
               >
-                <option value="All">All Levels</option>
-                <option value="Aligned">Aligned ($0-$1K)</option>
-                <option value="Activated">Activated ($1K-$5K)</option>
-                <option value="Ascended">Ascended ($5K-$25K)</option>
-                <option value="Magnetic">Magnetic ($25K-$50K)</option>
-                <option value="Luminary">Luminary ($50K-$100K)</option>
-                <option value="Visionary">Visionary ($100K-$500K)</option>
-                <option value="Oracle">Oracle ($500K-$1M)</option>
-                <option value="Sovereign">Sovereign ($1M+)</option>
+                <option value="All" className="bg-rise-dark text-white">All Levels</option>
+                <option value="Aligned" className="bg-rise-dark text-white">Aligned ($0-$1K)</option>
+                <option value="Activated" className="bg-rise-dark text-white">Activated ($1K-$5K)</option>
+                <option value="Ascended" className="bg-rise-dark text-white">Ascended ($5K-$25K)</option>
+                <option value="Magnetic" className="bg-rise-dark text-white">Magnetic ($25K-$50K)</option>
+                <option value="Luminary" className="bg-rise-dark text-white">Luminary ($50K-$100K)</option>
+                <option value="Visionary" className="bg-rise-dark text-white">Visionary ($100K-$500K)</option>
+                <option value="Oracle" className="bg-rise-dark text-white">Oracle ($500K-$1M)</option>
+                <option value="Sovereign" className="bg-rise-dark text-white">Sovereign ($1M+)</option>
               </select>
             </div>
             
-            <div className="flex items-center bg-rise-dark-light rounded-md px-3">
+            <div className="flex items-center bg-rise-dark-light border border-gray-600 rounded-md px-3 hover:border-gray-500 transition-colors">
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as AffiliateStatus)}
-                className="bg-transparent text-gray-300 py-2 pr-8 text-sm appearance-none focus:outline-none"
+                className="bg-rise-dark text-white py-2 pr-8 text-sm border-none focus:outline-none focus:ring-0 cursor-pointer"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: 'right 0.5rem center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '1.5em 1.5em',
+                  paddingRight: '2.5rem'
+                }}
               >
-                <option value="All">All Status</option>
-                <option value="Active">Active</option>
-                <option value="Pending">Pending</option>
-                <option value="Inactive">Inactive</option>
+                <option value="All" className="bg-rise-dark text-white">All Status</option>
+                <option value="Active" className="bg-rise-dark text-white">Active</option>
+                <option value="Pending" className="bg-rise-dark text-white">Pending</option>
+                <option value="Inactive" className="bg-rise-dark text-white">Inactive</option>
               </select>
             </div>
           </div>
