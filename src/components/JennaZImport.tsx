@@ -262,6 +262,12 @@ const JennaZImport: React.FC = () => {
 
       for (const contact of allContacts) {
         try {
+          // Skip contacts without email addresses since affiliate_system_users requires email
+          if (!contact.email || contact.email.trim() === '') {
+            console.log(`⚠️ Skipping contact ${contact.id} - no email address`);
+            continue;
+          }
+
           // Generate referral code if not provided
           const generateReferralCode = (contact: GHLContact): string => {
             // Safely handle null/undefined values
@@ -547,6 +553,12 @@ const JennaZImport: React.FC = () => {
 
       for (const contact of allContacts) {
         try {
+          // Skip contacts without email addresses since affiliate_system_users requires email
+          if (!contact.email || contact.email.trim() === '') {
+            console.log(`⚠️ Skipping contact ${contact.id} - no email address`);
+            continue;
+          }
+
           // Generate referral code if not provided
           const generateReferralCode = (contact: GHLContact): string => {
             // Safely handle null/undefined values

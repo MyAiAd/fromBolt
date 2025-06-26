@@ -252,6 +252,13 @@ export class GHLImportService {
       // First pass: Import all contacts into ghl_affiliates table
       for (const contact of contacts) {
         try {
+          // Skip contacts without email addresses since affiliate_system_users requires email
+          if (!contact.email || contact.email.trim() === '') {
+            result.warnings.push(`Skipped contact ${contact.id}: No email address provided`);
+            console.log(`⚠️ Skipping contact ${contact.id} - no email address`);
+            continue;
+          }
+
           const ghlAffiliateData = {
             ghl_contact_id: contact.id,
             email: contact.email,
