@@ -155,7 +155,7 @@ export class UnifiedImportService {
   }
 
   private async importFromGHL(credentials: { apiKey: string; locationId: string }): Promise<ImportResult> {
-    console.log('🔵 Starting GHL v2 import...');
+    console.log('🔵 Starting GHL v1 import...');
     const startTime = Date.now();
     
     const result: ImportResult = {
@@ -171,30 +171,29 @@ export class UnifiedImportService {
 
     try {
       // Only fetch contacts that are actual affiliates (not just prospects)
-      console.log(`🏷️ GHL v2: Searching for actual affiliates only...`);
+      console.log(`🏷️ GHL v1: Searching for actual affiliates only...`);
       const allContacts: GHLContact[] = [];
       
-      // Use GHL v2 API with proper pagination
+              // Use GHL v1 API with skip-based pagination
       let page = 1;
       let hasMore = true;
       const limit = 100;
       
       while (hasMore) {
-        console.log(`📥 GHL v2: Fetching page ${page} for affiliates...`);
+        console.log(`📥 GHL v1: Fetching page ${page} for affiliates...`);
         
-        // GHL v2 API endpoint with proper pagination
-        const url = `https://services.leadconnectorhq.com/contacts/?locationId=${credentials.locationId}&limit=${limit}&page=${page}&tags=affiliate`;
+        // GHL v1 API endpoint with tag filtering
+        const url = `https://rest.gohighlevel.com/v1/contacts/?locationId=${credentials.locationId}&limit=${limit}&skip=${(page - 1) * limit}&tags=affiliate`;
         
         const response = await fetch(url, {
           headers: {
             'Authorization': `Bearer ${credentials.apiKey}`,
-            'Version': '2021-07-28',
             'Content-Type': 'application/json'
           }
         });
 
         if (!response.ok) {
-          throw new Error(`GHL v2 API Error: ${response.status} ${response.statusText}`);
+          throw new Error(`GHL v1 API Error: ${response.status} ${response.statusText}`);
         }
 
         const responseData = await response.json();
@@ -243,10 +242,10 @@ export class UnifiedImportService {
           });
           
           allContacts.push(...affiliateContacts);
-          console.log(`✅ GHL v2: Added ${affiliateContacts.length} actual affiliates from page ${page} (filtered from ${responseData.contacts.length} contacts, total: ${allContacts.length})`);
+          console.log(`✅ GHL v1: Added ${affiliateContacts.length} actual affiliates from page ${page} (filtered from ${responseData.contacts.length} contacts, total: ${allContacts.length})`);
         }
         
-        // GHL v2 pagination: check if we got a full page of results
+        // GHL v1 pagination: check if we got a full page of results
         const contactsReceived = responseData.contacts?.length || 0;
         hasMore = contactsReceived === limit;
         
@@ -258,13 +257,13 @@ export class UnifiedImportService {
           
           // Safety break
           if (page > 20) {
-            console.log(`🛑 GHL v2: Safety break at page 20`);
+            console.log(`🛑 GHL v1: Safety break at page 20`);
             break;
           }
         }
       }
 
-      console.log(`✅ GHL v2: Total contacts fetched: ${allContacts.length}`);
+      console.log(`✅ GHL v1: Total contacts fetched: ${allContacts.length}`);
       result.recordsProcessed = allContacts.length;
 
       // Process contacts into Supabase
@@ -319,7 +318,7 @@ export class UnifiedImportService {
       result.success = result.recordsFailed === 0;
       result.duration = Date.now() - startTime;
       
-      console.log('✅ GHL v2 import completed:', {
+      console.log('✅ GHL v1 import completed:', {
         processed: result.recordsProcessed,
         successful: result.recordsSuccessful,
         failed: result.recordsFailed
@@ -328,9 +327,9 @@ export class UnifiedImportService {
       return result;
 
     } catch (error) {
-      result.errors.push(`GHL v2 import failed: ${error instanceof Error ? error.message : String(error)}`);
+      result.errors.push(`GHL v1 import failed: ${error instanceof Error ? error.message : String(error)}`);
       result.duration = Date.now() - startTime;
-      console.error('❌ GHL v2 import error:', error);
+      console.error('❌ GHL v1 import error:', error);
       return result;
     }
   }
