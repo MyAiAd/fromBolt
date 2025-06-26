@@ -158,6 +158,23 @@ export class UnifiedImportService {
     console.log('🔵 Starting GHL v1 import...');
     const startTime = Date.now();
     
+    // FIRST: Clear existing GHL data to avoid accumulation
+    console.log('🧹 Clearing existing GHL data from database...');
+    try {
+      const { error: deleteError } = await this.supabase
+        .from('affiliate_system_users')
+        .delete()
+        .eq('primary_source', 'GHL');
+        
+      if (deleteError) {
+        console.error('❌ Error clearing GHL data:', deleteError);
+      } else {
+        console.log('✅ Cleared existing GHL data');
+      }
+    } catch (error) {
+      console.error('❌ Error during GHL data cleanup:', error);
+    }
+    
     const result: ImportResult = {
       success: false,
       recordsProcessed: 0,
@@ -276,6 +293,13 @@ export class UnifiedImportService {
                 hasAffiliateTags && 'affiliateTags',
                 hasAffiliateCustomFields && 'customFields'
               ].filter(Boolean).join(', ')}`);
+              
+              // EMERGENCY BRAKE: Stop if we find too many affiliates
+              if (allContacts.length >= 50) {
+                console.error(`🚨 EMERGENCY BRAKE: Found ${allContacts.length} affiliates already - stopping to prevent spam!`);
+                hasMore = false; // This will break the outer while loop
+                return false; // Don't include this contact
+              }
             }
             
             return isActualAffiliate;
@@ -306,10 +330,10 @@ export class UnifiedImportService {
       console.log(`✅ GHL v1: Total contacts fetched: ${allContacts.length}`);
       console.log(`🔍 GHL v1: These contacts will be inserted into database:`, allContacts.map(c => ({ id: c.id, email: c.email, hasReferralCode: !!c.referralCode, tags: c.tags })).slice(0, 10));
       
-      // SANITY CHECK: If we have more than 100 "affiliates", something is wrong
-      if (allContacts.length > 100) {
-        console.error(`🚨 SANITY CHECK FAILED: Found ${allContacts.length} affiliates - this seems too high. Limiting to first 100 to prevent spam.`);
-        allContacts.splice(100); // Keep only first 100
+      // SANITY CHECK: If we have more than 50 "affiliates", something is wrong
+      if (allContacts.length > 50) {
+        console.error(`🚨 SANITY CHECK FAILED: Found ${allContacts.length} affiliates - this seems too high. Limiting to first 50 to prevent spam.`);
+        allContacts.splice(50); // Keep only first 50
       }
       
       result.recordsProcessed = allContacts.length;
@@ -385,6 +409,23 @@ export class UnifiedImportService {
   private async importFromGoAffPro(credentials: { apiKey: string; storeId: string }): Promise<ImportResult> {
     console.log('🟠 Starting GoAffPro import...');
     const startTime = Date.now();
+    
+    // FIRST: Clear existing GoAffPro data to avoid accumulation
+    console.log('🧹 Clearing existing GoAffPro data from database...');
+    try {
+      const { error: deleteError } = await this.supabase
+        .from('affiliate_system_users')
+        .delete()
+        .eq('primary_source', 'SHP');
+        
+      if (deleteError) {
+        console.error('❌ Error clearing GoAffPro data:', deleteError);
+      } else {
+        console.log('✅ Cleared existing GoAffPro data');
+      }
+    } catch (error) {
+      console.error('❌ Error during GoAffPro data cleanup:', error);
+    }
     
     const result: ImportResult = {
       success: false,
