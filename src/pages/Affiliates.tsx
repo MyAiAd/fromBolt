@@ -205,7 +205,7 @@ const Affiliates = () => {
 
     const goaffproCredentials = {
       apiKey: import.meta.env.VITE_GOAFFPRO_ACCESS_TOKEN || '',
-      storeId: 'default' // GoAffPro doesn't seem to need a store ID based on the tokens
+      storeId: import.meta.env.VITE_GOAFFPRO_PUBLIC_TOKEN || '' // storeId is actually the public token
     };
 
     // Check if we have credentials

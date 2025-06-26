@@ -43,14 +43,19 @@ interface GoAffProAffiliate {
   email: string;
   first_name?: string;
   last_name?: string;
-  referral_code?: string;
+  name?: string;
+  phone?: string;
+  address?: Record<string, unknown>;
   status?: string;
-  created_at?: string;
-  updated_at?: string;
-  total_sales?: number;
-  total_commission?: number;
-  pending_commission?: number;
-  paid_commission?: number;
+  signup_date?: string;
+  referral_code?: string;
+  commission_rate?: number;
+  balance?: number;
+  total_earnings?: number;
+  total_orders?: number;
+  tags?: unknown[];
+  custom_fields?: Record<string, unknown>;
+  [key: string]: unknown;
 }
 
 export class UnifiedImportService {
@@ -201,10 +206,11 @@ export class UnifiedImportService {
             console.log(`✅ GHL: Added ${newContacts.length} new contacts for tag "${tag}" (total: ${allContacts.length})`);
           }
           
-          // Use nextPageUrl if available
+          // Use nextPageUrl if available, but ensure it's HTTPS
           const nextUrl = responseData.meta?.nextPageUrl;
           if (nextUrl) {
-            currentUrl = nextUrl;
+            // Fix mixed content issue by ensuring HTTPS
+            currentUrl = nextUrl.replace('http://', 'https://');
             tagPage++;
             
             // Rate limiting
@@ -316,9 +322,11 @@ export class UnifiedImportService {
       while (hasMore) {
         console.log(`📥 GoAffPro: Fetching page ${page}...`);
         
-        const response = await fetch(`https://api.goaffpro.com/affiliates?page=${page}&limit=100`, {
+        // GoAffPro API uses header-based authentication
+        const response = await fetch(`https://api.goaffpro.com/v1/admin/affiliates?fields=id,email,first_name,last_name,name,phone,address,status,signup_date,referral_code,commission_rate,balance,total_earnings,total_orders,tags,custom_fields&page=${page}&limit=100`, {
           headers: {
-            'Authorization': `Bearer ${credentials.apiKey}`,
+            'X-GOAFFPRO-ACCESS-TOKEN': credentials.apiKey,
+            'X-GOAFFPRO-PUBLIC-TOKEN': credentials.storeId, // storeId is actually the public token
             'Content-Type': 'application/json'
           }
         });
@@ -370,11 +378,11 @@ export class UnifiedImportService {
             primary_source: 'goaffpro',
             goaffpro_affiliate_id: affiliate.id,
             status: affiliate.status || 'active',
-            signup_date: affiliate.created_at ? new Date(affiliate.created_at).toISOString() : new Date().toISOString(),
-            last_active: affiliate.updated_at ? new Date(affiliate.updated_at).toISOString() : null,
-            total_earnings: affiliate.total_commission || 0,
-            pending_earnings: affiliate.pending_commission || 0,
-            paid_earnings: affiliate.paid_commission || 0
+            signup_date: affiliate.signup_date ? new Date(affiliate.signup_date).toISOString() : new Date().toISOString(),
+            last_active: null, // GoAffPro doesn't provide last_active in the response
+            total_earnings: affiliate.total_earnings || 0,
+            pending_earnings: affiliate.balance || 0,
+            paid_earnings: (affiliate.total_earnings || 0) - (affiliate.balance || 0)
           };
 
           const { error } = await this.supabase
