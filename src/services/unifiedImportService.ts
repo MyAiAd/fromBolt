@@ -170,20 +170,20 @@ export class UnifiedImportService {
     };
 
     try {
-      // Only fetch contacts that are actual affiliates (not just prospects)
-      console.log(`🏷️ GHL v1: Searching for actual affiliates only...`);
+            // Fetch all contacts first, then filter for affiliates
+      console.log(`🏷️ GHL v1: Fetching all contacts to find affiliates...`);
       const allContacts: GHLContact[] = [];
       
-              // Use GHL v1 API with skip-based pagination
+      // Use GHL v1 API with skip-based pagination (no tag filtering in URL)
       let page = 1;
       let hasMore = true;
       const limit = 100;
       
       while (hasMore) {
-        console.log(`📥 GHL v1: Fetching page ${page} for affiliates...`);
+        console.log(`📥 GHL v1: Fetching page ${page} of all contacts...`);
         
-        // GHL v1 API endpoint with tag filtering
-        const url = `https://rest.gohighlevel.com/v1/contacts/?locationId=${credentials.locationId}&limit=${limit}&skip=${(page - 1) * limit}&tags=affiliate`;
+        // GHL v1 API endpoint without tag filtering (we'll filter after)
+        const url = `https://rest.gohighlevel.com/v1/contacts/?locationId=${credentials.locationId}&limit=${limit}&skip=${(page - 1) * limit}`;
         
         const response = await fetch(url, {
           headers: {
@@ -199,7 +199,9 @@ export class UnifiedImportService {
         const responseData = await response.json();
         
         if (responseData.contacts && Array.isArray(responseData.contacts)) {
-          // Filter to only include ACTUAL affiliates, not just contacts with affiliate tag
+          console.log(`📊 GHL v1: Page ${page} returned ${responseData.contacts.length} contacts`);
+          
+          // Filter to only include ACTUAL affiliates
           const affiliateContacts = responseData.contacts.filter((contact: GHLContact) => {
             // Skip duplicates
             if (allContacts.some(existing => existing.id === contact.id)) {
@@ -212,13 +214,34 @@ export class UnifiedImportService {
               return false;
             }
             
-            // Log first few contacts to understand the data structure
-            if (allContacts.length < 10) {
-              console.log(`🔍 GHL Contact sample: id=${contact.id}, email=${contact.email}, referralCode=${contact.referralCode}, customFields=${contact.customFields ? Object.keys(contact.customFields) : 'none'}`);
+            // Log first 5 contacts to understand the data structure
+            if (allContacts.length < 5) {
+              console.log(`🔍 GHL Contact sample #${allContacts.length + 1}:`, {
+                id: contact.id,
+                email: contact.email,
+                firstName: contact.firstName,
+                lastName: contact.lastName,
+                tags: contact.tags,
+                referralCode: contact.referralCode,
+                customFields: contact.customFields ? Object.keys(contact.customFields) : 'none'
+              });
             }
             
-            // STRICT FILTERING: Only include contacts that have clear affiliate indicators
+            // Check for affiliate indicators
             const hasReferralCode = contact.referralCode && contact.referralCode.trim() !== '';
+            
+            // Check tags for affiliate-related keywords
+            const hasAffiliateTags = contact.tags && Array.isArray(contact.tags) && 
+              contact.tags.some(tag => {
+                const tagLower = tag.toLowerCase();
+                return tagLower.includes('affiliate') || 
+                       tagLower.includes('partner') || 
+                       tagLower.includes('referrer') ||
+                       tagLower.includes('ambassador') ||
+                       tagLower.includes('influencer');
+              });
+            
+            // Check custom fields for affiliate indicators
             const hasAffiliateCustomFields = contact.customFields && (
               contact.customFields.referral_code ||
               contact.customFields.affiliate_id ||
@@ -230,11 +253,17 @@ export class UnifiedImportService {
               contact.customFields.affiliate_earnings
             );
             
-            // Only include if they have CLEAR affiliate indicators
-            const isActualAffiliate = hasReferralCode || hasAffiliateCustomFields;
+            // More lenient filtering - include if they have ANY affiliate indicator
+            const isActualAffiliate = hasReferralCode || hasAffiliateTags || hasAffiliateCustomFields;
             
-            if (!isActualAffiliate) {
-              // Log why we're excluding this contact
+            if (isActualAffiliate) {
+              console.log(`✅ GHL: Including affiliate ${contact.id} (${contact.email}) - reasons: ${[
+                hasReferralCode && 'referralCode',
+                hasAffiliateTags && 'affiliateTags',
+                hasAffiliateCustomFields && 'customFields'
+              ].filter(Boolean).join(', ')}`);
+            } else if (allContacts.length < 10) {
+              // Only log first 10 exclusions to avoid spam
               console.log(`❌ GHL: Excluding contact ${contact.id} (${contact.email}) - no affiliate indicators`);
             }
             
@@ -255,9 +284,9 @@ export class UnifiedImportService {
           // Rate limiting
           await new Promise(resolve => setTimeout(resolve, 200));
           
-          // Safety break
-          if (page > 20) {
-            console.log(`🛑 GHL v1: Safety break at page 20`);
+          // Safety break - limit to first 500 contacts to avoid long waits
+          if (page > 5) {
+            console.log(`🛑 GHL v1: Safety break at page 5 (500 contacts checked)`);
             break;
           }
         }
