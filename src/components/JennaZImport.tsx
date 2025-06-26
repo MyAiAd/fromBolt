@@ -59,7 +59,6 @@ interface GHLContact {
   dateAdded?: string;
   lastActivity?: string;
   customFields?: Record<string, unknown>;
-  tags?: string[];
 }
 
 const JennaZImport: React.FC = () => {
@@ -213,167 +212,78 @@ const JennaZImport: React.FC = () => {
       console.log('Fetching contacts from GHL API...');
       const startTime = new Date();
 
-      // Fetch affiliate contacts directly from GHL API using targeted tag searches
+      // Fetch contacts directly from GHL API using working skip-based pagination
       const baseUrl = 'https://rest.gohighlevel.com/v1';
       let allContacts: GHLContact[] = [];
-      let nextUrl: string | null = null;
+      let page = 1;
+      let hasMore = true;
       
-      // Define affiliate-related tags to search for
-      const affiliateTags = ['affiliate', 'partner', 'referrer', 'ambassador', 'influencer'];
-      
-      // We'll make multiple requests for different affiliate tags to be more targeted
-      for (const tag of affiliateTags) {
-        console.log(`🏷️ Searching for contacts with tag: "${tag}"`);
+      while (hasMore && allContacts.length < 1000) { // Safety limit
+        console.log(`📥 Fetching page ${page}...`);
         
-        // Start with the initial URL for this tag
-        let currentUrl = `${baseUrl}/contacts/?locationId=${credentials.locationId}&limit=100&tags=${encodeURIComponent(tag)}`;
-        let tagPage = 1;
+        const url = `${baseUrl}/contacts/?locationId=${credentials.locationId}&limit=100&skip=${(page - 1) * 100}`;
         
-        do {
-          console.log(`📥 Fetching page ${tagPage} for tag "${tag}"...`);
-          console.log(`🔗 Request URL: ${currentUrl}`);
-          
-          const response = await fetch(currentUrl, {
-            headers: {
-              'Authorization': `Bearer ${credentials.apiKey}`,
-              'Content-Type': 'application/json'
-            }
-          });
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${credentials.apiKey}`,
+            'Content-Type': 'application/json'
+          }
+        });
 
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`GHL API Error: ${response.status} ${response.statusText} - ${errorText}`);
-          }
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`GHL API Error: ${response.status} ${response.statusText} - ${errorText}`);
+        }
 
-          const responseData = await response.json();
-          
-          console.log(`🔍 API Response for tag "${tag}":`, {
-            contactsCount: responseData.contacts?.length || 0,
-            hasNextPageUrl: !!responseData.meta?.nextPageUrl,
-          });
-          
-          if (responseData.contacts && Array.isArray(responseData.contacts)) {
-            // Filter out duplicates based on contact ID
-            const newContacts = responseData.contacts.filter((contact: GHLContact) => 
-              !allContacts.some(existing => existing.id === contact.id)
-            );
-            
-            allContacts = allContacts.concat(newContacts);
-            console.log(`📥 Added ${newContacts.length} new contacts for tag "${tag}" (total: ${allContacts.length})`);
-          }
-          
-          // Use the nextPageUrl directly if available
-          nextUrl = responseData.meta?.nextPageUrl || null;
-          
-          if (nextUrl) {
-            currentUrl = nextUrl;
-            console.log(`🔄 Next page URL for tag "${tag}": ${nextUrl}`);
-          } else {
-            console.log(`🏁 No nextPageUrl found for tag "${tag}" - reached end`);
-            break;
-          }
-          
-          tagPage++;
-          
-          // Rate limiting
-          await new Promise(resolve => setTimeout(resolve, 200));
-          
-          // Safety break per tag
-          if (tagPage > 20) {
-            console.log(`🛑 Safety break at page 20 for tag "${tag}"`);
-            break;
-          }
-          
-        } while (nextUrl);
+        const responseData = await response.json();
         
-        // Reset for next tag
-        nextUrl = null;
+        if (responseData.contacts && Array.isArray(responseData.contacts)) {
+          allContacts = allContacts.concat(responseData.contacts);
+          console.log(`📥 Page ${page}: ${responseData.contacts.length} contacts (total: ${allContacts.length})`);
+          
+          // Check if we got fewer contacts than the limit - means we're done
+          hasMore = responseData.contacts.length === 100;
+          page++;
+        } else {
+          hasMore = false;
+        }
         
-        // Rate limiting between different tag searches
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Rate limiting
+        if (hasMore) {
+          await new Promise(resolve => setTimeout(resolve, 250));
+        }
       }
 
       console.log(`✅ Total contacts fetched: ${allContacts.length}`);
 
-      // Filter for affiliate contacts only
-      const isAffiliate = (contact: GHLContact): boolean => {
-        // Check for affiliate-related tags
-        const affiliateTags = ['affiliate', 'partner', 'referrer', 'ambassador', 'influencer'];
-        if (contact.tags && Array.isArray(contact.tags)) {
-          return contact.tags.some(tag => 
-            affiliateTags.some(affiliateTag => 
-              tag.toLowerCase().includes(affiliateTag.toLowerCase())
-            )
-          );
-        }
-        
-        // Check for affiliate-related custom fields
-        if (contact.customFields) {
-          const customFieldsStr = JSON.stringify(contact.customFields).toLowerCase();
-          return affiliateTags.some(tag => customFieldsStr.includes(tag));
-        }
-        
-        // If no clear affiliate indicators, include if they have a referral code
-        return !!contact.referralCode;
-      };
+      setImportStatus(prev => ({ ...prev, currentOperation: 'Processing contacts into affiliate system...' }));
 
-      const affiliateContacts = allContacts.filter(isAffiliate);
-      console.log(`🎯 Filtered to ${affiliateContacts.length} affiliate contacts out of ${allContacts.length} total contacts`);
-
-      setImportStatus(prev => ({ ...prev, currentOperation: 'Processing affiliate contacts into system...' }));
-
-      // Process affiliate contacts into affiliate system
+      // Process contacts into affiliate system
       let recordsSuccessful = 0;
       let recordsFailed = 0;
       const recordsUpdated = 0;
       const errors: string[] = [];
 
-      for (const contact of affiliateContacts) {
+      for (const contact of allContacts) {
         try {
-          // Skip contacts without email addresses since affiliate_system_users requires email
-          if (!contact.email || contact.email.trim() === '') {
-            console.log(`⚠️ Skipping contact ${contact.id} - no email address`);
-            continue;
-          }
-
           // Generate referral code if not provided
           const generateReferralCode = (contact: GHLContact): string => {
-            // Safely handle null/undefined values
-            const firstName = contact.firstName?.trim() || '';
-            const lastName = contact.lastName?.trim() || '';
-            const email = contact.email?.trim() || '';
-            
-            let baseName = '';
-            
-            // Try to get base name from firstName, lastName, or email
-            if (firstName) {
-              baseName = firstName;
-            } else if (lastName) {
-              baseName = lastName;
-            } else if (email && email.includes('@')) {
-              baseName = email.split('@')[0];
-            } else {
-              // Fallback if no usable name info
-              baseName = `user${contact.id?.substring(0, 4) || Math.random().toString(36).substring(2, 6)}`;
-            }
-            
+            const baseName = contact.firstName || contact.lastName || contact.email.split('@')[0];
             const cleanName = baseName.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
             const randomSuffix = Math.random().toString(36).substr(2, 4).toUpperCase();
-            const finalName = cleanName.length > 0 ? cleanName : 'USER';
-            
-            return `${finalName.substr(0, 6)}${randomSuffix}`;
+            return `${cleanName.substr(0, 6)}${randomSuffix}`;
           };
 
           const referralCode = contact.referralCode || generateReferralCode(contact);
 
-          // Import into main affiliate system
+          // Import into main affiliate system using user client
           const affiliateData = {
             email: contact.email,
             first_name: contact.firstName || null,
             last_name: contact.lastName || null,
             phone: contact.phone || null,
             referral_code: referralCode,
-            primary_source: 'GHL',
+            primary_source: 'ghl',
             ghl_contact_id: contact.id,
             status: 'active',
             signup_date: contact.dateAdded ? new Date(contact.dateAdded).toISOString() : new Date().toISOString(),
@@ -406,7 +316,7 @@ const JennaZImport: React.FC = () => {
 
       const affiliatesResult: ImportResult = {
         success: recordsFailed === 0,
-        recordsProcessed: affiliateContacts.length,
+        recordsProcessed: allContacts.length,
         recordsImported: recordsSuccessful,
         recordsUpdated: recordsUpdated,
         recordsSkipped: recordsFailed,
@@ -571,167 +481,78 @@ const JennaZImport: React.FC = () => {
       console.log('Fetching contacts from GHL API...');
       const startTime = new Date();
 
-      // Fetch affiliate contacts directly from GHL API using targeted tag searches
+      // Fetch contacts directly from GHL API using working skip-based pagination
       const baseUrl = 'https://rest.gohighlevel.com/v1';
       let allContacts: GHLContact[] = [];
-      let nextUrl: string | null = null;
+      let page = 1;
+      let hasMore = true;
       
-      // Define affiliate-related tags to search for
-      const affiliateTags = ['affiliate', 'partner', 'referrer', 'ambassador', 'influencer'];
-      
-      // We'll make multiple requests for different affiliate tags to be more targeted
-      for (const tag of affiliateTags) {
-        console.log(`🏷️ Searching for contacts with tag: "${tag}"`);
+      while (hasMore && allContacts.length < 1000) { // Safety limit
+        console.log(`📥 Fetching page ${page}...`);
         
-        // Start with the initial URL for this tag
-        let currentUrl = `${baseUrl}/contacts/?locationId=${credentials.locationId}&limit=100&tags=${encodeURIComponent(tag)}`;
-        let tagPage = 1;
+        const url = `${baseUrl}/contacts/?locationId=${credentials.locationId}&limit=100&skip=${(page - 1) * 100}`;
         
-        do {
-          console.log(`📥 Fetching page ${tagPage} for tag "${tag}"...`);
-          console.log(`🔗 Request URL: ${currentUrl}`);
-          
-          const response = await fetch(currentUrl, {
-            headers: {
-              'Authorization': `Bearer ${credentials.apiKey}`,
-              'Content-Type': 'application/json'
-            }
-          });
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${credentials.apiKey}`,
+            'Content-Type': 'application/json'
+          }
+        });
 
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`GHL API Error: ${response.status} ${response.statusText} - ${errorText}`);
-          }
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`GHL API Error: ${response.status} ${response.statusText} - ${errorText}`);
+        }
 
-          const responseData = await response.json();
-          
-          console.log(`🔍 API Response for tag "${tag}":`, {
-            contactsCount: responseData.contacts?.length || 0,
-            hasNextPageUrl: !!responseData.meta?.nextPageUrl,
-          });
-          
-          if (responseData.contacts && Array.isArray(responseData.contacts)) {
-            // Filter out duplicates based on contact ID
-            const newContacts = responseData.contacts.filter((contact: GHLContact) => 
-              !allContacts.some(existing => existing.id === contact.id)
-            );
-            
-            allContacts = allContacts.concat(newContacts);
-            console.log(`📥 Added ${newContacts.length} new contacts for tag "${tag}" (total: ${allContacts.length})`);
-          }
-          
-          // Use the nextPageUrl directly if available
-          nextUrl = responseData.meta?.nextPageUrl || null;
-          
-          if (nextUrl) {
-            currentUrl = nextUrl;
-            console.log(`🔄 Next page URL for tag "${tag}": ${nextUrl}`);
-          } else {
-            console.log(`🏁 No nextPageUrl found for tag "${tag}" - reached end`);
-            break;
-          }
-          
-          tagPage++;
-          
-          // Rate limiting
-          await new Promise(resolve => setTimeout(resolve, 200));
-          
-          // Safety break per tag
-          if (tagPage > 20) {
-            console.log(`🛑 Safety break at page 20 for tag "${tag}"`);
-            break;
-          }
-          
-        } while (nextUrl);
+        const responseData = await response.json();
         
-        // Reset for next tag
-        nextUrl = null;
+        if (responseData.contacts && Array.isArray(responseData.contacts)) {
+          allContacts = allContacts.concat(responseData.contacts);
+          console.log(`📥 Page ${page}: ${responseData.contacts.length} contacts (total: ${allContacts.length})`);
+          
+          // Check if we got fewer contacts than the limit - means we're done
+          hasMore = responseData.contacts.length === 100;
+          page++;
+        } else {
+          hasMore = false;
+        }
         
-        // Rate limiting between different tag searches
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Rate limiting
+        if (hasMore) {
+          await new Promise(resolve => setTimeout(resolve, 250));
+        }
       }
 
       console.log(`✅ Total contacts fetched: ${allContacts.length}`);
 
-      // Filter for affiliate contacts only
-      const isAffiliate = (contact: GHLContact): boolean => {
-        // Check for affiliate-related tags
-        const affiliateTags = ['affiliate', 'partner', 'referrer', 'ambassador', 'influencer'];
-        if (contact.tags && Array.isArray(contact.tags)) {
-          return contact.tags.some(tag => 
-            affiliateTags.some(affiliateTag => 
-              tag.toLowerCase().includes(affiliateTag.toLowerCase())
-            )
-          );
-        }
-        
-        // Check for affiliate-related custom fields
-        if (contact.customFields) {
-          const customFieldsStr = JSON.stringify(contact.customFields).toLowerCase();
-          return affiliateTags.some(tag => customFieldsStr.includes(tag));
-        }
-        
-        // If no clear affiliate indicators, include if they have a referral code
-        return !!contact.referralCode;
-      };
+      setImportStatus(prev => ({ ...prev, currentOperation: 'Processing contacts into affiliate system...' }));
 
-      const affiliateContacts = allContacts.filter(isAffiliate);
-      console.log(`🎯 Filtered to ${affiliateContacts.length} affiliate contacts out of ${allContacts.length} total contacts`);
-
-      setImportStatus(prev => ({ ...prev, currentOperation: 'Processing affiliate contacts into system...' }));
-
-      // Process affiliate contacts into affiliate system
+      // Process contacts into affiliate system
       let recordsSuccessful = 0;
       let recordsFailed = 0;
       const recordsUpdated = 0;
       const errors: string[] = [];
 
-      for (const contact of affiliateContacts) {
+      for (const contact of allContacts) {
         try {
-          // Skip contacts without email addresses since affiliate_system_users requires email
-          if (!contact.email || contact.email.trim() === '') {
-            console.log(`⚠️ Skipping contact ${contact.id} - no email address`);
-            continue;
-          }
-
           // Generate referral code if not provided
           const generateReferralCode = (contact: GHLContact): string => {
-            // Safely handle null/undefined values
-            const firstName = contact.firstName?.trim() || '';
-            const lastName = contact.lastName?.trim() || '';
-            const email = contact.email?.trim() || '';
-            
-            let baseName = '';
-            
-            // Try to get base name from firstName, lastName, or email
-            if (firstName) {
-              baseName = firstName;
-            } else if (lastName) {
-              baseName = lastName;
-            } else if (email && email.includes('@')) {
-              baseName = email.split('@')[0];
-            } else {
-              // Fallback if no usable name info
-              baseName = `user${contact.id?.substring(0, 4) || Math.random().toString(36).substring(2, 6)}`;
-            }
-            
+            const baseName = contact.firstName || contact.lastName || contact.email.split('@')[0];
             const cleanName = baseName.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
             const randomSuffix = Math.random().toString(36).substr(2, 4).toUpperCase();
-            const finalName = cleanName.length > 0 ? cleanName : 'USER';
-            
-            return `${finalName.substr(0, 6)}${randomSuffix}`;
+            return `${cleanName.substr(0, 6)}${randomSuffix}`;
           };
 
           const referralCode = contact.referralCode || generateReferralCode(contact);
 
-          // Import into main affiliate system
+          // Import into main affiliate system using user client
           const affiliateData = {
             email: contact.email,
             first_name: contact.firstName || null,
             last_name: contact.lastName || null,
             phone: contact.phone || null,
             referral_code: referralCode,
-            primary_source: 'GHL',
+            primary_source: 'ghl',
             ghl_contact_id: contact.id,
             status: 'active',
             signup_date: contact.dateAdded ? new Date(contact.dateAdded).toISOString() : new Date().toISOString(),
@@ -764,7 +585,7 @@ const JennaZImport: React.FC = () => {
 
       const affiliatesResult: ImportResult = {
         success: recordsFailed === 0,
-        recordsProcessed: affiliateContacts.length,
+        recordsProcessed: allContacts.length,
         recordsImported: recordsSuccessful,
         recordsUpdated: recordsUpdated,
         recordsSkipped: recordsFailed,
