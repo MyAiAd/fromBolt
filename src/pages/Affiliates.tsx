@@ -6,6 +6,7 @@ import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import { AffiliateAggregationService, AggregatedAffiliate } from '../services/affiliateAggregationService';
 import { UnifiedImportService } from '../services/unifiedImportService';
+import { GHLAnalysisService } from '../services/ghlAnalysisService';
 
 type AffiliateLevel = 'All' | 'Direct' | 'Level 2' | 'Level 3' | 'GoAFF Pro' | 'Mighty Networks';
 type AffiliateStatus = 'All' | 'Active' | 'Pending' | 'Inactive';
@@ -32,6 +33,8 @@ const Affiliates = () => {
   const [isCreatingDemo, setIsCreatingDemo] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importStatus, setImportStatus] = useState('');
+  const [analysisResults, setAnalysisResults] = useState<any>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showCredentialsModal, setShowCredentialsModal] = useState(false);
   const [credentials, setCredentials] = useState({
     ghlApiKey: '',
@@ -54,6 +57,7 @@ const Affiliates = () => {
 
   const aggregationService = useMemo(() => new AffiliateAggregationService(supabase), [supabase]);
   const unifiedImportService = useMemo(() => new UnifiedImportService(supabase), [supabase]);
+  const ghlAnalysisService = useMemo(() => new GHLAnalysisService(supabase), [supabase]);
 
   useEffect(() => {
     loadAffiliates();
@@ -188,6 +192,38 @@ const Affiliates = () => {
       alert(`Error creating demo user:\n${errorMessage}`);
     } finally {
       setIsCreatingDemo(false);
+    }
+  };
+
+  const handleGHLAnalysis = async () => {
+    if (!isAdmin) {
+      alert('Only administrators can perform analysis');
+      return;
+    }
+
+    const ghlCredentials = {
+      apiKey: import.meta.env.VITE_GHL_API_KEY || '',
+      locationId: import.meta.env.VITE_GHL_LOCATION_ID || 'w01Gc7T4b0tKSDQdKhuN'
+    };
+
+    if (!ghlCredentials.apiKey || !ghlCredentials.locationId) {
+      alert('GHL API credentials not found. Please check environment variables.');
+      return;
+    }
+
+    setIsAnalyzing(true);
+    setAnalysisResults(null);
+
+    try {
+      console.log('🔍 Starting GHL contact analysis...');
+      const results = await ghlAnalysisService.analyzeGHLContacts(ghlCredentials);
+      console.log('📊 Analysis completed:', results);
+      setAnalysisResults(results);
+    } catch (error) {
+      console.error('❌ Analysis error:', error);
+      alert(`Analysis failed: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -509,15 +545,26 @@ const Affiliates = () => {
         </div>
         <div className="flex items-center space-x-3 mt-4 md:mt-0">
           {isAdmin && (
-            <button
-              onClick={handleUnifiedImport}
-              disabled={isImporting}
-              className="btn btn-primary flex items-center space-x-2"
-              title="Import affiliate data from GHL and GoAffPro"
-            >
-              <Download className={`h-4 w-4 ${isImporting ? 'animate-pulse' : ''}`} />
-              <span>{isImporting ? 'Importing...' : 'Import All Data'}</span>
-            </button>
+            <>
+              <button
+                onClick={handleGHLAnalysis}
+                disabled={isAnalyzing}
+                className="btn btn-secondary flex items-center space-x-2"
+                title="Analyze GHL contacts to understand what should be imported"
+              >
+                <Search className={`h-4 w-4 ${isAnalyzing ? 'animate-pulse' : ''}`} />
+                <span>{isAnalyzing ? 'Analyzing...' : 'Analyze GHL'}</span>
+              </button>
+              <button
+                onClick={handleUnifiedImport}
+                disabled={isImporting}
+                className="btn btn-primary flex items-center space-x-2"
+                title="Import affiliate data from GHL and GoAffPro"
+              >
+                <Download className={`h-4 w-4 ${isImporting ? 'animate-pulse' : ''}`} />
+                <span>{isImporting ? 'Importing...' : 'Import All Data'}</span>
+              </button>
+            </>
           )}
           <button
             onClick={() => {
@@ -567,6 +614,115 @@ const Affiliates = () => {
             <div>
               <p className="text-blue-400 font-medium">Import in Progress</p>
               <p className="text-gray-300 text-sm">{importStatus}</p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Analysis Status */}
+      {isAnalyzing && (
+        <motion.div 
+          variants={itemVariants} 
+          className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-4 mb-6"
+        >
+          <div className="flex items-center space-x-3">
+            <Search className="h-5 w-5 text-purple-400 animate-pulse" />
+            <div>
+              <p className="text-purple-400 font-medium">Analysis in Progress</p>
+              <p className="text-gray-300 text-sm">Analyzing GHL contacts to understand affiliate patterns...</p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Analysis Results */}
+      {analysisResults && (
+        <motion.div 
+          variants={itemVariants} 
+          className="bg-green-500/10 border border-green-500/20 rounded-lg p-6 mb-6"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-green-400">GHL Contact Analysis Results</h3>
+            <button
+              onClick={() => setAnalysisResults(null)}
+              className="text-gray-400 hover:text-white"
+            >
+              ✕
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="bg-rise-dark-light rounded-lg p-4">
+              <p className="text-gray-400 text-sm">Total Contacts Analyzed</p>
+              <p className="text-2xl font-bold text-white">{analysisResults.totalContacts}</p>
+            </div>
+            <div className="bg-rise-dark-light rounded-lg p-4">
+              <p className="text-gray-400 text-sm">With Referral Codes</p>
+              <p className="text-2xl font-bold text-green-400">{analysisResults.contactsWithReferralCodes}</p>
+            </div>
+            <div className="bg-rise-dark-light rounded-lg p-4">
+              <p className="text-gray-400 text-sm">Already in Database</p>
+              <p className="text-2xl font-bold text-blue-400">{analysisResults.contactsInDatabase}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div className="bg-rise-dark-light rounded-lg p-4">
+              <p className="text-gray-400 text-sm">With Affiliate Tags</p>
+              <p className="text-xl font-bold text-yellow-400">{analysisResults.contactsWithAffiliateTags}</p>
+            </div>
+            <div className="bg-rise-dark-light rounded-lg p-4">
+              <p className="text-gray-400 text-sm">With Affiliate Custom Fields</p>
+              <p className="text-xl font-bold text-purple-400">{analysisResults.contactsWithAffiliateCustomFields}</p>
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <h4 className="text-md font-semibold text-white mb-2">Recommendations:</h4>
+            <ul className="space-y-1">
+              {analysisResults.recommendations.map((rec: string, index: number) => (
+                <li key={index} className="text-gray-300 text-sm">• {rec}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h4 className="text-md font-semibold text-white mb-2">Sample Contacts:</h4>
+              <div className="max-h-60 overflow-y-auto space-y-2">
+                {analysisResults.sampleContacts.slice(0, 10).map((contact: any, index: number) => (
+                  <div key={index} className="bg-rise-dark rounded p-3 text-xs">
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="text-white font-medium">{contact.name}</span>
+                      <span className={`px-2 py-1 rounded text-xs ${contact.isInDatabase ? 'bg-blue-500/20 text-blue-400' : 'bg-gray-500/20 text-gray-400'}`}>
+                        {contact.isInDatabase ? 'In DB' : 'New'}
+                      </span>
+                    </div>
+                    <p className="text-gray-400 mb-1">{contact.email}</p>
+                    {contact.hasReferralCode && (
+                      <p className="text-green-400">Referral: {contact.referralCode}</p>
+                    )}
+                    {contact.affiliateIndicators.length > 0 && (
+                      <p className="text-yellow-400">Indicators: {contact.affiliateIndicators.join(', ')}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="text-md font-semibold text-white mb-2">Most Common Tags:</h4>
+              <div className="max-h-60 overflow-y-auto">
+                {Object.entries(analysisResults.tagFrequency)
+                  .sort(([,a], [,b]) => (b as number) - (a as number))
+                  .slice(0, 15)
+                  .map(([tag, count], index) => (
+                    <div key={index} className="flex justify-between items-center py-1 text-sm">
+                      <span className="text-gray-300">{tag}</span>
+                      <span className="text-white font-medium">{count as number}</span>
+                    </div>
+                  ))}
+              </div>
             </div>
           </div>
         </motion.div>
