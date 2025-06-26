@@ -253,8 +253,22 @@ export class UnifiedImportService {
               contact.customFields.affiliate_earnings
             );
             
-            // More lenient filtering - include if they have ANY affiliate indicator
-            const isActualAffiliate = hasReferralCode || hasAffiliateTags || hasAffiliateCustomFields;
+            // STRICT filtering - must have referral code OR very specific affiliate indicators
+            const isActualAffiliate = hasReferralCode || 
+              (hasAffiliateTags && hasAffiliateCustomFields); // Must have BOTH tags AND custom fields if no referral code
+            
+            // Log every decision for the first 50 contacts to debug
+            if (allContacts.length < 50) {
+              console.log(`🔍 GHL Contact ${contact.id} (${contact.email}):`, {
+                hasReferralCode,
+                referralCode: contact.referralCode,
+                hasAffiliateTags,
+                tags: contact.tags,
+                hasAffiliateCustomFields,
+                customFieldKeys: contact.customFields ? Object.keys(contact.customFields) : [],
+                isActualAffiliate
+              });
+            }
             
             if (isActualAffiliate) {
               console.log(`✅ GHL: Including affiliate ${contact.id} (${contact.email}) - reasons: ${[
@@ -262,9 +276,6 @@ export class UnifiedImportService {
                 hasAffiliateTags && 'affiliateTags',
                 hasAffiliateCustomFields && 'customFields'
               ].filter(Boolean).join(', ')}`);
-            } else if (allContacts.length < 10) {
-              // Only log first 10 exclusions to avoid spam
-              console.log(`❌ GHL: Excluding contact ${contact.id} (${contact.email}) - no affiliate indicators`);
             }
             
             return isActualAffiliate;
@@ -293,7 +304,14 @@ export class UnifiedImportService {
       }
 
       console.log(`✅ GHL v1: Total contacts fetched: ${allContacts.length}`);
-      console.log(`🔍 GHL v1: These contacts will be inserted into database:`, allContacts.map(c => ({ id: c.id, email: c.email, hasReferralCode: !!c.referralCode, tags: c.tags })).slice(0, 5));
+      console.log(`🔍 GHL v1: These contacts will be inserted into database:`, allContacts.map(c => ({ id: c.id, email: c.email, hasReferralCode: !!c.referralCode, tags: c.tags })).slice(0, 10));
+      
+      // SANITY CHECK: If we have more than 100 "affiliates", something is wrong
+      if (allContacts.length > 100) {
+        console.error(`🚨 SANITY CHECK FAILED: Found ${allContacts.length} affiliates - this seems too high. Limiting to first 100 to prevent spam.`);
+        allContacts.splice(100); // Keep only first 100
+      }
+      
       result.recordsProcessed = allContacts.length;
 
       // Process contacts into Supabase
