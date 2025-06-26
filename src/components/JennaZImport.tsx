@@ -59,6 +59,8 @@ interface GHLContact {
   dateAdded?: string;
   lastActivity?: string;
   customFields?: Record<string, unknown>;
+  tags?: string[];
+  source?: string;
 }
 
 const JennaZImport: React.FC = () => {
@@ -1163,27 +1165,24 @@ const JennaZImport: React.FC = () => {
 
         <button
           onClick={() => {
-            // Create a modified version with no filtering for testing
-            const originalSkipFiltering = handleImportAll;
-            // Temporarily modify the function to skip filtering
-            const testImport = async () => {
-              console.log('🧪 TEST IMPORT: Running with minimal filtering to import more contacts');
+            // Create a data analysis function to understand GHL structure
+            const analyzeGHLData = async () => {
+              console.log('🔍 ANALYZING GHL DATA STRUCTURE...');
               if (!isCredentialsValid) {
                 setErrorMessage('Please configure GHL credentials first');
                 return;
               }
 
-              setImportStatus(prev => ({ ...prev, isImporting: true, currentOperation: 'Starting TEST import (minimal filtering)...' }));
+              setImportStatus(prev => ({ ...prev, isImporting: true, currentOperation: 'Analyzing GHL data structure...' }));
               setErrorMessage('');
               
               try {
-                setImportStatus(prev => ({ ...prev, currentOperation: 'Fetching contacts from GHL API...' }));
-                
                 const startTime = new Date();
                 const baseUrl = 'https://rest.gohighlevel.com/v1';
                 let allContacts: GHLContact[] = [];
                 let nextCursor: string | null = null;
                 
+                // Fetch ALL contacts first
                 do {
                   const endpoint = `/contacts/?locationId=${credentials.locationId}&limit=100${
                     nextCursor ? `&cursor=${nextCursor}` : ''
@@ -1214,107 +1213,131 @@ const JennaZImport: React.FC = () => {
                   
                 } while (nextCursor);
 
-                console.log(`✅ Total contacts fetched: ${allContacts.length}`);
+                console.log(`📊 ANALYSIS: Total contacts fetched: ${allContacts.length}`);
                 
-                // MINIMAL FILTERING - only exclude obviously bad contacts
-                const minimalFilter = (contact: GHLContact): boolean => {
-                  // Only exclude contacts that are clearly invalid
-                  if (!contact.email || !contact.email.includes('@')) return false;
-                  if (contact.email.includes('test') || contact.email.includes('noreply')) return false;
-                  return true; // Include almost everything else
+                // DEEP ANALYSIS OF DATA STRUCTURE
+                const analysis = {
+                  totalContacts: allContacts.length,
+                  tagsFound: new Set<string>(),
+                  customFieldKeys: new Set<string>(),
+                  campaignSources: new Set<string>(),
+                  contactsByTags: {} as Record<string, number>,
+                  contactsBySource: {} as Record<string, number>,
+                  sampleContactsWithTags: [] as any[]
                 };
 
-                const testContacts = allContacts.filter(minimalFilter);
-                console.log(`🧪 TEST: Importing ${testContacts.length} contacts with minimal filtering (was ${allContacts.length} total)`);
-
-                setImportStatus(prev => ({ ...prev, currentOperation: `TEST: Processing ${testContacts.length} contacts with minimal filtering...` }));
-
-                let recordsSuccessful = 0;
-                let recordsFailed = 0;
-                const errors: string[] = [];
-
-                // Process a smaller sample for testing (first 50)
-                const sampleContacts = testContacts.slice(0, 50);
-                console.log(`🧪 Processing sample of ${sampleContacts.length} contacts for testing`);
-
-                for (const contact of sampleContacts) {
-                  try {
-                    const referralCode = contact.referralCode || `TEST${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
-
-                    const affiliateData = {
-                      email: contact.email,
-                      first_name: contact.firstName || null,
-                      last_name: contact.lastName || null,
-                      phone: contact.phone || null,
-                      referral_code: referralCode,
-                      primary_source: 'ghl',
-                      ghl_contact_id: contact.id,
-                      status: 'active',
-                      signup_date: contact.dateAdded ? new Date(contact.dateAdded).toISOString() : new Date().toISOString(),
-                      last_active: contact.lastActivity ? new Date(contact.lastActivity).toISOString() : null,
-                      custom_fields: contact.customFields ? JSON.stringify(contact.customFields) : null
-                    };
-
-                    const { error: affiliateError } = await supabase
-                      .from('affiliate_system_users')
-                      .upsert([affiliateData], { 
-                        onConflict: 'email',
-                        ignoreDuplicates: false 
-                      });
-
-                    if (affiliateError) {
-                      errors.push(`Contact ${contact.id}: ${affiliateError.message}`);
-                      recordsFailed++;
-                    } else {
-                      recordsSuccessful++;
-                    }
-
-                  } catch (error) {
-                    errors.push(`Contact ${contact.id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-                    recordsFailed++;
+                // Analyze each contact
+                allContacts.forEach((contact, index) => {
+                  // Collect all tags
+                  if (contact.tags && Array.isArray(contact.tags)) {
+                    contact.tags.forEach((tag: string) => {
+                      analysis.tagsFound.add(tag);
+                      analysis.contactsByTags[tag] = (analysis.contactsByTags[tag] || 0) + 1;
+                    });
                   }
+
+                  // Collect all custom field keys
+                  if (contact.customFields) {
+                    Object.keys(contact.customFields).forEach(key => {
+                      analysis.customFieldKeys.add(key);
+                    });
+                  }
+
+                  // Collect source information
+                  if (contact.source) {
+                    analysis.campaignSources.add(contact.source);
+                    analysis.contactsBySource[contact.source] = (analysis.contactsBySource[contact.source] || 0) + 1;
+                  }
+
+                  // Save first 10 contacts with tags for detailed inspection
+                  if (index < 10 && contact.tags && contact.tags.length > 0) {
+                    analysis.sampleContactsWithTags.push({
+                      email: contact.email,
+                      firstName: contact.firstName,
+                      lastName: contact.lastName,
+                      tags: contact.tags,
+                      source: contact.source,
+                      customFields: contact.customFields,
+                      dateAdded: contact.dateAdded
+                    });
+                  }
+                });
+
+                // COMPREHENSIVE ANALYSIS REPORT
+                console.log('🎯 === GHL DATA STRUCTURE ANALYSIS ===');
+                console.log(`📊 Total Contacts: ${analysis.totalContacts}`);
+                console.log('');
+                
+                console.log('🏷️ ALL TAGS FOUND:');
+                Array.from(analysis.tagsFound).sort().forEach(tag => {
+                  const count = analysis.contactsByTags[tag];
+                  console.log(`  • ${tag}: ${count} contacts`);
+                  
+                  // Highlight tags that might indicate affiliates (around 481 contacts)
+                  if (count >= 400 && count <= 500) {
+                    console.log(`    ⭐ POTENTIAL AFFILIATE TAG (${count} contacts - close to 481!)`);
+                  }
+                });
+                console.log('');
+
+                console.log('🔧 CUSTOM FIELD KEYS:');
+                Array.from(analysis.customFieldKeys).sort().forEach(key => {
+                  console.log(`  • ${key}`);
+                });
+                console.log('');
+
+                console.log('📍 CAMPAIGN SOURCES:');
+                Object.entries(analysis.contactsBySource).forEach(([source, count]) => {
+                  console.log(`  • ${source}: ${count} contacts`);
+                });
+                console.log('');
+
+                console.log('🔍 SAMPLE CONTACTS WITH TAGS:');
+                analysis.sampleContactsWithTags.forEach((contact, index) => {
+                  console.log(`Contact ${index + 1}:`, contact);
+                });
+
+                // Look for the magic 481 number
+                const potentialAffiliateTags = Object.entries(analysis.contactsByTags)
+                  .filter(([tag, count]) => count >= 450 && count <= 520)
+                  .sort((a, b) => Math.abs(b[1] - 481) - Math.abs(a[1] - 481));
+
+                if (potentialAffiliateTags.length > 0) {
+                  console.log('🎯 LIKELY AFFILIATE TAGS (close to 481):');
+                  potentialAffiliateTags.forEach(([tag, count]) => {
+                    console.log(`  🎯 ${tag}: ${count} contacts (diff from 481: ${Math.abs(count - 481)})`);
+                  });
                 }
 
-                const endTime = new Date();
-                const duration = endTime.getTime() - startTime.getTime();
-
-                const result = {
-                  success: recordsFailed === 0,
-                  recordsProcessed: sampleContacts.length,
-                  recordsImported: recordsSuccessful,
-                  recordsUpdated: 0,
-                  recordsSkipped: recordsFailed,
-                  errors: errors || [],
-                  startTime,
-                  endTime,
-                  duration
-                };
-
-                setImportStatus(prev => ({ 
-                  ...prev, 
-                  isImporting: false, 
-                  currentOperation: '',
-                  results: { ...prev.results, affiliates: result }
-                }));
+                setImportStatus(prev => ({ ...prev, isImporting: false, currentOperation: '' }));
                 
-                setErrorMessage(`🧪 TEST IMPORT: Processed ${result.recordsImported} of ${sampleContacts.length} sample contacts. Total available: ${testContacts.length}`);
-                
-                window.dispatchEvent(new CustomEvent('affiliate-data-updated'));
+                const reportMessage = `📊 ANALYSIS COMPLETE:
+• Total contacts: ${analysis.totalContacts}
+• Unique tags: ${analysis.tagsFound.size}
+• Custom fields: ${analysis.customFieldKeys.size}
+• Potential affiliate tags found: ${potentialAffiliateTags.length}
+${potentialAffiliateTags.length > 0 ? 
+  `• Best match: "${potentialAffiliateTags[0][0]}" (${potentialAffiliateTags[0][1]} contacts)` : 
+  '• No tags close to 481 found'}
+
+Check console for detailed breakdown!`;
+
+                setErrorMessage(reportMessage);
                 
               } catch (error) {
-                console.error('Test import error:', error);
-                setErrorMessage(`Test import failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                console.error('Analysis error:', error);
+                setErrorMessage(`Analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
                 setImportStatus(prev => ({ ...prev, isImporting: false, currentOperation: '' }));
               }
             };
             
-            testImport();
+            analyzeGHLData();
           }}
           disabled={importStatus.isImporting}
-          className="flex items-center justify-center p-4 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 disabled:opacity-50 text-white rounded-lg transition-colors"
+          className="flex items-center justify-center p-4 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:opacity-50 text-white rounded-lg transition-colors"
         >
-          <Eye className="w-5 h-5 mr-2" />
-          Test Import (50 Samples)
+          <Database className="w-5 h-5 mr-2" />
+          Analyze GHL Data Structure
         </button>
 
         <button
