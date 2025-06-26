@@ -6,7 +6,7 @@ import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import { AffiliateAggregationService, AggregatedAffiliate } from '../services/affiliateAggregationService';
 
-type AffiliateLevel = 'All' | 'Direct' | 'Level 2' | 'Level 3' | 'ReAction' | 'Bitcoin is BAE';
+type AffiliateLevel = 'All' | 'Direct' | 'Level 2' | 'Level 3' | 'GoAFF Pro' | 'Mighty Networks';
 type AffiliateStatus = 'All' | 'Active' | 'Pending' | 'Inactive';
 type AffiliateSource = 'All' | 'goaffpro' | 'mightynetworks' | 'native';
 
@@ -282,8 +282,8 @@ const Affiliates = () => {
                             affiliate.email.toLowerCase().includes(searchQuery.toLowerCase());
       
       const matchesLevel = levelFilter === 'All' || 
-                          (levelFilter === 'ReAction' && affiliate.source === 'goaffpro') ||
-                          (levelFilter === 'Bitcoin is BAE' && affiliate.source === 'mightynetworks') ||
+                          (levelFilter === 'GoAFF Pro' && affiliate.source === 'goaffpro') ||
+                          (levelFilter === 'Mighty Networks' && affiliate.source === 'mightynetworks') ||
                           affiliate.level === levelFilter;
       
       const matchesStatus = statusFilter === 'All' || affiliate.status === statusFilter;
@@ -319,11 +319,11 @@ const Affiliates = () => {
   const getSourceBadge = (source: string) => {
     switch (source) {
       case 'goaffpro':
-        return <span className="px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-400">ReAction</span>;
+        return <span className="px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-400">GoAFF Pro</span>;
       case 'mightynetworks':
-        return <span className="px-2 py-1 text-xs rounded-full bg-purple-500/20 text-purple-400">Bitcoin is BAE</span>;
+        return <span className="px-2 py-1 text-xs rounded-full bg-purple-500/20 text-purple-400">Mighty Networks</span>;
       case 'native':
-        return <span className="px-2 py-1 text-xs rounded-full bg-green-500/20 text-green-400">JennaZ.co</span>;
+        return <span className="px-2 py-1 text-xs rounded-full bg-green-500/20 text-green-400">GHL</span>;
       default:
         return <span className="px-2 py-1 text-xs rounded-full bg-gray-500/20 text-gray-400">Unknown</span>;
     }
@@ -387,11 +387,11 @@ const Affiliates = () => {
         <div>
           <h1 className="text-2xl font-serif font-semibold text-white flex items-center">
             <Users className="mr-2 h-6 w-6 text-rise-gold" />
-            {isAdmin ? 'Affiliate Network' : 'My Affiliate Profile'}
+            {isAdmin ? 'Raw Data' : 'My Affiliate Profile'}
           </h1>
           <p className="text-gray-400">
             {isAdmin 
-              ? 'Manage and track all your affiliate partners from multiple sources'
+              ? 'Import all of your affiliate partners from multiple sources'
               : 'View and manage your affiliate profile and performance data'
             }
           </p>
@@ -487,21 +487,21 @@ const Affiliates = () => {
           <div className="flex items-center justify-between p-3 bg-rise-dark-light rounded-lg">
             <div className="flex items-center space-x-3">
               <div className="h-3 w-3 rounded-full bg-blue-400"></div>
-              <span className="text-gray-300">ReAction</span>
+              <span className="text-gray-300">GoAFF Pro</span>
             </div>
             <span className="text-white font-semibold">{stats.bySource.goaffpro}</span>
           </div>
           <div className="flex items-center justify-between p-3 bg-rise-dark-light rounded-lg">
             <div className="flex items-center space-x-3">
               <div className="h-3 w-3 rounded-full bg-purple-400"></div>
-              <span className="text-gray-300">Bitcoin is BAE</span>
+              <span className="text-gray-300">Mighty Networks</span>
             </div>
             <span className="text-white font-semibold">{stats.bySource.mightynetworks}</span>
           </div>
           <div className="flex items-center justify-between p-3 bg-rise-dark-light rounded-lg">
             <div className="flex items-center space-x-3">
               <div className="h-3 w-3 rounded-full bg-green-400"></div>
-              <span className="text-gray-300">JennaZ.co</span>
+              <span className="text-gray-300">GHL</span>
             </div>
             <span className="text-white font-semibold">{stats.bySource.native}</span>
           </div>
@@ -534,9 +534,9 @@ const Affiliates = () => {
                 className="bg-transparent text-gray-300 py-2 pr-8 text-sm appearance-none focus:outline-none"
               >
                 <option value="All">All Sources</option>
-                <option value="goaffpro">ReAction</option>
-                <option value="mightynetworks">Bitcoin is BAE</option>
-                <option value="native">JennaZ.co</option>
+                <option value="goaffpro">GoAFF Pro</option>
+                <option value="mightynetworks">Mighty Networks</option>
+                <option value="native">GHL</option>
               </select>
             </div>
             
@@ -550,8 +550,8 @@ const Affiliates = () => {
                 <option value="Direct">Direct</option>
                 <option value="Level 2">Level 2</option>
                 <option value="Level 3">Level 3</option>
-                <option value="ReAction">ReAction</option>
-                <option value="Bitcoin is BAE">Bitcoin is BAE</option>
+                <option value="GoAFF Pro">GoAFF Pro</option>
+                <option value="Mighty Networks">Mighty Networks</option>
               </select>
             </div>
             
@@ -621,7 +621,7 @@ const Affiliates = () => {
                     onClick={() => handleSort('referrals')}
                   >
                     <div className="flex items-center space-x-1">
-                      <span>Referrals</span>
+                      <span>Leads</span>
                       {getSortIcon('referrals')}
                     </div>
                   </th>
@@ -904,9 +904,9 @@ const Affiliates = () => {
                           value={demoUserForm.source}
                           onChange={(e) => setDemoUserForm(prev => ({ ...prev, source: e.target.value as 'manual' | 'ghl' | 'goaffpro' }))}
                         >
-                          <option value="manual">JennaZ.co (Manual)</option>
-                          <option value="ghl">JennaZ (Go High Level)</option>
-                          <option value="goaffpro">ReAction (GoAffPro)</option>
+                          <option value="manual">GHL (Manual)</option>
+                          <option value="ghl">GHL (Go High Level)</option>
+                          <option value="goaffpro">GoAFF Pro (GoAffPro)</option>
                         </select>
                       </div>
                     </div>
