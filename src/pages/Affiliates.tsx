@@ -197,27 +197,41 @@ const Affiliates = () => {
       return;
     }
 
-    // Use the known working GHL credentials directly
+    // Use credentials from Vercel environment variables
     const ghlCredentials = {
-      apiKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2NhdGlvbl9pZCI6IncwMUdjN1Q0YjB0S1NEUWRLaHVOIiwiY29tcGFueV9pZCI6IjY2ZTcxZmYzZjI5YzU0MjY0MzZmMjMzNSIsInZlcnNpb24iOjEsImlhdCI6MTczNzU0Mzg5MCwiZXhwIjoxNzM4MTQ4NjkwfQ.QhvPGwvFxlQ6QGIcFHhwfLsOyiPT4rVJ2G3mhfFPEWg',
-      locationId: 'w01Gc7T4b0tKSDQdKhuN'
+      apiKey: import.meta.env.VITE_GHL_API_KEY || '',
+      locationId: import.meta.env.VITE_GHL_LOCATION_ID || 'w01Gc7T4b0tKSDQdKhuN'
     };
 
-    // For now, skip GoAffPro since we don't have working credentials
-    const goaffproCredentials = undefined;
+    const goaffproCredentials = {
+      apiKey: import.meta.env.VITE_GOAFFPRO_ACCESS_TOKEN || '',
+      storeId: 'default' // GoAffPro doesn't seem to need a store ID based on the tokens
+    };
+
+    // Check if we have credentials
+    const hasGhlCredentials = ghlCredentials.apiKey && ghlCredentials.locationId;
+    const hasGoaffproCredentials = goaffproCredentials.apiKey;
+
+    if (!hasGhlCredentials && !hasGoaffproCredentials) {
+      alert('No API credentials found. Please check environment variables.');
+      return;
+    }
 
     setIsImporting(true);
-    setImportStatus('Starting import from GHL...');
+    setImportStatus('Starting import from all sources...');
 
     try {
       console.log('🚀 Starting unified import from Affiliates page...');
-      console.log('🔑 Using GHL credentials:', { locationId: ghlCredentials.locationId, hasApiKey: !!ghlCredentials.apiKey });
+      console.log('🔑 Available credentials:', { 
+        ghl: hasGhlCredentials, 
+        goaffpro: hasGoaffproCredentials 
+      });
 
-      setImportStatus('Executing GHL import...');
+      setImportStatus('Executing imports...');
 
       const result = await unifiedImportService.importAllData(
-        ghlCredentials,
-        goaffproCredentials
+        hasGhlCredentials ? ghlCredentials : undefined,
+        hasGoaffproCredentials ? goaffproCredentials : undefined
       );
 
       console.log('✅ Unified import completed:', result);
@@ -498,10 +512,10 @@ const Affiliates = () => {
               onClick={handleUnifiedImport}
               disabled={isImporting}
               className="btn btn-primary flex items-center space-x-2"
-              title="Import affiliate contacts from Go High Level"
+              title="Import affiliate data from GHL and GoAffPro"
             >
               <Download className={`h-4 w-4 ${isImporting ? 'animate-pulse' : ''}`} />
-              <span>{isImporting ? 'Importing...' : 'Import GHL Data'}</span>
+              <span>{isImporting ? 'Importing...' : 'Import All Data'}</span>
             </button>
           )}
           <button
