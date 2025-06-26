@@ -32,6 +32,13 @@ const Affiliates = () => {
   const [isCreatingDemo, setIsCreatingDemo] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importStatus, setImportStatus] = useState('');
+  const [showCredentialsModal, setShowCredentialsModal] = useState(false);
+  const [credentials, setCredentials] = useState({
+    ghlApiKey: '',
+    ghlLocationId: 'w01Gc7T4b0tKSDQdKhuN',
+    goaffproApiKey: '',
+    goaffproStoreId: ''
+  });
   const [affiliates, setAffiliates] = useState<AggregatedAffiliate[]>([]);
   const [stats, setStats] = useState({
     total: 0,
@@ -190,38 +197,27 @@ const Affiliates = () => {
       return;
     }
 
+    // Use the known working GHL credentials directly
+    const ghlCredentials = {
+      apiKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2NhdGlvbl9pZCI6IncwMUdjN1Q0YjB0S1NEUWRLaHVOIiwiY29tcGFueV9pZCI6IjY2ZTcxZmYzZjI5YzU0MjY0MzZmMjMzNSIsInZlcnNpb24iOjEsImlhdCI6MTczNzU0Mzg5MCwiZXhwIjoxNzM4MTQ4NjkwfQ.QhvPGwvFxlQ6QGIcFHhwfLsOyiPT4rVJ2G3mhfFPEWg',
+      locationId: 'w01Gc7T4b0tKSDQdKhuN'
+    };
+
+    // For now, skip GoAffPro since we don't have working credentials
+    const goaffproCredentials = undefined;
+
     setIsImporting(true);
-    setImportStatus('Starting import from all sources...');
+    setImportStatus('Starting import from GHL...');
 
     try {
       console.log('🚀 Starting unified import from Affiliates page...');
+      console.log('🔑 Using GHL credentials:', { locationId: ghlCredentials.locationId, hasApiKey: !!ghlCredentials.apiKey });
 
-      // For now, we'll use hardcoded credentials or environment variables
-      // In a real app, these would come from a secure configuration
-      const ghlCredentials = {
-        apiKey: process.env.REACT_APP_GHL_API_KEY || '',
-        locationId: process.env.REACT_APP_GHL_LOCATION_ID || 'w01Gc7T4b0tKSDQdKhuN'
-      };
-
-      const goaffproCredentials = {
-        apiKey: process.env.REACT_APP_GOAFFPRO_API_KEY || '',
-        storeId: process.env.REACT_APP_GOAFFPRO_STORE_ID || ''
-      };
-
-      // Check if we have any credentials
-      const hasGhlCredentials = ghlCredentials.apiKey && ghlCredentials.locationId;
-      const hasGoaffproCredentials = goaffproCredentials.apiKey && goaffproCredentials.storeId;
-
-      if (!hasGhlCredentials && !hasGoaffproCredentials) {
-        // For demo purposes, let's use the known GHL credentials
-        ghlCredentials.apiKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2NhdGlvbl9pZCI6IncwMUdjN1Q0YjB0S1NEUWRLaHVOIiwiY29tcGFueV9pZCI6IjY2ZTcxZmYzZjI5YzU0MjY0MzZmMjMzNSIsInZlcnNpb24iOjEsImlhdCI6MTczNzU0Mzg5MCwiZXhwIjoxNzM4MTQ4NjkwfQ.QhvPGwvFxlQ6QGIcFHhwfLsOyiPT4rVJ2G3mhfFPEWg';
-      }
-
-      setImportStatus('Executing imports...');
+      setImportStatus('Executing GHL import...');
 
       const result = await unifiedImportService.importAllData(
-        hasGhlCredentials ? ghlCredentials : undefined,
-        hasGoaffproCredentials ? goaffproCredentials : undefined
+        ghlCredentials,
+        goaffproCredentials
       );
 
       console.log('✅ Unified import completed:', result);
@@ -502,10 +498,10 @@ const Affiliates = () => {
               onClick={handleUnifiedImport}
               disabled={isImporting}
               className="btn btn-primary flex items-center space-x-2"
-              title="Import all affiliate data from GHL and GoAffPro"
+              title="Import affiliate contacts from Go High Level"
             >
               <Download className={`h-4 w-4 ${isImporting ? 'animate-pulse' : ''}`} />
-              <span>{isImporting ? 'Importing...' : 'Import All Data'}</span>
+              <span>{isImporting ? 'Importing...' : 'Import GHL Data'}</span>
             </button>
           )}
           <button
