@@ -198,6 +198,18 @@ export class GHLImportService {
           
           // Extract cursor for next page from meta.nextCursor
           cursor = data.meta?.nextCursor || null;
+          
+          // GHL API v1 might use different field names for pagination
+          if (!cursor && data.meta) {
+            // Try common pagination field names
+            cursor = data.meta.nextCursor || 
+                     data.meta.next_cursor || 
+                     data.meta.cursor || 
+                     data.meta.startAfter || 
+                     data.meta.startAfterId || 
+                     null;
+          }
+          
           console.log(`🔄 Next cursor: ${cursor ? cursor.substring(0, 20) + '...' : 'null'}`);
           
           // If we got less than the limit, we're at the end

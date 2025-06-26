@@ -245,12 +245,32 @@ const JennaZImport: React.FC = () => {
           nextCursor: responseData.meta?.nextCursor
         });
         
+        // Debug: Log all meta fields to identify pagination fields
+        if (responseData.meta) {
+          console.log(`🔍 All meta fields:`, responseData.meta);
+          Object.keys(responseData.meta).forEach(key => {
+            console.log(`  ${key}: ${responseData.meta[key]}`);
+          });
+        }
+        
         if (responseData.contacts && Array.isArray(responseData.contacts)) {
           allContacts = allContacts.concat(responseData.contacts);
           console.log(`📥 Fetched ${responseData.contacts.length} contacts (total: ${allContacts.length})`);
         }
         
         cursor = responseData.meta?.nextCursor || null;
+        
+        // GHL API v1 might use different field names for pagination
+        if (!cursor && responseData.meta) {
+          // Try common pagination field names
+          cursor = responseData.meta.nextCursor || 
+                   responseData.meta.next_cursor || 
+                   responseData.meta.cursor || 
+                   responseData.meta.startAfter || 
+                   responseData.meta.startAfterId || 
+                   null;
+        }
+        
         console.log(`🔄 Next cursor: ${cursor ? cursor.substring(0, 20) + '...' : 'null'}`);
         
         // Rate limiting
@@ -546,12 +566,32 @@ const JennaZImport: React.FC = () => {
           nextCursor: responseData.meta?.nextCursor
         });
         
+        // Debug: Log all meta fields to identify pagination fields
+        if (responseData.meta) {
+          console.log(`🔍 All meta fields:`, responseData.meta);
+          Object.keys(responseData.meta).forEach(key => {
+            console.log(`  ${key}: ${responseData.meta[key]}`);
+          });
+        }
+        
         if (responseData.contacts && Array.isArray(responseData.contacts)) {
           allContacts = allContacts.concat(responseData.contacts);
           console.log(`📥 Fetched ${responseData.contacts.length} contacts (total: ${allContacts.length})`);
         }
         
         cursor = responseData.meta?.nextCursor || null;
+        
+        // GHL API v1 might use different field names for pagination
+        if (!cursor && responseData.meta) {
+          // Try common pagination field names
+          cursor = responseData.meta.nextCursor || 
+                   responseData.meta.next_cursor || 
+                   responseData.meta.cursor || 
+                   responseData.meta.startAfter || 
+                   responseData.meta.startAfterId || 
+                   null;
+        }
+        
         console.log(`🔄 Next cursor: ${cursor ? cursor.substring(0, 20) + '...' : 'null'}`);
         
         // Rate limiting
