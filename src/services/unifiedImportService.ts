@@ -270,13 +270,20 @@ export class UnifiedImportService {
               contact.customFields.affiliate_earnings
             );
             
-            // ADJUSTED filtering based on analysis - your affiliates are identified by specific tags
+            // COMPREHENSIVE filtering based on analysis - include all potential affiliate indicators
             const hasSpecificAffiliateTags = contact.tags && Array.isArray(contact.tags) && 
               contact.tags.some(tag => {
                 const tagLower = tag.toLowerCase();
                 return tagLower === 'jennaz-affiliate' || 
                        tagLower === 'reaction-affiliate' ||
-                       tagLower.includes('affiliate'); // Keep broader affiliate tag matching
+                       tagLower.includes('affiliate') ||
+                       tagLower.includes('rego-') ||          // rego-rise66 (290 contacts)
+                       tagLower.includes('manifest-') ||      // manifest-your-dreams (35 contacts)
+                       tagLower.includes('purchase-') ||      // purchase-3mastery (30 contacts)
+                       tagLower.includes('rise') ||
+                       tagLower.includes('mastery') ||
+                       tagLower.includes('partner') ||
+                       tagLower.includes('referrer');
               });
             
             const isActualAffiliate = hasReferralCode || hasSpecificAffiliateTags;
@@ -298,8 +305,8 @@ export class UnifiedImportService {
                 hasSpecificAffiliateTags && 'specificAffiliateTags'
               ].filter(Boolean).join(', ')}`);
               
-              // EMERGENCY BRAKE: Increase limit since we expect ~320 affiliates
-              if (allContacts.length >= 350) {
+              // EMERGENCY BRAKE: Increase limit since we expect ~481 affiliates
+              if (allContacts.length >= 500) {
                 console.error(`🚨 EMERGENCY BRAKE: Found ${allContacts.length} affiliates already - stopping to prevent spam!`);
                 hasMore = false; // This will break the outer while loop
                 return false; // Don't include this contact
@@ -334,10 +341,10 @@ export class UnifiedImportService {
       console.log(`✅ GHL v1: Total contacts fetched: ${allContacts.length}`);
       console.log(`🔍 GHL v1: These contacts will be inserted into database:`, allContacts.map(c => ({ id: c.id, email: c.email, hasReferralCode: !!c.referralCode, tags: c.tags })).slice(0, 10));
       
-      // SANITY CHECK: Based on analysis, we expect ~320 affiliates
-      if (allContacts.length > 350) {
-        console.error(`🚨 SANITY CHECK FAILED: Found ${allContacts.length} affiliates - limiting to first 350 to prevent spam.`);
-        allContacts.splice(350); // Keep only first 350
+      // SANITY CHECK: Based on analysis, we expect ~481 affiliates
+      if (allContacts.length > 500) {
+        console.error(`🚨 SANITY CHECK FAILED: Found ${allContacts.length} affiliates - limiting to first 500 to prevent spam.`);
+        allContacts.splice(500); // Keep only first 500
       } else {
         console.log(`✅ GHL: Found ${allContacts.length} affiliates - this matches expected range based on analysis`);
       }
