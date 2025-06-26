@@ -152,22 +152,20 @@ export class GHLImportService {
     console.log('🔄 Fetching all contacts from Go High Level...');
     
     const allContacts: GHLContact[] = [];
-    let startAfter: string | null = null;
-    let startAfterId: string | null = null;
+    let cursor: string | null = null;
     let page = 1;
     const limit = 100;
 
     do {
       try {
-        console.log(`📥 Fetching page ${page}...`);
+        console.log(`📥 Fetching page ${page}${cursor ? ` with cursor: ${cursor.substring(0, 20)}...` : ''}...`);
         
-        // Build URL with proper cursor pagination parameters
+        // Build URL with proper cursor pagination parameter
         let url = `${this.config.baseUrl}/contacts/?locationId=${this.config.locationId}&limit=${limit}`;
         
-        // Add cursor parameters if we have them
-        if (startAfter && startAfterId) {
-          url += `&startAfter=${startAfter}&startAfterId=${startAfterId}`;
-          console.log(`🔍 Using cursor: startAfter=${startAfter}, startAfterId=${startAfterId}`);
+        // Add cursor parameter if we have one
+        if (cursor) {
+          url += `&cursor=${cursor}`;
         }
 
         const response = await fetch(url, {
@@ -183,27 +181,14 @@ export class GHLImportService {
 
         const data = await response.json();
         
-        console.log(`📊 Response: ${data.contacts?.length || 0} contacts`);
+        console.log(`📊 Response: ${data.contacts?.length || 0} contacts, cursor: ${data.meta?.nextCursor ? 'present' : 'none'}`);
         
         if (data.contacts && Array.isArray(data.contacts) && data.contacts.length > 0) {
           allContacts.push(...data.contacts);
           console.log(`✅ Added ${data.contacts.length} contacts (total: ${allContacts.length})`);
           
-          // Extract cursor for next page from meta
-          if (data.meta && data.meta.startAfter && data.meta.startAfterId) {
-            startAfter = data.meta.startAfter;
-            startAfterId = data.meta.startAfterId;
-          } else {
-            console.log(`⚠️ No cursor info in response - checking if we reached end`);
-            // If we got less than the limit, we're probably at the end
-            if (data.contacts.length < limit) {
-              console.log(`🏁 Got ${data.contacts.length} < ${limit} contacts, reached end`);
-              break;
-            }
-            // If no cursor but we got a full page, something might be wrong
-            console.log(`❌ No cursor but got full page - stopping to prevent infinite loop`);
-            break;
-          }
+          // Extract cursor for next page from meta.nextCursor
+          cursor = data.meta?.nextCursor || null;
           
           // If we got less than the limit, we're at the end
           if (data.contacts.length < limit) {
@@ -221,8 +206,8 @@ export class GHLImportService {
         await new Promise(resolve => setTimeout(resolve, 300));
         
         // Safety break to prevent infinite loops
-        if (page > 100) {
-          console.log('🛑 Safety break at page 100');
+        if (page > 50) {
+          console.log('🛑 Safety break at page 50');
           break;
         }
         
@@ -230,7 +215,7 @@ export class GHLImportService {
         console.error(`❌ Error fetching page ${page}:`, error);
         break;
       }
-    } while (startAfter && startAfterId && allContacts.length < 2000); // Reasonable safety limit
+    } while (cursor && allContacts.length < 2000); // Continue while we have cursor and under safety limit
 
     console.log(`✅ Total contacts fetched: ${allContacts.length}`);
     return allContacts;
@@ -366,10 +351,30 @@ export class GHLImportService {
 
   private generateReferralCode(contact: GHLContact): string {
     // Generate a unique referral code based on contact info
-    const baseName = contact.firstName || contact.lastName || contact.email.split('@')[0];
+    // Safely handle null/undefined values
+    const firstName = contact.firstName?.trim() || '';
+    const lastName = contact.lastName?.trim() || '';
+    const email = contact.email?.trim() || '';
+    
+    let baseName = '';
+    
+    // Try to get base name from firstName, lastName, or email
+    if (firstName) {
+      baseName = firstName;
+    } else if (lastName) {
+      baseName = lastName;
+    } else if (email && email.includes('@')) {
+      baseName = email.split('@')[0];
+    } else {
+      // Fallback if no usable name info
+      baseName = `user${contact.id?.substring(0, 4) || Math.random().toString(36).substring(2, 6)}`;
+    }
+    
     const cleanName = baseName.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
     const randomSuffix = Math.random().toString(36).substr(2, 4).toUpperCase();
-    return `${cleanName.substr(0, 6)}${randomSuffix}`;
+    const finalName = cleanName.length > 0 ? cleanName : 'USER';
+    
+    return `${finalName.substr(0, 6)}${randomSuffix}`;
   }
 
   private async establishReferralRelationships(): Promise<void> {

@@ -215,11 +215,11 @@ const JennaZImport: React.FC = () => {
       // Fetch contacts directly from GHL API
       const baseUrl = 'https://rest.gohighlevel.com/v1';
       let allContacts: GHLContact[] = [];
-      let nextCursor: string | null = null;
+      let cursor: string | null = null;
       
       do {
         const endpoint = `/contacts/?locationId=${credentials.locationId}&limit=100${
-          nextCursor ? `&cursor=${nextCursor}` : ''
+          cursor ? `&cursor=${cursor}` : ''
         }`;
         
         const response = await fetch(`${baseUrl}${endpoint}`, {
@@ -241,14 +241,14 @@ const JennaZImport: React.FC = () => {
           console.log(`📥 Fetched ${responseData.contacts.length} contacts (total: ${allContacts.length})`);
         }
         
-        nextCursor = responseData.meta?.nextCursor || null;
+        cursor = responseData.meta?.nextCursor || null;
         
         // Rate limiting
-        if (nextCursor) {
+        if (cursor) {
           await new Promise(resolve => setTimeout(resolve, 200));
         }
         
-      } while (nextCursor);
+      } while (cursor);
 
       console.log(`✅ Total contacts fetched: ${allContacts.length}`);
 
@@ -264,10 +264,30 @@ const JennaZImport: React.FC = () => {
         try {
           // Generate referral code if not provided
           const generateReferralCode = (contact: GHLContact): string => {
-            const baseName = contact.firstName || contact.lastName || contact.email.split('@')[0];
+            // Safely handle null/undefined values
+            const firstName = contact.firstName?.trim() || '';
+            const lastName = contact.lastName?.trim() || '';
+            const email = contact.email?.trim() || '';
+            
+            let baseName = '';
+            
+            // Try to get base name from firstName, lastName, or email
+            if (firstName) {
+              baseName = firstName;
+            } else if (lastName) {
+              baseName = lastName;
+            } else if (email && email.includes('@')) {
+              baseName = email.split('@')[0];
+            } else {
+              // Fallback if no usable name info
+              baseName = `user${contact.id?.substring(0, 4) || Math.random().toString(36).substring(2, 6)}`;
+            }
+            
             const cleanName = baseName.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
             const randomSuffix = Math.random().toString(36).substr(2, 4).toUpperCase();
-            return `${cleanName.substr(0, 6)}${randomSuffix}`;
+            const finalName = cleanName.length > 0 ? cleanName : 'USER';
+            
+            return `${finalName.substr(0, 6)}${randomSuffix}`;
           };
 
           const referralCode = contact.referralCode || generateReferralCode(contact);
@@ -480,11 +500,11 @@ const JennaZImport: React.FC = () => {
       // Fetch contacts directly from GHL API
       const baseUrl = 'https://rest.gohighlevel.com/v1';
       let allContacts: GHLContact[] = [];
-      let nextCursor: string | null = null;
+      let cursor: string | null = null;
       
       do {
         const endpoint = `/contacts/?locationId=${credentials.locationId}&limit=100${
-          nextCursor ? `&cursor=${nextCursor}` : ''
+          cursor ? `&cursor=${cursor}` : ''
         }`;
         
         const response = await fetch(`${baseUrl}${endpoint}`, {
@@ -506,14 +526,14 @@ const JennaZImport: React.FC = () => {
           console.log(`📥 Fetched ${responseData.contacts.length} contacts (total: ${allContacts.length})`);
         }
         
-        nextCursor = responseData.meta?.nextCursor || null;
+        cursor = responseData.meta?.nextCursor || null;
         
         // Rate limiting
-        if (nextCursor) {
+        if (cursor) {
           await new Promise(resolve => setTimeout(resolve, 200));
         }
         
-      } while (nextCursor);
+      } while (cursor);
 
       console.log(`✅ Total contacts fetched: ${allContacts.length}`);
 
@@ -529,10 +549,30 @@ const JennaZImport: React.FC = () => {
         try {
           // Generate referral code if not provided
           const generateReferralCode = (contact: GHLContact): string => {
-            const baseName = contact.firstName || contact.lastName || contact.email.split('@')[0];
+            // Safely handle null/undefined values
+            const firstName = contact.firstName?.trim() || '';
+            const lastName = contact.lastName?.trim() || '';
+            const email = contact.email?.trim() || '';
+            
+            let baseName = '';
+            
+            // Try to get base name from firstName, lastName, or email
+            if (firstName) {
+              baseName = firstName;
+            } else if (lastName) {
+              baseName = lastName;
+            } else if (email && email.includes('@')) {
+              baseName = email.split('@')[0];
+            } else {
+              // Fallback if no usable name info
+              baseName = `user${contact.id?.substring(0, 4) || Math.random().toString(36).substring(2, 6)}`;
+            }
+            
             const cleanName = baseName.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
             const randomSuffix = Math.random().toString(36).substr(2, 4).toUpperCase();
-            return `${cleanName.substr(0, 6)}${randomSuffix}`;
+            const finalName = cleanName.length > 0 ? cleanName : 'USER';
+            
+            return `${finalName.substr(0, 6)}${randomSuffix}`;
           };
 
           const referralCode = contact.referralCode || generateReferralCode(contact);
