@@ -285,7 +285,7 @@ export class UnifiedImportService {
             last_name: contact.lastName || null,
             phone: contact.phone || null,
             referral_code: referralCode,
-            primary_source: 'ghl', // Must be lowercase to match database constraint
+            primary_source: 'GHL', // Must match database constraint (uppercase abbreviation)
             ghl_contact_id: contact.id,
             status: 'active',
             signup_date: contact.dateAdded ? new Date(contact.dateAdded).toISOString() : new Date().toISOString(),
@@ -413,7 +413,7 @@ export class UnifiedImportService {
             last_name: affiliate.last_name || null,
             phone: affiliate.phone || null,
             referral_code: affiliate.referral_code || this.generateReferralCode(affiliate.first_name, affiliate.last_name, affiliate.email),
-            primary_source: 'goaffpro', // Must match database constraint
+            primary_source: 'SHP', // Must match database constraint (SHP = GoAffPro)
             goaffpro_affiliate_id: affiliate.id,
             status: this.mapGoAffProStatus(affiliate.status), // Ensure status matches database constraint
             signup_date: affiliate.signup_date ? new Date(affiliate.signup_date).toISOString() : new Date().toISOString(),
