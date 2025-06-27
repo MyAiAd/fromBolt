@@ -218,13 +218,19 @@ const JennaZImport: React.FC = () => {
       const baseUrl = 'https://rest.gohighlevel.com/v1';
       let allContacts: GHLContact[] = [];
       let nextCursor: string | null = null;
+      let pageCount = 0;
+      
+      console.log('🚀 Starting GHL contact fetch with pagination...');
       
       do {
-        const endpoint: string = `/contacts/?locationId=${credentials.locationId}&limit=100${
+        pageCount++;
+        const endpoint = `/contacts/?locationId=${credentials.locationId}&limit=100${
           nextCursor ? `&cursor=${nextCursor}` : ''
         }`;
         
-        const response: Response = await fetch(`${baseUrl}${endpoint}`, {
+        console.log(`📄 Fetching page ${pageCount} - Endpoint: ${endpoint}`);
+        
+        const response = await fetch(`${baseUrl}${endpoint}`, {
           headers: {
             'Authorization': `Bearer ${credentials.apiKey}`,
             'Content-Type': 'application/json'
@@ -233,26 +239,57 @@ const JennaZImport: React.FC = () => {
 
         if (!response.ok) {
           const errorText = await response.text();
+          console.error(`❌ GHL API Error on page ${pageCount}:`, response.status, response.statusText, errorText);
           throw new Error(`GHL API Error: ${response.status} ${response.statusText} - ${errorText}`);
         }
 
         const responseData: any = await response.json();
+        console.log(`📊 Page ${pageCount} response structure:`, {
+          hasContacts: !!responseData.contacts,
+          contactsCount: responseData.contacts?.length || 0,
+          hasMeta: !!responseData.meta,
+          nextCursor: responseData.meta?.nextCursor || null,
+          totalCount: responseData.meta?.total || 'unknown'
+        });
         
         if (responseData.contacts && Array.isArray(responseData.contacts)) {
           allContacts = allContacts.concat(responseData.contacts);
-          console.log(`📥 Fetched ${responseData.contacts.length} contacts (total: ${allContacts.length})`);
+          console.log(`📥 Page ${pageCount}: Added ${responseData.contacts.length} contacts (running total: ${allContacts.length})`);
+        } else {
+          console.warn(`⚠️ Page ${pageCount}: No contacts array found in response`);
         }
         
         nextCursor = responseData.meta?.nextCursor || null;
+        console.log(`🔄 Page ${pageCount} cursor info:`, {
+          hasNextCursor: !!nextCursor,
+          nextCursor: nextCursor ? `${nextCursor.substring(0, 20)}...` : null
+        });
         
         // Rate limiting
         if (nextCursor) {
+          console.log(`⏱️ Rate limiting: waiting 200ms before next page...`);
           await new Promise(resolve => setTimeout(resolve, 200));
+        }
+        
+        // Safety check to prevent infinite loops
+        if (pageCount > 20) {
+          console.error(`🛑 Safety break: Stopped after ${pageCount} pages to prevent infinite loop`);
+          break;
         }
         
       } while (nextCursor);
 
-      console.log(`✅ Total contacts fetched: ${allContacts.length}`);
+      console.log(`✅ GHL Pagination Complete! Summary:`);
+      console.log(`   📊 Total pages fetched: ${pageCount}`);
+      console.log(`   👥 Total contacts fetched: ${allContacts.length}`);
+      console.log(`   🎯 Expected ~481 contacts, got ${allContacts.length} (${((allContacts.length / 481) * 100).toFixed(1)}%)`);
+      
+      if (allContacts.length < 400) {
+        console.warn(`⚠️ WARNING: Only got ${allContacts.length} contacts, expected ~481. This suggests:`);
+        console.warn(`   - Pagination may have stopped early`);
+        console.warn(`   - API may have rate limits or restrictions`);
+        console.warn(`   - Some contacts may be filtered at the API level`);
+      }
 
       setImportStatus(prev => ({ ...prev, currentOperation: 'Filtering for affiliates only...' }));
 
@@ -261,24 +298,32 @@ const JennaZImport: React.FC = () => {
         // Check multiple criteria to identify affiliates
         const customFields = contact.customFields || {};
         
-        // More inclusive approach - any contact with meaningful data could be an affiliate
+        // MUCH MORE INCLUSIVE approach - we want to capture most contacts as potential affiliates
         
-        // 1. Check for affiliate-specific tags or custom fields (more inclusive)
+        // 1. If contact has an email and at least a first name OR last name, include them
+        if (contact.email && (contact.firstName || contact.lastName)) {
+          console.log(`✅ Basic contact info found: ${contact.firstName || ''} ${contact.lastName || ''} - ${contact.email}`);
+          return true;
+        }
+        
+        // 2. If contact has meaningful custom fields, include them
+        if (Object.keys(customFields).length > 0) {
+          console.log(`✅ Custom fields found (${Object.keys(customFields).length} fields)`);
+          return true;
+        }
+        
+        // 3. If contact has a phone number, include them
+        if (contact.phone && contact.phone.trim() !== '') {
+          console.log(`✅ Phone number found: ${contact.phone}`);
+          return true;
+        }
+        
+        // 4. Check for affiliate-specific indicators (keeping original logic as bonus)
         const affiliateIndicators = [
-          'affiliate',
-          'partner',
-          'referral',
-          'commission',
-          'ambassador',
-          'agent',
-          'rep',
-          'distributor',
-          'member',
-          'customer',
-          'lead'
+          'affiliate', 'partner', 'referral', 'commission', 'ambassador',
+          'agent', 'rep', 'distributor', 'member', 'customer', 'lead'
         ];
         
-        // Check custom fields for affiliate indicators
         for (const [key, value] of Object.entries(customFields)) {
           const keyLower = key.toLowerCase();
           const valueLower = String(value).toLowerCase();
@@ -291,40 +336,26 @@ const JennaZImport: React.FC = () => {
           }
         }
         
-        // 2. Check if contact has a referral code
+        // 5. If contact has a referral code, definitely include
         if (contact.referralCode) {
           console.log(`✅ Referral code found: ${contact.referralCode}`);
           return true;
         }
         
-        // 3. Check for specific custom field that marks affiliates (more options)
-        if (customFields['affiliate_status'] || 
-            customFields['is_affiliate'] || 
-            customFields['partner_type'] ||
-            customFields['referral_code'] ||
-            customFields['affiliate_id'] ||
-            customFields['commission_rate'] ||
-            customFields['status'] ||
-            customFields['tier'] ||
-            customFields['level']) {
-          console.log(`✅ Specific affiliate field found in custom fields`);
+        // 6. If contact has any meaningful engagement data, include them
+        if (contact.dateAdded || contact.lastActivity || contact.tags?.length) {
+          console.log(`✅ Engagement data found - Added: ${contact.dateAdded}, Active: ${contact.lastActivity}, Tags: ${contact.tags?.length || 0}`);
           return true;
         }
         
-        // 4. Check if contact has meaningful engagement (phone, first name, last name)
-        if (contact.phone && contact.firstName && contact.lastName) {
-          console.log(`✅ Complete contact info found: ${contact.firstName} ${contact.lastName} - ${contact.phone}`);
+        // 7. As a final fallback, if they have just an email, include them too
+        if (contact.email && contact.email.includes('@')) {
+          console.log(`✅ Valid email found: ${contact.email}`);
           return true;
         }
         
-        // 5. More inclusive - if contact has both first and last name, they're likely legitimate
-        if (contact.firstName && contact.lastName && contact.firstName.trim() !== '' && contact.lastName.trim() !== '') {
-          console.log(`✅ Valid name found: ${contact.firstName} ${contact.lastName}`);
-          return true;
-        }
-        
-        // Debug: Log contacts that are being filtered OUT
-        console.log(`❌ Contact filtered out - Email: ${contact.email}, Name: ${contact.firstName || 'N/A'} ${contact.lastName || 'N/A'}, Fields: ${Object.keys(customFields).length}`);
+        // Debug: Log contacts that are being filtered OUT (should be very few now)
+        console.log(`❌ Contact filtered out - Email: ${contact.email || 'N/A'}, Name: ${contact.firstName || 'N/A'} ${contact.lastName || 'N/A'}, Fields: ${Object.keys(customFields).length}, Phone: ${contact.phone || 'N/A'}`);
         return false;
       };
 
@@ -587,7 +618,7 @@ const JennaZImport: React.FC = () => {
           throw new Error(`GHL API Error: ${response.status} ${response.statusText} - ${errorText}`);
         }
 
-        const responseData: any = await response.json();
+        const responseData = await response.json();
         
         if (responseData.contacts && Array.isArray(responseData.contacts)) {
           allContacts = allContacts.concat(responseData.contacts);
@@ -612,24 +643,32 @@ const JennaZImport: React.FC = () => {
         // Check multiple criteria to identify affiliates
         const customFields = contact.customFields || {};
         
-        // More inclusive approach - any contact with meaningful data could be an affiliate
+        // MUCH MORE INCLUSIVE approach - we want to capture most contacts as potential affiliates
         
-        // 1. Check for affiliate-specific tags or custom fields (more inclusive)
+        // 1. If contact has an email and at least a first name OR last name, include them
+        if (contact.email && (contact.firstName || contact.lastName)) {
+          console.log(`✅ Basic contact info found: ${contact.firstName || ''} ${contact.lastName || ''} - ${contact.email}`);
+          return true;
+        }
+        
+        // 2. If contact has meaningful custom fields, include them
+        if (Object.keys(customFields).length > 0) {
+          console.log(`✅ Custom fields found (${Object.keys(customFields).length} fields)`);
+          return true;
+        }
+        
+        // 3. If contact has a phone number, include them
+        if (contact.phone && contact.phone.trim() !== '') {
+          console.log(`✅ Phone number found: ${contact.phone}`);
+          return true;
+        }
+        
+        // 4. Check for affiliate-specific indicators (keeping original logic as bonus)
         const affiliateIndicators = [
-          'affiliate',
-          'partner',
-          'referral',
-          'commission',
-          'ambassador',
-          'agent',
-          'rep',
-          'distributor',
-          'member',
-          'customer',
-          'lead'
+          'affiliate', 'partner', 'referral', 'commission', 'ambassador',
+          'agent', 'rep', 'distributor', 'member', 'customer', 'lead'
         ];
         
-        // Check custom fields for affiliate indicators
         for (const [key, value] of Object.entries(customFields)) {
           const keyLower = key.toLowerCase();
           const valueLower = String(value).toLowerCase();
@@ -642,40 +681,26 @@ const JennaZImport: React.FC = () => {
           }
         }
         
-        // 2. Check if contact has a referral code
+        // 5. If contact has a referral code, definitely include
         if (contact.referralCode) {
           console.log(`✅ Referral code found: ${contact.referralCode}`);
           return true;
         }
         
-        // 3. Check for specific custom field that marks affiliates (more options)
-        if (customFields['affiliate_status'] || 
-            customFields['is_affiliate'] || 
-            customFields['partner_type'] ||
-            customFields['referral_code'] ||
-            customFields['affiliate_id'] ||
-            customFields['commission_rate'] ||
-            customFields['status'] ||
-            customFields['tier'] ||
-            customFields['level']) {
-          console.log(`✅ Specific affiliate field found in custom fields`);
+        // 6. If contact has any meaningful engagement data, include them
+        if (contact.dateAdded || contact.lastActivity || contact.tags?.length) {
+          console.log(`✅ Engagement data found - Added: ${contact.dateAdded}, Active: ${contact.lastActivity}, Tags: ${contact.tags?.length || 0}`);
           return true;
         }
         
-        // 4. Check if contact has meaningful engagement (phone, first name, last name)
-        if (contact.phone && contact.firstName && contact.lastName) {
-          console.log(`✅ Complete contact info found: ${contact.firstName} ${contact.lastName} - ${contact.phone}`);
+        // 7. As a final fallback, if they have just an email, include them too
+        if (contact.email && contact.email.includes('@')) {
+          console.log(`✅ Valid email found: ${contact.email}`);
           return true;
         }
         
-        // 5. More inclusive - if contact has both first and last name, they're likely legitimate
-        if (contact.firstName && contact.lastName && contact.firstName.trim() !== '' && contact.lastName.trim() !== '') {
-          console.log(`✅ Valid name found: ${contact.firstName} ${contact.lastName}`);
-          return true;
-        }
-        
-        // Debug: Log contacts that are being filtered OUT
-        console.log(`❌ Contact filtered out - Email: ${contact.email}, Name: ${contact.firstName || 'N/A'} ${contact.lastName || 'N/A'}, Fields: ${Object.keys(customFields).length}`);
+        // Debug: Log contacts that are being filtered OUT (should be very few now)
+        console.log(`❌ Contact filtered out - Email: ${contact.email || 'N/A'}, Name: ${contact.firstName || 'N/A'} ${contact.lastName || 'N/A'}, Fields: ${Object.keys(customFields).length}, Phone: ${contact.phone || 'N/A'}`);
         return false;
       };
 
