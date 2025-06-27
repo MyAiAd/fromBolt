@@ -111,7 +111,7 @@ const JennaZImport: React.FC = () => {
   const loadImportLogs = async () => {
     try {
       const { data, error } = await supabase
-        .from('import_logs')
+        .from('data_import_logs')
         .select('*')
         .eq('import_type', 'jennaz')
         .order('created_at', { ascending: false })
@@ -158,7 +158,7 @@ const JennaZImport: React.FC = () => {
       console.log('📝 Creating import log with data:', logData);
       
       const { data, error } = await supabase
-        .from('import_logs')
+        .from('data_import_logs')
         .insert(logData)
         .select();
 
