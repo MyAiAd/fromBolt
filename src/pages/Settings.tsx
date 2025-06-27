@@ -150,29 +150,47 @@ const Settings = () => {
   const loadAiData = async () => {
     setLoadingAiData(true);
     try {
+      console.log('🔍 DEBUG: Loading AI data for user...');
+      
+      // Get current user first
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log('🔍 DEBUG: Current user for loading AI data:', user);
+      
       // Load API keys
+      console.log('🔍 DEBUG: Attempting to load API keys...');
       const { data: keys, error: keysError } = await supabase
         .from('ai_api_keys')
         .select('*')
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
-      if (keysError) throw keysError;
+      if (keysError) {
+        console.error('🚨 DEBUG: Keys loading error:', keysError);
+        throw keysError;
+      }
+      
+      console.log('✅ DEBUG: API keys loaded successfully:', keys);
       setAiKeys(keys || []);
 
       // Load RAG documents (if admin)
       if (isAdmin) {
+        console.log('🔍 DEBUG: User is admin, loading RAG documents...');
         const { data: docs, error: docsError } = await supabase
           .from('rag_documents')
           .select('*')
           .eq('is_active', true)
           .order('created_at', { ascending: false });
 
-        if (docsError) throw docsError;
+        if (docsError) {
+          console.error('🚨 DEBUG: RAG docs loading error:', docsError);
+          throw docsError;
+        }
+        
+        console.log('✅ DEBUG: RAG documents loaded successfully:', docs);
         setRagDocuments(docs || []);
       }
     } catch (error) {
-      console.error('Error loading AI data:', error);
+      console.error('🚨 DEBUG: Full error loading AI data:', error);
       toast.error('Failed to load AI settings');
     } finally {
       setLoadingAiData(false);
@@ -188,6 +206,8 @@ const Settings = () => {
     try {
       // Get current user ID
       const { data: { user } } = await supabase.auth.getUser();
+      console.log('🔍 DEBUG: Current user for API key insert:', user);
+      
       if (!user) {
         toast.error('You must be logged in to add API keys');
         return;
@@ -196,23 +216,31 @@ const Settings = () => {
       // Simple encryption - in production, use proper server-side encryption
       const encryptedKey = btoa(newApiKey.apiKey);
       
-      const { error } = await supabase
+      const insertData = {
+        user_id: user.id,
+        provider: newApiKey.provider,
+        api_key_encrypted: encryptedKey,
+        api_key_name: newApiKey.keyName || null
+      };
+      
+      console.log('🔍 DEBUG: Inserting API key data:', insertData);
+      
+      const { error, data } = await supabase
         .from('ai_api_keys')
-        .insert({
-          user_id: user.id,
-          provider: newApiKey.provider,
-          api_key_encrypted: encryptedKey,
-          api_key_name: newApiKey.keyName || null
-        });
+        .insert(insertData);
 
-      if (error) throw error;
+      if (error) {
+        console.error('🚨 DEBUG: Supabase insert error details:', error);
+        throw error;
+      }
 
+      console.log('✅ DEBUG: API key inserted successfully:', data);
       toast.success('API key added successfully!');
       setNewApiKey({ provider: 'openai', apiKey: '', keyName: '' });
       setShowAddKeyModal(false);
       loadAiData();
     } catch (error) {
-      console.error('Error adding API key:', error);
+      console.error('🚨 DEBUG: Full error object:', error);
       toast.error('Failed to add API key');
     }
   };
