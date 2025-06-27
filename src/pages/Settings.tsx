@@ -219,6 +219,7 @@ const Settings = () => {
       const insertData = {
         user_id: user.id,
         provider: newApiKey.provider,
+        service_name: newApiKey.provider, // Add service_name to match provider
         api_key_encrypted: encryptedKey,
         api_key_name: newApiKey.keyName || null
       };
