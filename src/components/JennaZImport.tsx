@@ -298,64 +298,106 @@ const JennaZImport: React.FC = () => {
         // Check multiple criteria to identify affiliates
         const customFields = contact.customFields || {};
         
-        // MUCH MORE INCLUSIVE approach - we want to capture most contacts as potential affiliates
+        // Based on data analysis: 481 affiliates out of 1,071 total contacts (~45%)
+        // Key finding: Affiliates are tagged with specific affiliate tags
         
-        // 1. If contact has an email and at least a first name OR last name, include them
-        if (contact.email && (contact.firstName || contact.lastName)) {
-          console.log(`✅ Basic contact info found: ${contact.firstName || ''} ${contact.lastName || ''} - ${contact.email}`);
-          return true;
-        }
+        console.log(`🔍 Evaluating contact: ${contact.email || 'no-email'} - Tags: ${contact.tags?.join(', ') || 'none'}`);
         
-        // 2. If contact has meaningful custom fields, include them
-        if (Object.keys(customFields).length > 0) {
-          console.log(`✅ Custom fields found (${Object.keys(customFields).length} fields)`);
-          return true;
-        }
-        
-        // 3. If contact has a phone number, include them
-        if (contact.phone && contact.phone.trim() !== '') {
-          console.log(`✅ Phone number found: ${contact.phone}`);
-          return true;
-        }
-        
-        // 4. Check for affiliate-specific indicators (keeping original logic as bonus)
-        const affiliateIndicators = [
-          'affiliate', 'partner', 'referral', 'commission', 'ambassador',
-          'agent', 'rep', 'distributor', 'member', 'customer', 'lead'
-        ];
-        
-        for (const [key, value] of Object.entries(customFields)) {
-          const keyLower = key.toLowerCase();
-          const valueLower = String(value).toLowerCase();
+        // 1. PRIMARY: Check for specific affiliate tags (this is the main identifier!)
+        if (contact.tags && contact.tags.length > 0) {
+          const affiliateTags = [
+            'jennaz-affiliate',    // Found: 62 contacts
+            'reaction-affiliate',  // Found: 62 contacts  
+            'bae-affiliate',       // Found: 1 contact
+            'affiliate',           // Generic affiliate tag
+            'partner',             // Partner tag
+            'ambassador',          // Ambassador tag
+            'agent'                // Agent tag
+          ];
           
-          if (affiliateIndicators.some(indicator => 
-            keyLower.includes(indicator) || valueLower.includes(indicator)
-          )) {
-            console.log(`✅ Affiliate indicator found: ${key}=${value}`);
+          const hasAffiliateTag = contact.tags.some(tag => 
+            affiliateTags.some(affiliateTag => 
+              String(tag).toLowerCase().includes(affiliateTag.toLowerCase())
+            )
+          );
+          
+          if (hasAffiliateTag) {
+            console.log(`✅ AFFILIATE TAG FOUND: ${contact.tags.join(', ')}`);
             return true;
           }
         }
         
-        // 5. If contact has a referral code, definitely include
-        if (contact.referralCode) {
-          console.log(`✅ Referral code found: ${contact.referralCode}`);
+        // 2. Check if contact has a referral code (backup indicator)
+        if (contact.referralCode && contact.referralCode.trim() !== '') {
+          console.log(`✅ REFERRAL CODE: ${contact.referralCode}`);
           return true;
         }
         
-        // 6. If contact has any meaningful engagement data, include them
-        if (contact.dateAdded || contact.lastActivity || contact.tags?.length) {
-          console.log(`✅ Engagement data found - Added: ${contact.dateAdded}, Active: ${contact.lastActivity}, Tags: ${contact.tags?.length || 0}`);
+        // 3. Check for explicit affiliate indicators in custom fields
+        const affiliateFields = [
+          'affiliate_status', 'is_affiliate', 'affiliate_id', 'partner_type',
+          'referral_code', 'commission_rate', 'affiliate_tier', 'affiliate_level',
+          'partner_status', 'ambassador_status', 'agent_status'
+        ];
+        
+        for (const field of affiliateFields) {
+          if (customFields[field] && customFields[field] !== '' && customFields[field] !== null) {
+            console.log(`✅ AFFILIATE FIELD: ${field}=${customFields[field]}`);
+            return true;
+          }
+        }
+        
+        // 4. Check custom field values for affiliate keywords
+        for (const [key, value] of Object.entries(customFields)) {
+          if (value && typeof value === 'string') {
+            const keyLower = key.toLowerCase();
+            const valueLower = value.toLowerCase();
+            
+            const affiliateKeywords = ['affiliate', 'partner', 'referral', 'commission', 'ambassador'];
+            
+            if (affiliateKeywords.some(keyword => 
+              keyLower.includes(keyword) || valueLower.includes(keyword)
+            )) {
+              console.log(`✅ AFFILIATE KEYWORD: ${key}=${value}`);
+              return true;
+            }
+          }
+        }
+        
+        // 5. Check for commission-related fields
+        const commissionFields = [
+          'commission', 'earnings', 'payout', 'balance', 'revenue_share',
+          'bonus', 'tier', 'level', 'rank', 'performance'
+        ];
+        
+        for (const field of commissionFields) {
+          for (const [key, value] of Object.entries(customFields)) {
+            if (key.toLowerCase().includes(field) && value && value !== '') {
+              console.log(`✅ COMMISSION FIELD: ${key}=${value}`);
+              return true;
+            }
+          }
+        }
+        
+        // 6. LAST RESORT: Complete profile with business indicators
+        const businessFields = ['business_name', 'company', 'website', 'social_media'];
+        let businessFieldCount = 0;
+        
+        for (const field of businessFields) {
+          for (const [key, value] of Object.entries(customFields)) {
+            if (key.toLowerCase().includes(field) && value && value !== '') {
+              businessFieldCount++;
+            }
+          }
+        }
+        
+        if (businessFieldCount >= 2 && contact.email && contact.firstName && contact.lastName && contact.phone) {
+          console.log(`✅ BUSINESS PROFILE: ${businessFieldCount} business fields + complete contact info`);
           return true;
         }
         
-        // 7. As a final fallback, if they have just an email, include them too
-        if (contact.email && contact.email.includes('@')) {
-          console.log(`✅ Valid email found: ${contact.email}`);
-          return true;
-        }
-        
-        // Debug: Log contacts that are being filtered OUT (should be very few now)
-        console.log(`❌ Contact filtered out - Email: ${contact.email || 'N/A'}, Name: ${contact.firstName || 'N/A'} ${contact.lastName || 'N/A'}, Fields: ${Object.keys(customFields).length}, Phone: ${contact.phone || 'N/A'}`);
+        // Debug: Log contacts that are being filtered OUT
+        console.log(`❌ NOT AFFILIATE: ${contact.email || 'no-email'} - Tags: ${contact.tags?.length || 0}, Fields: ${Object.keys(customFields).length}`);
         return false;
       };
 
@@ -643,64 +685,106 @@ const JennaZImport: React.FC = () => {
         // Check multiple criteria to identify affiliates
         const customFields = contact.customFields || {};
         
-        // MUCH MORE INCLUSIVE approach - we want to capture most contacts as potential affiliates
+        // Based on data analysis: 481 affiliates out of 1,071 total contacts (~45%)
+        // Key finding: Affiliates are tagged with specific affiliate tags
         
-        // 1. If contact has an email and at least a first name OR last name, include them
-        if (contact.email && (contact.firstName || contact.lastName)) {
-          console.log(`✅ Basic contact info found: ${contact.firstName || ''} ${contact.lastName || ''} - ${contact.email}`);
-          return true;
-        }
+        console.log(`🔍 Evaluating contact: ${contact.email || 'no-email'} - Tags: ${contact.tags?.join(', ') || 'none'}`);
         
-        // 2. If contact has meaningful custom fields, include them
-        if (Object.keys(customFields).length > 0) {
-          console.log(`✅ Custom fields found (${Object.keys(customFields).length} fields)`);
-          return true;
-        }
-        
-        // 3. If contact has a phone number, include them
-        if (contact.phone && contact.phone.trim() !== '') {
-          console.log(`✅ Phone number found: ${contact.phone}`);
-          return true;
-        }
-        
-        // 4. Check for affiliate-specific indicators (keeping original logic as bonus)
-        const affiliateIndicators = [
-          'affiliate', 'partner', 'referral', 'commission', 'ambassador',
-          'agent', 'rep', 'distributor', 'member', 'customer', 'lead'
-        ];
-        
-        for (const [key, value] of Object.entries(customFields)) {
-          const keyLower = key.toLowerCase();
-          const valueLower = String(value).toLowerCase();
+        // 1. PRIMARY: Check for specific affiliate tags (this is the main identifier!)
+        if (contact.tags && contact.tags.length > 0) {
+          const affiliateTags = [
+            'jennaz-affiliate',    // Found: 62 contacts
+            'reaction-affiliate',  // Found: 62 contacts  
+            'bae-affiliate',       // Found: 1 contact
+            'affiliate',           // Generic affiliate tag
+            'partner',             // Partner tag
+            'ambassador',          // Ambassador tag
+            'agent'                // Agent tag
+          ];
           
-          if (affiliateIndicators.some(indicator => 
-            keyLower.includes(indicator) || valueLower.includes(indicator)
-          )) {
-            console.log(`✅ Affiliate indicator found: ${key}=${value}`);
+          const hasAffiliateTag = contact.tags.some(tag => 
+            affiliateTags.some(affiliateTag => 
+              String(tag).toLowerCase().includes(affiliateTag.toLowerCase())
+            )
+          );
+          
+          if (hasAffiliateTag) {
+            console.log(`✅ AFFILIATE TAG FOUND: ${contact.tags.join(', ')}`);
             return true;
           }
         }
         
-        // 5. If contact has a referral code, definitely include
-        if (contact.referralCode) {
-          console.log(`✅ Referral code found: ${contact.referralCode}`);
+        // 2. Check if contact has a referral code (backup indicator)
+        if (contact.referralCode && contact.referralCode.trim() !== '') {
+          console.log(`✅ REFERRAL CODE: ${contact.referralCode}`);
           return true;
         }
         
-        // 6. If contact has any meaningful engagement data, include them
-        if (contact.dateAdded || contact.lastActivity || contact.tags?.length) {
-          console.log(`✅ Engagement data found - Added: ${contact.dateAdded}, Active: ${contact.lastActivity}, Tags: ${contact.tags?.length || 0}`);
+        // 3. Check for explicit affiliate indicators in custom fields
+        const affiliateFields = [
+          'affiliate_status', 'is_affiliate', 'affiliate_id', 'partner_type',
+          'referral_code', 'commission_rate', 'affiliate_tier', 'affiliate_level',
+          'partner_status', 'ambassador_status', 'agent_status'
+        ];
+        
+        for (const field of affiliateFields) {
+          if (customFields[field] && customFields[field] !== '' && customFields[field] !== null) {
+            console.log(`✅ AFFILIATE FIELD: ${field}=${customFields[field]}`);
+            return true;
+          }
+        }
+        
+        // 4. Check custom field values for affiliate keywords
+        for (const [key, value] of Object.entries(customFields)) {
+          if (value && typeof value === 'string') {
+            const keyLower = key.toLowerCase();
+            const valueLower = value.toLowerCase();
+            
+            const affiliateKeywords = ['affiliate', 'partner', 'referral', 'commission', 'ambassador'];
+            
+            if (affiliateKeywords.some(keyword => 
+              keyLower.includes(keyword) || valueLower.includes(keyword)
+            )) {
+              console.log(`✅ AFFILIATE KEYWORD: ${key}=${value}`);
+              return true;
+            }
+          }
+        }
+        
+        // 5. Check for commission-related fields
+        const commissionFields = [
+          'commission', 'earnings', 'payout', 'balance', 'revenue_share',
+          'bonus', 'tier', 'level', 'rank', 'performance'
+        ];
+        
+        for (const field of commissionFields) {
+          for (const [key, value] of Object.entries(customFields)) {
+            if (key.toLowerCase().includes(field) && value && value !== '') {
+              console.log(`✅ COMMISSION FIELD: ${key}=${value}`);
+              return true;
+            }
+          }
+        }
+        
+        // 6. LAST RESORT: Complete profile with business indicators
+        const businessFields = ['business_name', 'company', 'website', 'social_media'];
+        let businessFieldCount = 0;
+        
+        for (const field of businessFields) {
+          for (const [key, value] of Object.entries(customFields)) {
+            if (key.toLowerCase().includes(field) && value && value !== '') {
+              businessFieldCount++;
+            }
+          }
+        }
+        
+        if (businessFieldCount >= 2 && contact.email && contact.firstName && contact.lastName && contact.phone) {
+          console.log(`✅ BUSINESS PROFILE: ${businessFieldCount} business fields + complete contact info`);
           return true;
         }
         
-        // 7. As a final fallback, if they have just an email, include them too
-        if (contact.email && contact.email.includes('@')) {
-          console.log(`✅ Valid email found: ${contact.email}`);
-          return true;
-        }
-        
-        // Debug: Log contacts that are being filtered OUT (should be very few now)
-        console.log(`❌ Contact filtered out - Email: ${contact.email || 'N/A'}, Name: ${contact.firstName || 'N/A'} ${contact.lastName || 'N/A'}, Fields: ${Object.keys(customFields).length}, Phone: ${contact.phone || 'N/A'}`);
+        // Debug: Log contacts that are being filtered OUT
+        console.log(`❌ NOT AFFILIATE: ${contact.email || 'no-email'} - Tags: ${contact.tags?.length || 0}, Fields: ${Object.keys(customFields).length}`);
         return false;
       };
 
