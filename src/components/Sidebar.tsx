@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import { LayoutDashboard, Users, BarChart3, Settings, Award, Layers, LogOut, Database, RefreshCw, HelpCircle } from 'lucide-react';
+import { LayoutDashboard, Users, BarChart3, Settings, Award, Layers, LogOut, Database, RefreshCw, HelpCircle, MessageCircle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment, useState } from 'react';
@@ -21,6 +21,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     { name: 'Affiliate Management', href: '/affiliates-dashboard', icon: Users },
     { name: 'Campaigns', href: '/campaigns', icon: Layers },
     { name: 'Performance', href: '/performance', icon: BarChart3 },
+    { name: 'AI Chat', href: '/chat', icon: MessageCircle },
     ...(isAdmin
       ? [
           { name: 'ReAction', href: '/reaction-data', icon: Database },

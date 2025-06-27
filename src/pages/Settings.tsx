@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Settings as SettingsIcon, Bell, Lock, CreditCard, User, Shield, Database, Save, Eye, EyeOff } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Settings as SettingsIcon, Bell, Lock, CreditCard, User, Shield, Database, Save, Eye, EyeOff, Bot, Key, Plus, Trash2, FileText } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { toast } from 'react-toastify';
 import GoAffProImport from '../components/GoAffProImport';
@@ -59,6 +59,23 @@ const Settings = () => {
     cookiePreferences: 'essential',
     activityLogging: true
   });
+
+  // AI Settings state
+  const [aiKeys, setAiKeys] = useState<any[]>([]);
+  const [ragDocuments, setRagDocuments] = useState<any[]>([]);
+  const [newApiKey, setNewApiKey] = useState({
+    provider: 'openai',
+    apiKey: '',
+    keyName: ''
+  });
+  const [newRagDoc, setNewRagDoc] = useState({
+    title: '',
+    content: '',
+    tags: ''
+  });
+  const [showAddKeyModal, setShowAddKeyModal] = useState(false);
+  const [showAddDocModal, setShowAddDocModal] = useState(false);
+  const [loadingAiData, setLoadingAiData] = useState(false);
 
   const handlePasswordChange = async () => {
     const { currentPassword, newPassword, confirmPassword } = securitySettings;
@@ -129,6 +146,144 @@ const Settings = () => {
     toast.success(`${section} settings saved successfully!`);
   };
 
+  // AI Settings handlers
+  const loadAiData = async () => {
+    setLoadingAiData(true);
+    try {
+      // Load API keys
+      const { data: keys, error: keysError } = await supabase
+        .from('ai_api_keys')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (keysError) throw keysError;
+      setAiKeys(keys || []);
+
+      // Load RAG documents (if admin)
+      if (isAdmin) {
+        const { data: docs, error: docsError } = await supabase
+          .from('rag_documents')
+          .select('*')
+          .eq('is_active', true)
+          .order('created_at', { ascending: false });
+
+        if (docsError) throw docsError;
+        setRagDocuments(docs || []);
+      }
+    } catch (error) {
+      console.error('Error loading AI data:', error);
+      toast.error('Failed to load AI settings');
+    } finally {
+      setLoadingAiData(false);
+    }
+  };
+
+  const handleAddApiKey = async () => {
+    if (!newApiKey.apiKey.trim()) {
+      toast.error('API key is required');
+      return;
+    }
+
+    try {
+      // Simple encryption - in production, use proper server-side encryption
+      const encryptedKey = btoa(newApiKey.apiKey);
+      
+      const { error } = await supabase
+        .from('ai_api_keys')
+        .insert({
+          provider: newApiKey.provider,
+          api_key_encrypted: encryptedKey,
+          api_key_name: newApiKey.keyName || null
+        });
+
+      if (error) throw error;
+
+      toast.success('API key added successfully!');
+      setNewApiKey({ provider: 'openai', apiKey: '', keyName: '' });
+      setShowAddKeyModal(false);
+      loadAiData();
+    } catch (error) {
+      console.error('Error adding API key:', error);
+      toast.error('Failed to add API key');
+    }
+  };
+
+  const handleDeleteApiKey = async (keyId: string) => {
+    if (!confirm('Are you sure you want to delete this API key?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('ai_api_keys')
+        .update({ is_active: false })
+        .eq('id', keyId);
+
+      if (error) throw error;
+
+      toast.success('API key deleted successfully!');
+      loadAiData();
+    } catch (error) {
+      console.error('Error deleting API key:', error);
+      toast.error('Failed to delete API key');
+    }
+  };
+
+  const handleAddRagDocument = async () => {
+    if (!newRagDoc.title.trim() || !newRagDoc.content.trim()) {
+      toast.error('Title and content are required');
+      return;
+    }
+
+    try {
+      const tags = newRagDoc.tags.split(',').map(tag => tag.trim()).filter(Boolean);
+      
+      const { error } = await supabase
+        .from('rag_documents')
+        .insert({
+          title: newRagDoc.title,
+          content: newRagDoc.content,
+          tags: tags,
+          file_size: newRagDoc.content.length
+        });
+
+      if (error) throw error;
+
+      toast.success('Document added successfully!');
+      setNewRagDoc({ title: '', content: '', tags: '' });
+      setShowAddDocModal(false);
+      loadAiData();
+    } catch (error) {
+      console.error('Error adding document:', error);
+      toast.error('Failed to add document');
+    }
+  };
+
+  const handleDeleteRagDocument = async (docId: string) => {
+    if (!confirm('Are you sure you want to delete this document?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('rag_documents')
+        .update({ is_active: false })
+        .eq('id', docId);
+
+      if (error) throw error;
+
+      toast.success('Document deleted successfully!');
+      loadAiData();
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      toast.error('Failed to delete document');
+    }
+  };
+
+  // Load AI data when AI tab is activated
+  useEffect(() => {
+    if (activeTab === 'ai') {
+      loadAiData();
+    }
+  }, [activeTab, isAdmin]);
+
   const tabs = [
     { id: 'general', label: 'General', icon: SettingsIcon },
     { id: 'notifications', label: 'Notifications', icon: Bell },
@@ -136,6 +291,7 @@ const Settings = () => {
     { id: 'billing', label: 'Billing', icon: CreditCard },
     { id: 'account', label: 'Account', icon: User },
     { id: 'privacy', label: 'Privacy', icon: Shield },
+    { id: 'ai', label: 'AI Settings', icon: Bot },
     ...(isAdmin ? [{ id: 'import', label: 'Data Import & Integration', icon: Database }] : []),
   ];
 
@@ -731,6 +887,138 @@ const Settings = () => {
                 </div>
               )}
 
+              {activeTab === 'ai' && (
+                <div>
+                  <h3 className="text-lg font-medium text-white mb-4">AI Settings</h3>
+                  <p className="text-gray-400 mb-6">
+                    Manage your AI API keys for OpenAI, OpenRouter, and Anthropic. {isAdmin && 'As an admin, you can also manage RAG documents for enhanced AI responses.'}
+                  </p>
+                  
+                  {loadingAiData ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                    </div>
+                  ) : (
+                    <div className="space-y-8">
+                      {/* API Keys Section */}
+                      <div className="border border-gray-700 rounded-lg p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <h4 className="text-lg font-medium text-white flex items-center">
+                              <Key className="mr-2 h-5 w-5 text-blue-400" />
+                              API Keys
+                            </h4>
+                            <p className="text-gray-400 text-sm">Manage your AI provider API keys</p>
+                          </div>
+                          <button
+                            onClick={() => setShowAddKeyModal(true)}
+                            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                          >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add Key
+                          </button>
+                        </div>
+                        
+                        {aiKeys.length > 0 ? (
+                          <div className="space-y-3">
+                            {aiKeys.map((key) => (
+                              <div key={key.id} className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+                                <div>
+                                  <div className="flex items-center space-x-2">
+                                    <span className="font-medium text-white capitalize">{key.provider}</span>
+                                    {key.api_key_name && (
+                                      <span className="text-sm text-gray-400">({key.api_key_name})</span>
+                                    )}
+                                  </div>
+                                  <div className="text-sm text-gray-400">
+                                    Added {new Date(key.created_at).toLocaleDateString()}
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => handleDeleteApiKey(key.id)}
+                                  className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition-colors"
+                                  title="Delete API key"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-gray-400">
+                            <Key className="mx-auto h-12 w-12 text-gray-600 mb-4" />
+                            <p>No API keys configured yet</p>
+                            <p className="text-sm">Add your first API key to start using AI features</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* RAG Documents Section - Admin Only */}
+                      {isAdmin && (
+                        <div className="border border-gray-700 rounded-lg p-6">
+                          <div className="flex items-center justify-between mb-4">
+                            <div>
+                              <h4 className="text-lg font-medium text-white flex items-center">
+                                <FileText className="mr-2 h-5 w-5 text-green-400" />
+                                RAG Documents
+                              </h4>
+                              <p className="text-gray-400 text-sm">Manage documents for enhanced AI responses</p>
+                            </div>
+                            <button
+                              onClick={() => setShowAddDocModal(true)}
+                              className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                            >
+                              <Plus className="mr-2 h-4 w-4" />
+                              Add Document
+                            </button>
+                          </div>
+                          
+                          {ragDocuments.length > 0 ? (
+                            <div className="space-y-3">
+                              {ragDocuments.map((doc) => (
+                                <div key={doc.id} className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+                                  <div className="flex-1">
+                                    <div className="font-medium text-white">{doc.title}</div>
+                                    <div className="text-sm text-gray-400">
+                                      {doc.file_size} characters • Added {new Date(doc.created_at).toLocaleDateString()}
+                                    </div>
+                                    {doc.tags && doc.tags.length > 0 && (
+                                      <div className="flex flex-wrap gap-1 mt-2">
+                                                                                 {doc.tags.map((tag: string, index: number) => (
+                                          <span
+                                            key={index}
+                                            className="px-2 py-1 text-xs bg-blue-900/20 text-blue-300 rounded"
+                                          >
+                                            {tag}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <button
+                                    onClick={() => handleDeleteRagDocument(doc.id)}
+                                    className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition-colors"
+                                    title="Delete document"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center py-8 text-gray-400">
+                              <FileText className="mx-auto h-12 w-12 text-gray-600 mb-4" />
+                              <p>No documents uploaded yet</p>
+                              <p className="text-sm">Add documents to enhance AI responses with your content</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {activeTab === 'import' && isAdmin && (
                 <div>
                   <h3 className="text-lg font-medium text-white mb-4">Data Import & Integration</h3>
@@ -787,6 +1075,126 @@ const Settings = () => {
           </div>
         </div>
       </div>
+
+      {/* Add API Key Modal */}
+      {showAddKeyModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-900 border border-gray-700 rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-medium text-white mb-4">Add API Key</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Provider</label>
+                <select
+                  value={newApiKey.provider}
+                  onChange={(e) => setNewApiKey({ ...newApiKey, provider: e.target.value })}
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="openai">OpenAI</option>
+                  <option value="openrouter">OpenRouter</option>
+                  <option value="anthropic">Anthropic</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">API Key</label>
+                <input
+                  type="password"
+                  value={newApiKey.apiKey}
+                  onChange={(e) => setNewApiKey({ ...newApiKey, apiKey: e.target.value })}
+                  placeholder="sk-..."
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Key Name (Optional)</label>
+                <input
+                  type="text"
+                  value={newApiKey.keyName}
+                  onChange={(e) => setNewApiKey({ ...newApiKey, keyName: e.target.value })}
+                  placeholder="e.g., Personal, Work"
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+            
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={() => setShowAddKeyModal(false)}
+                className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddApiKey}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Add Key
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add RAG Document Modal */}
+      {showAddDocModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-900 border border-gray-700 rounded-lg p-6 w-full max-w-2xl">
+            <h3 className="text-lg font-medium text-white mb-4">Add RAG Document</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Title</label>
+                <input
+                  type="text"
+                  value={newRagDoc.title}
+                  onChange={(e) => setNewRagDoc({ ...newRagDoc, title: e.target.value })}
+                  placeholder="Document title"
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Content</label>
+                <textarea
+                  value={newRagDoc.content}
+                  onChange={(e) => setNewRagDoc({ ...newRagDoc, content: e.target.value })}
+                  placeholder="Document content..."
+                  rows={8}
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Tags (comma-separated)</label>
+                <input
+                  type="text"
+                  value={newRagDoc.tags}
+                  onChange={(e) => setNewRagDoc({ ...newRagDoc, tags: e.target.value })}
+                  placeholder="affiliates, guide, faq"
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+            </div>
+            
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={() => setShowAddDocModal(false)}
+                className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddRagDocument}
+                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Add Document
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,0 +1,48 @@
+Sitewide, we have a level / structure system for affiliates and the details are listed in the user guide (https://jenna-two.vercel.app/user-guide). But generally if we just look at these titles, we have these:
+```
+Aligned
+$0 - $1,000 monthly
+
+
+Activated
+$1,000 - $5,000 monthly
+
+
+Ascended
+$5,000 - $25,000 monthly
+
+
+Magnetic
+$25,000 - $50,000 monthly
+
+
+Luminary
+$50,000 - $100,000 monthly
+
+
+Visionary
+$100,000+ monthly
+
+
+Oracle
+$500,000+ monthly
+
+
+Sovereign
+$1,000,000+ monthly
+
+```
+
+But if you look at the page: https://jenna-two.vercel.app/affiliates
+
+you will see that what we are calling 'levels' is really more like their originating platform (ReAction, etc)
+
+I need to change their respective levles listed there to actually be one of the corresponding titles listed above (Magnetic, Aligned, etc)--and that will be based on the numbers they have achieved (and I am not sure that we have the math and formulas implemented yet... and so
+considering this is to be done in the supabase database and not just cosmetic changes to the site... I have to understand what we need to do.... but I have not yet been able to figure out which table in the database corresponds to that colmun of data on that page. Do not make the changes ... just find the location and show me please
+
+I want to base their levels on monthly earnings and not total earnings, I would rather store it in the database for calculations to be made on the 1st of each month rather than on-the-fly / dynamically, and for this we will use a calendar month and not a rolling 30.
+
+I have already done some work in the database to faciliate these changes... but the levels are not right. Please read the user guide mentioned above to undertstand where we are now and what I need to do next in order to complete my task. I think the database work is far along but may not yet be complete
+
+
+

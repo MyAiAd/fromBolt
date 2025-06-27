@@ -27,6 +27,7 @@ const DataSyncManagement = lazy(() => import('./pages/DataSyncManagement'));
 const UserGuide = lazy(() => import('./pages/UserGuide'));
 const Team = lazy(() => import('./pages/Team'));
 const Leaderboard = lazy(() => import('./pages/Leaderboard'));
+const Chat = lazy(() => import('./pages/Chat'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 function App() {
@@ -174,6 +175,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Leaderboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/chat" 
+            element={
+              <ProtectedRoute>
+                <Chat />
               </ProtectedRoute>
             } 
           />
