@@ -125,10 +125,23 @@ const Chat = () => {
   };
 
   const createNewConversation = async () => {
+    if (!user?.id) {
+      toast.error('User not authenticated');
+      return;
+    }
+
+    console.log('🚀 Creating conversation with user:', {
+      userId: user.id,
+      userEmail: user.email,
+      provider: selectedProvider,
+      model: selectedModel
+    });
+
     try {
       const { data, error } = await supabase
         .from('chat_conversations')
         .insert({
+          user_id: user.id,
           title: 'New Conversation',
           ai_provider: selectedProvider,
           model_name: selectedModel
@@ -136,7 +149,12 @@ const Chat = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Database error:', error);
+        throw error;
+      }
+
+      console.log('✅ Conversation created successfully:', data);
 
       const newConv: Conversation = {
         id: data.id,
@@ -153,7 +171,8 @@ const Chat = () => {
       
       toast.success('New conversation created!');
     } catch (error) {
-      console.error('Error creating conversation:', error);
+      console.error('❌ Error creating conversation:', error);
+      console.error('❌ Error details:', JSON.stringify(error, null, 2));
       toast.error('Failed to create conversation');
     }
   };
