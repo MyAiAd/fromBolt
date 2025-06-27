@@ -186,12 +186,20 @@ const Settings = () => {
     }
 
     try {
+      // Get current user ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('You must be logged in to add API keys');
+        return;
+      }
+
       // Simple encryption - in production, use proper server-side encryption
       const encryptedKey = btoa(newApiKey.apiKey);
       
       const { error } = await supabase
         .from('ai_api_keys')
         .insert({
+          user_id: user.id,
           provider: newApiKey.provider,
           api_key_encrypted: encryptedKey,
           api_key_name: newApiKey.keyName || null
@@ -235,6 +243,13 @@ const Settings = () => {
     }
 
     try {
+      // Get current user ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('You must be logged in to add documents');
+        return;
+      }
+
       const tags = newRagDoc.tags.split(',').map(tag => tag.trim()).filter(Boolean);
       
       const { error } = await supabase
@@ -243,6 +258,7 @@ const Settings = () => {
           title: newRagDoc.title,
           content: newRagDoc.content,
           tags: tags,
+          uploaded_by: user.id,
           file_size: newRagDoc.content.length
         });
 
