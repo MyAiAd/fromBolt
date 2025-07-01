@@ -7,6 +7,7 @@ import { GHLTagBasedImportService, GHLTagBasedConfig } from '../services/ghlTagB
 
 // GHL Tag-Based Import - Optimized for 96.9% success rate (466/481 affiliates)
 // Requires VITE_GHL_API_KEY and VITE_GHL_LOCATION_ID environment variables
+// Build timestamp: 2024-12-28 - Force rebuild to load environment variables
 
 interface ImportResult {
   success: boolean;
