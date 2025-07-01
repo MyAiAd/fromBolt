@@ -362,13 +362,16 @@ export class GHLTagBasedImportService {
     const lastName = contact.lastName?.toLowerCase() || '';
     const email = contact.email.toLowerCase();
     
+    // Use GHL contact ID suffix to ensure uniqueness
+    const idSuffix = contact.id.substring(0, 6);
+    
     if (firstName && lastName) {
-      return `${firstName}-${lastName}`.substring(0, 20);
+      return `${firstName}-${lastName}-${idSuffix}`.substring(0, 30);
     } else if (firstName) {
-      return `${firstName}-${Math.random().toString(36).substring(2, 8)}`;
+      return `${firstName}-${idSuffix}`;
     } else {
       const emailPrefix = email.split('@')[0];
-      return `${emailPrefix}-${Math.random().toString(36).substring(2, 6)}`;
+      return `${emailPrefix}-${idSuffix}`;
     }
   }
 
