@@ -659,6 +659,17 @@ const Affiliates = () => {
                   const hasApiKey = !!(import.meta.env.VITE_GHL_API_KEY || process.env.VITE_GHL_API_KEY);
                   const hasLocationId = !!(import.meta.env.VITE_GHL_LOCATION_ID || process.env.VITE_GHL_LOCATION_ID);
                   
+                  // Temporary debug logging
+                  console.log('🔍 Environment Variables Debug:', {
+                    'import.meta.env.VITE_GHL_API_KEY': !!import.meta.env.VITE_GHL_API_KEY,
+                    'process.env.VITE_GHL_API_KEY': !!process.env.VITE_GHL_API_KEY,
+                    'import.meta.env.VITE_GHL_LOCATION_ID': !!import.meta.env.VITE_GHL_LOCATION_ID,
+                    'process.env.VITE_GHL_LOCATION_ID': !!process.env.VITE_GHL_LOCATION_ID,
+                    hasApiKey,
+                    hasLocationId,
+                    allEnvKeys: Object.keys(import.meta.env).filter(key => key.startsWith('VITE_'))
+                  });
+                  
                   if (!hasApiKey || !hasLocationId) {
                     return (
                       <div className="p-3 bg-red-900/20 border border-red-500/30 rounded-lg">
@@ -671,6 +682,12 @@ const Affiliates = () => {
                           <p className="text-xs text-gray-400 mt-2">
                             Please configure environment variables in Vercel deployment settings
                           </p>
+                          <details className="text-xs text-gray-500 mt-2">
+                            <summary>Debug Info (click to expand)</summary>
+                            <div className="mt-1 font-mono text-xs">
+                              Available VITE_ vars: {Object.keys(import.meta.env).filter(key => key.startsWith('VITE_')).join(', ') || 'none'}
+                            </div>
+                          </details>
                         </div>
                       </div>
                     );
