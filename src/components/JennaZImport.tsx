@@ -1585,15 +1585,6 @@ Check console for detailed breakdown!`;
               <p className="text-sm text-gray-300">
                 <span className="text-green-400">✅ Affiliates Import:</span> Fully implemented and working with GHL API v1.0
               </p>
-              <p className="text-sm text-gray-300">
-                <span className="text-yellow-400">🚧 Orders Import:</span> Planned for future update (GHL Opportunities integration)
-              </p>
-              <p className="text-sm text-gray-300">
-                <span className="text-yellow-400">🚧 Rewards Import:</span> Planned for future update (GHL custom fields/tags)
-              </p>
-              <p className="text-sm text-gray-300">
-                <span className="text-yellow-400">🚧 Payments Import:</span> Planned for future update (GHL payment tracking)
-              </p>
             </div>
             <p className="text-sm text-gray-400 mt-3">
               Your GHL contacts are successfully importing as affiliates with referral codes and commission tracking ready. Using GHL API v1.0 endpoint.
