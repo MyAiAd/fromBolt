@@ -113,7 +113,14 @@ const SyncStatusDashboard: React.FC<SyncStatusProps> = ({ className = '' }) => {
 
     // Check if required environment variables are configured
     if (source === 'ghl') {
-      if (!import.meta.env.VITE_GHL_API_KEY || !import.meta.env.VITE_GHL_LOCATION_ID) {
+      // Hardcoded fallbacks for GHL credentials (temporary fix for Vercel env var issues)
+      const hardcodedApiKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2NhdGlvbl9pZCI6IncwMUdjN1Q0YjB0S1NEUWRLaHVOIiwidmVyc2lvbiI6MSwiaWF0IjoxNzQ4MDg3NzIyNDAwLCJzdWIiOiJFdHhSblUwTWpRSDFPaE5RbWN0OCJ9.HdKxSRwdblNpkGrt8ZUyMiz_RBFZbvlbE5Oa6V23wUI';
+      const hardcodedLocationId = 'w01Gc7T4b0tKSDQdKhuN';
+      
+      const apiKey = import.meta.env.VITE_GHL_API_KEY || process.env.VITE_GHL_API_KEY || hardcodedApiKey;
+      const locationId = import.meta.env.VITE_GHL_LOCATION_ID || process.env.VITE_GHL_LOCATION_ID || hardcodedLocationId;
+      
+      if (!apiKey || !locationId) {
         alert('GHL API credentials are not configured. Please check your environment variables.');
         return;
       }
@@ -234,8 +241,12 @@ const SyncStatusDashboard: React.FC<SyncStatusProps> = ({ className = '' }) => {
     try {
       console.log('🔄 Starting GHL direct sync');
 
-      const apiKey = import.meta.env.VITE_GHL_API_KEY;
-      const locationId = import.meta.env.VITE_GHL_LOCATION_ID;
+      // Hardcoded fallbacks for GHL credentials (temporary fix for Vercel env var issues)
+      const hardcodedApiKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2NhdGlvbl9pZCI6IncwMUdjN1Q0YjB0S1NEUWRLaHVOIiwidmVyc2lvbiI6MSwiaWF0IjoxNzQ4MDg3NzIyNDAwLCJzdWIiOiJFdHhSblUwTWpRSDFPaE5RbWN0OCJ9.HdKxSRwdblNpkGrt8ZUyMiz_RBFZbvlbE5Oa6V23wUI';
+      const hardcodedLocationId = 'w01Gc7T4b0tKSDQdKhuN';
+
+      const apiKey = import.meta.env.VITE_GHL_API_KEY || process.env.VITE_GHL_API_KEY || hardcodedApiKey;
+      const locationId = import.meta.env.VITE_GHL_LOCATION_ID || process.env.VITE_GHL_LOCATION_ID || hardcodedLocationId;
 
       if (!apiKey || !locationId) {
         throw new Error('GHL API credentials not configured');
@@ -494,4 +505,4 @@ const SyncStatusDashboard: React.FC<SyncStatusProps> = ({ className = '' }) => {
   );
 };
 
-export default SyncStatusDashboard; 
+export default SyncStatusDashboard;

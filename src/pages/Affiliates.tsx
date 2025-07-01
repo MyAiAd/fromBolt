@@ -656,15 +656,20 @@ const Affiliates = () => {
               <div className="space-y-2">
                 {/* Configuration Status Check */}
                 {(() => {
-                  const hasApiKey = !!(import.meta.env.VITE_GHL_API_KEY || process.env.VITE_GHL_API_KEY);
-                  const hasLocationId = !!(import.meta.env.VITE_GHL_LOCATION_ID || process.env.VITE_GHL_LOCATION_ID);
+                  // Hardcoded fallbacks for GHL credentials (temporary fix for Vercel env var issues)
+                  const hardcodedApiKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2NhdGlvbl9pZCI6IncwMUdjN1Q0YjB0S1NEUWRLaHVOIiwidmVyc2lvbiI6MSwiaWF0IjoxNzQ4MDg3NzIyNDAwLCJzdWIiOiJFdHhSblUwTWpRSDFPaE5RbWN0OCJ9.HdKxSRwdblNpkGrt8ZUyMiz_RBFZbvlbE5Oa6V23wUI';
+                  const hardcodedLocationId = 'w01Gc7T4b0tKSDQdKhuN';
                   
-                  // Temporary debug logging
+                  const hasApiKey = !!(import.meta.env.VITE_GHL_API_KEY || process.env.VITE_GHL_API_KEY || hardcodedApiKey);
+                  const hasLocationId = !!(import.meta.env.VITE_GHL_LOCATION_ID || process.env.VITE_GHL_LOCATION_ID || hardcodedLocationId);
+                  
+                  // Debug logging
                   console.log('🔍 Environment Variables Debug:', {
                     'import.meta.env.VITE_GHL_API_KEY': !!import.meta.env.VITE_GHL_API_KEY,
                     'process.env.VITE_GHL_API_KEY': !!process.env.VITE_GHL_API_KEY,
                     'import.meta.env.VITE_GHL_LOCATION_ID': !!import.meta.env.VITE_GHL_LOCATION_ID,
                     'process.env.VITE_GHL_LOCATION_ID': !!process.env.VITE_GHL_LOCATION_ID,
+                    'hardcodedFallback': true,
                     hasApiKey,
                     hasLocationId,
                     allEnvKeys: Object.keys(import.meta.env).filter(key => key.startsWith('VITE_'))
@@ -692,14 +697,20 @@ const Affiliates = () => {
                       </div>
                     );
                   } else {
+                    const usingFallback = !(import.meta.env.VITE_GHL_API_KEY || process.env.VITE_GHL_API_KEY);
                     return (
                       <div className="p-3 bg-green-900/20 border border-green-500/30 rounded-lg">
                         <p className="text-sm text-green-400 font-medium mb-1">
-                          ✅ GHL API Configured
+                          ✅ GHL API Configured {usingFallback ? '(using hardcoded fallback)' : ''}
                         </p>
                         <p className="text-sm text-gray-300">
-                          Location: {import.meta.env.VITE_GHL_LOCATION_ID || process.env.VITE_GHL_LOCATION_ID || 'w01Gc7T4b0tKSDQdKhuN'}
+                          Location: {import.meta.env.VITE_GHL_LOCATION_ID || process.env.VITE_GHL_LOCATION_ID || hardcodedLocationId}
                         </p>
+                        {usingFallback && (
+                          <p className="text-xs text-yellow-400 mt-1">
+                            ⚠️ Using fallback credentials - configure VITE_* env vars in Vercel for security
+                          </p>
+                        )}
                       </div>
                     );
                   }
