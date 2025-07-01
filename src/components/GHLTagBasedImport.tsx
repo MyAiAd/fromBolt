@@ -52,11 +52,14 @@ const GHLTagBasedImport: React.FC = () => {
       locationId = locationId || runtimeEnv.VITE_GHL_LOCATION_ID || '';
     }
     
-    // Hardcoded fallback for immediate testing (REMOVE AFTER TESTING)
+    // Log status for debugging
     if (!apiKey || !locationId) {
-      console.warn('🚨 Using hardcoded GHL credentials for testing - REMOVE IN PRODUCTION');
-      apiKey = apiKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2NhdGlvbl9pZCI6IncwMUdjN1Q0YjB0S1NEUWRLaHVOIiwidmVyc2lvbiI6MSwiaWF0IjoxNzQ4MDg3NzIyNDAwLCJzdWIiOiJFdHhSblUwTWpRaDFPaE5RbWN0OCJ9.HdKxSRwdblNpkGrt8ZUyMiz_RBFZbvlbE5Oa6V23wUI';
-      locationId = locationId || 'w01Gc7T4b0tKSDQdKhuN';
+      console.error('🚨 GHL Environment Variables Missing:', {
+        hasApiKey: !!apiKey,
+        hasLocationId: !!locationId,
+        processEnvKeys: Object.keys(process.env).filter(key => key.includes('GHL')),
+        note: 'Please configure VITE_GHL_API_KEY and VITE_GHL_LOCATION_ID in Vercel environment variables'
+      });
     }
     
     return { apiKey, locationId };
@@ -85,11 +88,14 @@ const GHLTagBasedImport: React.FC = () => {
       locationId = locationId || runtimeEnv.VITE_GHL_LOCATION_ID || '';
     }
     
-    // Hardcoded fallback for immediate testing (REMOVE AFTER TESTING)
+    // Log status for debugging
     if (!apiKey || !locationId) {
-      console.warn('🚨 Using hardcoded GHL credentials for testing - REMOVE IN PRODUCTION');
-      apiKey = apiKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2NhdGlvbl9pZCI6IncwMUdjN1Q0YjB0S1NEUWRLaHVOIiwidmVyc2lvbiI6MSwiaWF0IjoxNzQ4MDg3NzIyNDAwLCJzdWIiOiJFdHhSblUwTWpRaDFPaE5RbWN0OCJ9.HdKxSRwdblNpkGrt8ZUyMiz_RBFZbvlbE5Oa6V23wUI';
-      locationId = locationId || 'w01Gc7T4b0tKSDQdKhuN';
+      console.error('🚨 GHL Environment Variables Missing:', {
+        hasApiKey: !!apiKey,
+        hasLocationId: !!locationId,
+        processEnvKeys: Object.keys(process.env).filter(key => key.includes('GHL')),
+        note: 'Please configure VITE_GHL_API_KEY and VITE_GHL_LOCATION_ID in Vercel environment variables'
+      });
     }
     
     return {
