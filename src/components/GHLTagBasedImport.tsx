@@ -44,6 +44,32 @@ const GHLTagBasedImport: React.FC = () => {
     baseUrl: 'https://rest.gohighlevel.com/v1'
   };
 
+  // Dynamic configuration getter for runtime updates
+  const getFreshGHLConfig = (): GHLTagBasedConfig => {
+    return {
+      apiKey: process.env.VITE_GHL_API_KEY || '',
+      locationId: process.env.VITE_GHL_LOCATION_ID || '',
+      baseUrl: 'https://rest.gohighlevel.com/v1'
+    };
+  };
+
+  // Debug: Log environment variables
+  console.log('🔧 GHL Environment Variables Debug:', {
+    hasApiKey: !!process.env.VITE_GHL_API_KEY,
+    hasLocationId: !!process.env.VITE_GHL_LOCATION_ID,
+    apiKeyLength: process.env.VITE_GHL_API_KEY?.length || 0,
+    locationIdLength: process.env.VITE_GHL_LOCATION_ID?.length || 0,
+    locationIdValue: process.env.VITE_GHL_LOCATION_ID || 'NOT_SET'
+  });
+
+  // Validate configuration
+  if (!ghlConfig.apiKey || !ghlConfig.locationId) {
+    console.error('❌ GHL Configuration Missing:', {
+      missingApiKey: !ghlConfig.apiKey,
+      missingLocationId: !ghlConfig.locationId
+    });
+  }
+
   const [importService] = useState(() => {
     // Use service role client for import operations
     const serviceRoleClient = supabase;
@@ -72,13 +98,31 @@ const GHLTagBasedImport: React.FC = () => {
       return;
     }
 
+    // Validate GHL configuration before starting import
+    if (!ghlConfig.apiKey || !ghlConfig.locationId) {
+      setErrorMessage(`GHL configuration missing: ${!ghlConfig.apiKey ? 'API Key' : ''} ${!ghlConfig.locationId ? 'Location ID' : ''}. Please check environment variables in deployment settings.`);
+      return;
+    }
+
+    console.log('✅ GHL Configuration validated:', {
+      apiKeyPresent: !!ghlConfig.apiKey,
+      locationIdPresent: !!ghlConfig.locationId,
+      locationId: ghlConfig.locationId
+    });
+
     setImportStatus({ isImporting: true, currentOperation: 'Starting GHL tag-based affiliate import...' });
     setErrorMessage('');
     
     try {
       setImportStatus(prev => ({ ...prev, currentOperation: 'Fetching contacts from GHL...' }));
       
-      const result = await importService.importAffiliates(user.id);
+      // Use fresh configuration and create new service if needed
+      const freshConfig = getFreshGHLConfig();
+      const serviceToUse = freshConfig.apiKey && freshConfig.locationId 
+        ? new GHLTagBasedImportService(supabase, supabase, freshConfig)
+        : importService;
+      
+      const result = await serviceToUse.importAffiliates(user.id);
       
       setImportStatus({
         isImporting: false,
