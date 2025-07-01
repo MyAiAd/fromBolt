@@ -341,13 +341,15 @@ const GoAffProImport: React.FC = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <div className="flex justify-center mb-6">
+          {/* Hidden buttons - functionality preserved, only UI hidden per user request */}
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleImportAffiliates}
             disabled={importStatus.isImporting}
             className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-4 py-3 rounded-lg flex items-center justify-center space-x-2 transition-colors"
+            style={{ display: 'none' }} // Hidden per user request - functionality preserved
           >
             <Users className="w-5 h-5" />
             <span>Import Affiliates</span>
@@ -359,6 +361,7 @@ const GoAffProImport: React.FC = () => {
             onClick={handleImportOrders}
             disabled={importStatus.isImporting}
             className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white px-4 py-3 rounded-lg flex items-center justify-center space-x-2 transition-colors"
+            style={{ display: 'none' }} // Hidden per user request - functionality preserved
           >
             <ShoppingCart className="w-5 h-5" />
             <span>Import Orders</span>
@@ -370,6 +373,7 @@ const GoAffProImport: React.FC = () => {
             onClick={handleImportRewards}
             disabled={importStatus.isImporting}
             className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white px-4 py-3 rounded-lg flex items-center justify-center space-x-2 transition-colors"
+            style={{ display: 'none' }} // Hidden per user request - functionality preserved
           >
             <Gift className="w-5 h-5" />
             <span>Import Rewards</span>
@@ -381,19 +385,21 @@ const GoAffProImport: React.FC = () => {
             onClick={handleImportPayments}
             disabled={importStatus.isImporting}
             className="bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 text-white px-4 py-3 rounded-lg flex items-center justify-center space-x-2 transition-colors"
+            style={{ display: 'none' }} // Hidden per user request - functionality preserved
           >
             <CreditCard className="w-5 h-5" />
             <span>Import Payments</span>
           </motion.button>
 
+          {/* Main visible button - Import All Data */}
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleImportAll}
             disabled={importStatus.isImporting}
-            className="bg-jennaz-rose hover:bg-jennaz-rose/80 disabled:bg-gray-600 text-white px-4 py-3 rounded-lg flex items-center justify-center space-x-2 transition-colors font-semibold"
+            className="bg-jennaz-rose hover:bg-jennaz-rose/80 disabled:bg-gray-600 text-white px-6 py-4 rounded-lg flex items-center justify-center space-x-2 transition-colors font-semibold text-lg"
           >
-            <Download className="w-5 h-5" />
+            <Download className="w-6 h-6" />
             <span>Import All Data</span>
           </motion.button>
 
@@ -403,6 +409,7 @@ const GoAffProImport: React.FC = () => {
             onClick={handleDeleteTestData}
             disabled={isDeleting || importStatus.isImporting}
             className="bg-red-600 hover:bg-red-700 disabled:bg-gray-600 text-white px-4 py-3 rounded-lg flex items-center justify-center space-x-2 transition-colors"
+            style={{ display: 'none' }} // Hidden per user request - functionality preserved
           >
             <Trash2 className="w-5 h-5" />
             <span>{isDeleting ? 'Deleting...' : 'Delete Test Data'}</span>
