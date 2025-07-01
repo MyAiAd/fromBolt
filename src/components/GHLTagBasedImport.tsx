@@ -47,9 +47,28 @@ const GHLTagBasedImport: React.FC = () => {
 
   // Dynamic configuration getter for runtime updates
   const getFreshGHLConfig = (): GHLTagBasedConfig => {
+    // First try process.env
+    let apiKey = process.env.VITE_GHL_API_KEY || '';
+    let locationId = process.env.VITE_GHL_LOCATION_ID || '';
+    
+    // Fallback: Try runtime environment (for debugging Vercel issues)
+    if (!apiKey || !locationId) {
+      // @ts-ignore - Fallback for Vercel environment variable loading issues
+      const runtimeEnv = window.__VERCEL_ENV__ || {};
+      apiKey = apiKey || runtimeEnv.VITE_GHL_API_KEY || '';
+      locationId = locationId || runtimeEnv.VITE_GHL_LOCATION_ID || '';
+    }
+    
+    // Hardcoded fallback for immediate testing (REMOVE AFTER TESTING)
+    if (!apiKey || !locationId) {
+      console.warn('🚨 Using hardcoded GHL credentials for testing - REMOVE IN PRODUCTION');
+      apiKey = apiKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2NhdGlvbl9pZCI6IncwMUdjN1Q0YjB0S1NEUWRLaHVOIiwidmVyc2lvbiI6MSwiaWF0IjoxNzQ4MDg3NzIyNDAwLCJzdWIiOiJFdHhSblUwTWpRaDFPaE5RbWN0OCJ9.HdKxSRwdblNpkGrt8ZUyMiz_RBFZbvlbE5Oa6V23wUI';
+      locationId = locationId || 'w01Gc7T4b0tKSDQdKhuN';
+    }
+    
     return {
-      apiKey: process.env.VITE_GHL_API_KEY || '',
-      locationId: process.env.VITE_GHL_LOCATION_ID || '',
+      apiKey,
+      locationId,
       baseUrl: 'https://rest.gohighlevel.com/v1'
     };
   };
