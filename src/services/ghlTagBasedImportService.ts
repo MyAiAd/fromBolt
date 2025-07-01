@@ -289,7 +289,7 @@ export class GHLTagBasedImportService {
             last_name: contact.lastName || null,
             phone: contact.phone || null,
             referral_code: referralCode,
-            primary_source: 'ghl',
+                         primary_source: 'GHL',
             ghl_contact_id: contact.id,
             status: 'active',
             signup_date: contact.dateAdded ? new Date(contact.dateAdded).toISOString() : new Date().toISOString(),
