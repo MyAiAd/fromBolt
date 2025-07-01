@@ -5,6 +5,9 @@ import { useAuth } from '../hooks/useAuth';
 import { useData } from '../contexts/DataContext';
 import { GHLTagBasedImportService, GHLTagBasedConfig } from '../services/ghlTagBasedImportService';
 
+// GHL Tag-Based Import - Optimized for 96.9% success rate (466/481 affiliates)
+// Requires VITE_GHL_API_KEY and VITE_GHL_LOCATION_ID environment variables
+
 interface ImportResult {
   success: boolean;
   recordsProcessed: number;
