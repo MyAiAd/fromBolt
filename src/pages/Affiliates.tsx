@@ -650,16 +650,46 @@ const Affiliates = () => {
               </div>
             </div>
             
-            {/* GHL API Status */}
-            <div className="mb-4 p-3 bg-green-900/20 border border-green-500/30 rounded-lg">
-              <p className="text-sm text-green-400 font-medium mb-1">
-                ✅ GHL API Configured
-              </p>
-              <p className="text-sm text-gray-300">
-                Location: w01Gc7T4b0tKSDQdKhuN
-              </p>
+            {/* GHL API Configuration Status */}
+            <div className="mt-4">
+              <h4 className="text-sm font-medium text-gray-300 mb-2">GHL Configuration Status:</h4>
+              <div className="space-y-2">
+                {/* Configuration Status Check */}
+                {(() => {
+                  const hasApiKey = !!(import.meta.env.VITE_GHL_API_KEY || process.env.VITE_GHL_API_KEY);
+                  const hasLocationId = !!(import.meta.env.VITE_GHL_LOCATION_ID || process.env.VITE_GHL_LOCATION_ID);
+                  
+                  if (!hasApiKey || !hasLocationId) {
+                    return (
+                      <div className="p-3 bg-red-900/20 border border-red-500/30 rounded-lg">
+                        <p className="text-sm text-red-400 font-medium mb-1">
+                          ❌ GHL Configuration Missing
+                        </p>
+                        <div className="text-sm text-gray-300 space-y-1">
+                          {!hasApiKey && <p>• Missing: VITE_GHL_API_KEY</p>}
+                          {!hasLocationId && <p>• Missing: VITE_GHL_LOCATION_ID</p>}
+                          <p className="text-xs text-gray-400 mt-2">
+                            Please configure environment variables in Vercel deployment settings
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  } else {
+                    return (
+                      <div className="p-3 bg-green-900/20 border border-green-500/30 rounded-lg">
+                        <p className="text-sm text-green-400 font-medium mb-1">
+                          ✅ GHL API Configured
+                        </p>
+                        <p className="text-sm text-gray-300">
+                          Location: {import.meta.env.VITE_GHL_LOCATION_ID || process.env.VITE_GHL_LOCATION_ID || 'w01Gc7T4b0tKSDQdKhuN'}
+                        </p>
+                      </div>
+                    );
+                  }
+                })()}
+              </div>
             </div>
-
+            
             <JennaZImport />
             
             {/* Tags Display */}
