@@ -658,7 +658,7 @@ const Affiliates = () => {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h4 className="text-lg font-medium text-white">Import from GHL</h4>
-                <p className="text-gray-400 text-sm">Tag-based import achieving 100% success rate (466/466 affiliates)</p>
+                <p className="text-gray-400 text-sm">Tag-based import for affiliate contacts</p>
               </div>
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <Database className="h-4 w-4 text-white" />

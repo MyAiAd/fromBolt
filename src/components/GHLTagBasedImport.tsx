@@ -314,7 +314,7 @@ const GHLTagBasedImport: React.FC = () => {
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           <div className="bg-green-50 rounded-lg p-4">
             <div className="text-2xl font-bold text-green-600">{result.recordsSuccessful}</div>
             <div className="text-sm text-green-700">Successful</div>
@@ -323,11 +323,6 @@ const GHLTagBasedImport: React.FC = () => {
           <div className="bg-blue-50 rounded-lg p-4">
             <div className="text-2xl font-bold text-blue-600">{result.uniqueAffiliates}</div>
             <div className="text-sm text-blue-700">Unique Affiliates</div>
-          </div>
-          
-          <div className="bg-purple-50 rounded-lg p-4">
-            <div className="text-2xl font-bold text-purple-600">{successRate}%</div>
-            <div className="text-sm text-purple-700">vs Target (481)</div>
           </div>
           
           {result.recordsFailed > 0 && (
@@ -375,7 +370,7 @@ const GHLTagBasedImport: React.FC = () => {
       <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-6 text-white">
         <h2 className="text-2xl font-bold mb-2">GHL Tag-Based Affiliate Import</h2>
         <p className="text-blue-100">
-          Validated approach achieving 96.9% success rate (466/481 affiliates)
+          Optimized GHL tag-based affiliate import
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <span className="bg-white/20 px-3 py-1 rounded-full text-sm">rego-rise66</span>
