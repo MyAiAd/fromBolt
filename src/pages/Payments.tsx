@@ -452,29 +452,28 @@ export default function Payments() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
                         {formatCurrency(summary.totalPending)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap space-x-2">
-                        <button
-                          onClick={() => navigate(`/payments?affiliate=${summary.affiliateId}`)}
-                          className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm font-medium transition-colors"
-                        >
-                          View Details
-                        </button>
-                        {isAdmin && (
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center space-x-3">
                           <button
-                            onClick={() => handleSinglePayout(summary.affiliateId, summary.totalPending, summary.email)}
-                            disabled={processing.has(summary.affiliateId)}
-                            className="bg-green-600 hover:bg-green-700 disabled:bg-gray-700 disabled:cursor-not-allowed px-3 py-1 rounded text-sm font-medium transition-colors flex items-center"
+                            onClick={() => navigate(`/payments?affiliate=${summary.affiliateId}`)}
+                            className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm font-medium transition-colors"
                           >
-                            {processing.has(summary.affiliateId) ? (
-                              <RefreshCw className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <>
-                                <Send className="w-4 h-4 mr-1" />
-                                Pay Now
-                              </>
-                            )}
+                            View
                           </button>
-                        )}
+                          {isAdmin && (
+                            <button
+                              onClick={() => handleSinglePayout(summary.affiliateId, summary.totalPending, summary.email)}
+                              disabled={processing.has(summary.affiliateId)}
+                              className="bg-green-600 hover:bg-green-700 disabled:bg-gray-700 disabled:cursor-not-allowed px-3 py-1 rounded text-sm font-medium transition-colors flex items-center"
+                            >
+                              {processing.has(summary.affiliateId) ? (
+                                <RefreshCw className="w-4 h-4 animate-spin" />
+                              ) : (
+                                "Pay"
+                              )}
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
