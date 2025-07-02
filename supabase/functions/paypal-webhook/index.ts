@@ -31,24 +31,32 @@ serve(async (req) => {
 
     // Handle different PayPal webhook event types
     switch (payload.event_type) {
-      case 'PAYMENT.PAYOUTSBATCH.SUCCESS':
+      case 'Payment payoutsbatch success':
         await handlePayoutBatchSuccess(supabase, payload)
         break
       
-      case 'PAYMENT.PAYOUTSBATCH.DENIED':
+      case 'Payment payoutsbatch denied':
         await handlePayoutBatchDenied(supabase, payload)
         break
         
-      case 'PAYMENT.PAYOUTS-ITEM.SUCCEEDED':
+      case 'Payment payouts-item succeeded':
         await handlePayoutItemSucceeded(supabase, payload)
         break
         
-      case 'PAYMENT.PAYOUTS-ITEM.FAILED':
+      case 'Payment payouts-item failed':
         await handlePayoutItemFailed(supabase, payload)
         break
         
-      case 'PAYMENT.PAYOUTS-ITEM.DENIED':
+      case 'Payment payouts-item denied':
         await handlePayoutItemDenied(supabase, payload)
+        break
+        
+      case 'Payment payouts-item canceled':
+        await handlePayoutItemFailed(supabase, payload) // Treat as failed
+        break
+        
+      case 'Payment payouts-item blocked':
+        await handlePayoutItemFailed(supabase, payload) // Treat as failed
         break
         
       default:
