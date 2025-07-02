@@ -168,6 +168,8 @@ export default function AffiliatesDashboard() {
   const sortedAffiliates = React.useMemo(() => {
     if (!sortColumn) return affiliates;
 
+    console.log('🔄 Sorting affiliates by:', sortColumn, 'Direction:', sortDirection);
+    
     return [...affiliates].sort((a, b) => {
       let aValue = a[sortColumn];
       let bValue = b[sortColumn];
@@ -176,6 +178,38 @@ export default function AffiliatesDashboard() {
       if (sortColumn === 'first_name') {
         aValue = `${a.first_name || ''} ${a.last_name || ''}`.trim() || a.email;
         bValue = `${b.first_name || ''} ${b.last_name || ''}`.trim() || b.email;
+      }
+
+      // Special handling for status to ensure consistent sorting
+      if (sortColumn === 'status') {
+        // Define status priority order (you can adjust this as needed)
+        const statusOrder = {
+          'active': 1,
+          'approved': 2, 
+          'pending': 3,
+          'in_review': 4,
+          'inactive': 5
+        };
+        
+        const aStatusValue = statusOrder[String(aValue || '').toLowerCase() as keyof typeof statusOrder] || 999;
+        const bStatusValue = statusOrder[String(bValue || '').toLowerCase() as keyof typeof statusOrder] || 999;
+        
+        console.log('🔄 Status sorting:', {
+          aStatus: aValue,
+          bStatus: bValue,
+          aOrder: aStatusValue,
+          bOrder: bStatusValue,
+          direction: sortDirection
+        });
+        
+        // If status values are different priorities, sort by priority
+        if (aStatusValue !== bStatusValue) {
+          return sortDirection === 'asc' ? aStatusValue - bStatusValue : bStatusValue - aStatusValue;
+        }
+        
+        // If same priority, fall back to alphabetical
+        const comparison = String(aValue || '').toLowerCase().localeCompare(String(bValue || '').toLowerCase());
+        return sortDirection === 'asc' ? comparison : -comparison;
       }
 
       // Handle string comparison
@@ -232,6 +266,7 @@ export default function AffiliatesDashboard() {
         }));
 
         console.log('🔄 Loaded affiliates:', transformedAffiliates.length);
+        console.log('🔄 Status values found:', [...new Set(transformedAffiliates.map(a => a.status))]);
         setAffiliates(transformedAffiliates);
       } else {
         console.log('🔄 Regular user: Loading user-specific affiliate data');
@@ -261,6 +296,7 @@ export default function AffiliatesDashboard() {
           }));
 
           console.log('🔄 Loaded user affiliates:', transformedUserAffiliates.length);
+          console.log('🔄 User status values found:', [...new Set(transformedUserAffiliates.map(a => a.status))]);
           setAffiliates(transformedUserAffiliates);
         }
       }
