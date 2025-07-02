@@ -69,8 +69,9 @@ export default function Payments() {
   // Check if we're viewing payments for a specific affiliate
   const affiliateId = new URLSearchParams(location.search).get('affiliate');
   
-  const [pendingCommissions, setPendingCommissions] = useState<PendingCommission[]>([]);
-  const [payoutHistory, setPayoutHistory] = useState<PayoutHistoryItem[]>([]);
+  const [unpaidCommissions, setUnpaidCommissions] = useState<PendingCommission[]>([]);
+  const [pendingPayouts, setPendingPayouts] = useState<PayoutHistoryItem[]>([]);
+  const [completedPayouts, setCompletedPayouts] = useState<PayoutHistoryItem[]>([]);
   const [affiliatePaymentSummaries, setAffiliatePaymentSummaries] = useState<AffiliatePaymentSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<Set<string>>(new Set());
@@ -109,14 +110,24 @@ export default function Payments() {
     );
   };
 
-  const loadPendingCommissions = async () => {
+  const loadUnpaidCommissions = async () => {
     try {
       const commissions = await paypalService.getPendingCommissions(affiliateId || undefined);
-      setPendingCommissions(commissions);
+      
+      // Filter out commissions that have associated payouts (processing or pending)
+      const payouts = await paypalService.getPayoutHistory(affiliateId || undefined);
+      const payoutAffiliateIds = new Set(payouts.map(p => p.affiliate_id));
+      
+      const unpaidOnly = commissions.filter(comm => 
+        !payoutAffiliateIds.has(comm.earning_affiliate_id) || 
+        payouts.every(p => p.affiliate_id !== comm.earning_affiliate_id || p.status === 'completed')
+      );
+      
+      setUnpaidCommissions(unpaidOnly);
 
       // Group commissions by affiliate for bulk payment view
       if (!affiliateId) {
-        const grouped = commissions.reduce((acc, commission) => {
+        const grouped = unpaidOnly.reduce((acc, commission) => {
           const affiliateId = commission.earning_affiliate_id;
           if (!acc[affiliateId]) {
             acc[affiliateId] = {
@@ -137,16 +148,22 @@ export default function Payments() {
         setAffiliatePaymentSummaries(Object.values(grouped));
       }
     } catch (error) {
-      console.error('Error loading pending commissions:', error);
+      console.error('Error loading unpaid commissions:', error);
     }
   };
 
-  const loadPayoutHistory = async () => {
+  const loadPayouts = async () => {
     try {
-      const history = await paypalService.getPayoutHistory(affiliateId || undefined);
-      setPayoutHistory(history);
+      const allPayouts = await paypalService.getPayoutHistory(affiliateId || undefined);
+      
+      // Separate into pending and completed
+      const pending = allPayouts.filter(p => p.status === 'processing' || p.status === 'pending');
+      const completed = allPayouts.filter(p => p.status === 'completed');
+      
+      setPendingPayouts(pending);
+      setCompletedPayouts(completed);
     } catch (error) {
-      console.error('Error loading payout history:', error);
+      console.error('Error loading payouts:', error);
     }
   };
 
@@ -161,8 +178,8 @@ export default function Payments() {
     try {
       await paypalService.createPayout(affiliateId, amount, email);
       alert(`Payout of ${formatCurrency(amount)} initiated successfully to ${email}`);
-      await loadPendingCommissions();
-      await loadPayoutHistory();
+      await loadUnpaidCommissions();
+      await loadPayouts();
     } catch (error) {
       console.error('Error processing payout:', error);
       alert(`Error processing payout: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -200,8 +217,8 @@ export default function Payments() {
       await Promise.all(promises);
       alert(`Bulk payout completed for ${selectedPayments.length} affiliates`);
       setSelectedCommissions(new Set());
-      await loadPendingCommissions();
-      await loadPayoutHistory();
+      await loadUnpaidCommissions();
+      await loadPayouts();
     } catch (error) {
       console.error('Error processing bulk payout:', error);
       alert(`Error processing bulk payout: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -234,8 +251,8 @@ export default function Payments() {
     const loadData = async () => {
       setLoading(true);
       const promises = [
-        loadPendingCommissions(),
-        loadPayoutHistory()
+        loadUnpaidCommissions(),
+        loadPayouts()
       ];
       
       // If viewing a specific affiliate, also load their info
@@ -280,7 +297,7 @@ export default function Payments() {
   }
 
   const totalPendingAmount = affiliateId 
-    ? pendingCommissions.reduce((sum, comm) => sum + comm.commission_amount, 0)
+    ? unpaidCommissions.reduce((sum, comm) => sum + comm.commission_amount, 0)
     : affiliatePaymentSummaries.reduce((sum, summary) => sum + summary.totalPending, 0);
 
   const totalSelectedAmount = Array.from(selectedCommissions).reduce((sum, affiliateId) => {
@@ -288,7 +305,7 @@ export default function Payments() {
     return sum + (summary?.totalPending || 0);
   }, 0);
 
-  const selectedAffiliate = affiliateId ? (affiliateInfo || pendingCommissions[0]?.affiliate_system_users) : null;
+  const selectedAffiliate = affiliateId ? (affiliateInfo || unpaidCommissions[0]?.affiliate_system_users) : null;
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
@@ -383,7 +400,7 @@ export default function Payments() {
                   {affiliateId ? 'Pending Commissions' : 'Affiliates with Pending'}
                 </p>
                 <p className="text-2xl font-bold">
-                  {affiliateId ? pendingCommissions.length : affiliatePaymentSummaries.length}
+                  {affiliateId ? unpaidCommissions.length : affiliatePaymentSummaries.length}
                 </p>
               </div>
               <Users className="h-8 w-8 text-blue-400" />
