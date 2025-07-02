@@ -410,14 +410,14 @@ export default function Payments() {
           <div className="bg-gray-800 rounded-lg p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-400">Recent Payouts</p>
-                <p className="text-2xl font-bold">{completedPayouts.length}</p>
+                <p className="text-sm font-medium text-gray-400">Processing</p>
+                <p className="text-2xl font-bold">{pendingPayouts.length}</p>
               </div>
-              <CreditCard className="h-8 w-8 text-green-400" />
+              <RefreshCw className="h-8 w-8 text-blue-400" />
             </div>
           </div>
 
-          {bulkPaymentMode && (
+          {bulkPaymentMode ? (
             <div className="bg-gray-800 rounded-lg p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -427,12 +427,22 @@ export default function Payments() {
                 <CheckCircle className="h-8 w-8 text-purple-400" />
               </div>
             </div>
+          ) : (
+            <div className="bg-gray-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-400">Completed</p>
+                  <p className="text-2xl font-bold">{completedPayouts.length}</p>
+                </div>
+                <CheckCircle className="h-8 w-8 text-green-400" />
+              </div>
+            </div>
           )}
         </div>
 
-        {/* Pending Payments */}
+        {/* Unpaid Commissions */}
         <div className="bg-gray-800 rounded-lg p-6 mb-8">
-          <h3 className="text-xl font-semibold mb-6">Pending Payments</h3>
+          <h3 className="text-xl font-semibold mb-6">Unpaid</h3>
           
           {(!affiliateId && !bulkPaymentMode) ? (
             // Affiliate summary view
@@ -618,9 +628,9 @@ export default function Payments() {
           )}
         </div>
 
-        {/* Payout History */}
-        <div className="bg-gray-800 rounded-lg p-6">
-          <h3 className="text-xl font-semibold mb-6">Payment History</h3>
+        {/* Processing Payments */}
+        <div className="bg-gray-800 rounded-lg p-6 mb-8">
+          <h3 className="text-xl font-semibold mb-6">Processing</h3>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-700">
               <thead>
@@ -646,7 +656,7 @@ export default function Payments() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-700">
-                {[...pendingPayouts, ...completedPayouts].map((payout) => (
+                {pendingPayouts.map((payout) => (
                   <tr key={payout.id} className="hover:bg-gray-700">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
@@ -680,10 +690,81 @@ export default function Payments() {
               </tbody>
             </table>
             
-            {[...pendingPayouts, ...completedPayouts].length === 0 && (
+            {pendingPayouts.length === 0 && (
               <div className="text-center py-12">
-                <CreditCard className="inline-block h-12 w-12 text-gray-600 mb-4" />
-                <p className="text-gray-400">No payment history found</p>
+                <Clock className="inline-block h-12 w-12 text-gray-600 mb-4" />
+                <p className="text-gray-400">No processing payments found</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Paid History */}
+        <div className="bg-gray-800 rounded-lg p-6">
+          <h3 className="text-xl font-semibold mb-6">Paid</h3>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-700">
+              <thead>
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    Affiliate
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    Amount
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    Method
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    Transaction ID
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-700">
+                {completedPayouts.map((payout) => (
+                  <tr key={payout.id} className="hover:bg-gray-700">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <div className="text-sm font-medium text-white">
+                          {payout.affiliate_system_users.first_name || payout.affiliate_system_users.last_name 
+                            ? `${payout.affiliate_system_users.first_name || ''} ${payout.affiliate_system_users.last_name || ''}`.trim()
+                            : payout.affiliate_system_users.email}
+                        </div>
+                        <div className="text-sm text-gray-400">{payout.payment_email}</div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
+                      {formatCurrency(payout.amount)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-900/20 text-blue-400">
+                        {payout.payment_method.toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {getStatusBadge(payout.status)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                      {formatDate(payout.created_at)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                      {payout.transaction_id?.slice(-8) || 'N/A'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            
+            {completedPayouts.length === 0 && (
+              <div className="text-center py-12">
+                <CheckCircle className="inline-block h-12 w-12 text-gray-600 mb-4" />
+                <p className="text-gray-400">No completed payments found</p>
               </div>
             )}
           </div>
