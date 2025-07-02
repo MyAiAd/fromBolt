@@ -14,7 +14,10 @@ import {
   Download,
   RefreshCw,
   ArrowLeft,
-  Send
+  Send,
+  ChevronUp,
+  ChevronDown,
+  ChevronsUpDown
 } from 'lucide-react';
 import { PayPalService } from '../services/paypalService';
 
@@ -80,6 +83,13 @@ export default function Payments() {
   const [selectedCommissions, setSelectedCommissions] = useState<Set<string>>(new Set());
   const [bulkPaymentMode, setBulkPaymentMode] = useState(false);
   const [affiliateInfo, setAffiliateInfo] = useState<any>(null);
+  
+  // Sorting state
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: 'asc' | 'desc';
+    table: 'unpaid' | 'processing' | 'paid';
+  } | null>(null);
 
   const formatCurrency = (amount: number) => {
     if (typeof amount !== 'number' || isNaN(amount)) return '$0.00';
@@ -108,6 +118,66 @@ export default function Payments() {
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
     );
+  };
+
+  // Sorting functions
+  const handleSort = (key: string, table: 'unpaid' | 'processing' | 'paid') => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.table === table && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction, table });
+  };
+
+  const getSortIcon = (columnKey: string, table: 'unpaid' | 'processing' | 'paid') => {
+    if (!sortConfig || sortConfig.key !== columnKey || sortConfig.table !== table) {
+      return <ChevronsUpDown className="w-4 h-4 text-gray-400" />;
+    }
+    return sortConfig.direction === 'asc' ? 
+      <ChevronUp className="w-4 h-4 text-blue-400" /> : 
+      <ChevronDown className="w-4 h-4 text-blue-400" />;
+  };
+
+  const sortData = <T extends Record<string, any>>(data: T[], key: string, direction: 'asc' | 'desc'): T[] => {
+    return [...data].sort((a, b) => {
+      let aValue: any, bValue: any;
+      
+      // Handle nested properties
+      if (key.includes('.')) {
+        const keys = key.split('.');
+        aValue = keys.reduce((obj: any, k) => obj?.[k], a);
+        bValue = keys.reduce((obj: any, k) => obj?.[k], b);
+      } else {
+        aValue = (a as any)[key];
+        bValue = (b as any)[key];
+      }
+
+      // Handle different data types
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        aValue = aValue.toLowerCase();
+        bValue = bValue.toLowerCase();
+      }
+      
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return direction === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+      
+      if (aValue instanceof Date && bValue instanceof Date) {
+        return direction === 'asc' ? aValue.getTime() - bValue.getTime() : bValue.getTime() - aValue.getTime();
+      }
+      
+      // Handle date strings
+      if (key === 'order_date' || key === 'created_at') {
+        const dateA = new Date(aValue);
+        const dateB = new Date(bValue);
+        return direction === 'asc' ? dateA.getTime() - dateB.getTime() : dateB.getTime() - dateA.getTime();
+      }
+      
+      // Default string comparison
+      if (aValue < bValue) return direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return direction === 'asc' ? 1 : -1;
+      return 0;
+    });
   };
 
   const loadUnpaidCommissions = async () => {
@@ -450,14 +520,32 @@ export default function Payments() {
               <table className="min-w-full divide-y divide-gray-700">
                 <thead>
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Affiliate
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700"
+                      onClick={() => handleSort('name', 'unpaid')}
+                    >
+                      <div className="flex items-center space-x-1">
+                        <span>Affiliate</span>
+                        {getSortIcon('name', 'unpaid')}
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Commissions
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700"
+                      onClick={() => handleSort('commissionCount', 'unpaid')}
+                    >
+                      <div className="flex items-center space-x-1">
+                        <span>Commissions</span>
+                        {getSortIcon('commissionCount', 'unpaid')}
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Total Pending
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700"
+                      onClick={() => handleSort('totalPending', 'unpaid')}
+                    >
+                      <div className="flex items-center space-x-1">
+                        <span>Total Pending</span>
+                        {getSortIcon('totalPending', 'unpaid')}
+                      </div>
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                       Actions
@@ -465,7 +553,10 @@ export default function Payments() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-700">
-                  {affiliatePaymentSummaries.map((summary) => (
+                  {(sortConfig?.table === 'unpaid' 
+                    ? sortData(affiliatePaymentSummaries, sortConfig.key, sortConfig.direction)
+                    : affiliatePaymentSummaries
+                  ).map((summary) => (
                     <tr key={summary.affiliateId} className="hover:bg-gray-700">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
@@ -569,22 +660,49 @@ export default function Payments() {
               <table className="min-w-full divide-y divide-gray-700">
                 <thead>
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Commission ID
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700"
+                      onClick={() => handleSort('id', 'unpaid')}
+                    >
+                      <div className="flex items-center space-x-1">
+                        <span>Commission ID</span>
+                        {getSortIcon('id', 'unpaid')}
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Amount
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700"
+                      onClick={() => handleSort('commission_amount', 'unpaid')}
+                    >
+                      <div className="flex items-center space-x-1">
+                        <span>Amount</span>
+                        {getSortIcon('commission_amount', 'unpaid')}
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Order Date
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700"
+                      onClick={() => handleSort('order_date', 'unpaid')}
+                    >
+                      <div className="flex items-center space-x-1">
+                        <span>Order Date</span>
+                        {getSortIcon('order_date', 'unpaid')}
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Status
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700"
+                      onClick={() => handleSort('status', 'unpaid')}
+                    >
+                      <div className="flex items-center space-x-1">
+                        <span>Status</span>
+                        {getSortIcon('status', 'unpaid')}
+                      </div>
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-700">
-                  {unpaidCommissions.map((commission) => (
+                  {(sortConfig?.table === 'unpaid' 
+                    ? sortData(unpaidCommissions, sortConfig.key, sortConfig.direction)
+                    : unpaidCommissions
+                  ).map((commission) => (
                     <tr key={commission.id} className="hover:bg-gray-700">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
                         {commission.id.slice(-8)}
@@ -635,28 +753,67 @@ export default function Payments() {
             <table className="min-w-full divide-y divide-gray-700">
               <thead>
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Affiliate
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700"
+                    onClick={() => handleSort('affiliate_system_users.email', 'processing')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Affiliate</span>
+                      {getSortIcon('affiliate_system_users.email', 'processing')}
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Amount
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700"
+                    onClick={() => handleSort('amount', 'processing')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Amount</span>
+                      {getSortIcon('amount', 'processing')}
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Method
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700"
+                    onClick={() => handleSort('payment_method', 'processing')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Method</span>
+                      {getSortIcon('payment_method', 'processing')}
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Status
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700"
+                    onClick={() => handleSort('status', 'processing')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Status</span>
+                      {getSortIcon('status', 'processing')}
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Date
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700"
+                    onClick={() => handleSort('created_at', 'processing')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Date</span>
+                      {getSortIcon('created_at', 'processing')}
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Transaction ID
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700"
+                    onClick={() => handleSort('transaction_id', 'processing')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Transaction ID</span>
+                      {getSortIcon('transaction_id', 'processing')}
+                    </div>
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-700">
-                {pendingPayouts.map((payout) => (
+                {(sortConfig?.table === 'processing' 
+                  ? sortData(pendingPayouts, sortConfig.key, sortConfig.direction)
+                  : pendingPayouts
+                ).map((payout) => (
                   <tr key={payout.id} className="hover:bg-gray-700">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
@@ -706,28 +863,67 @@ export default function Payments() {
             <table className="min-w-full divide-y divide-gray-700">
               <thead>
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Affiliate
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700"
+                    onClick={() => handleSort('affiliate_system_users.email', 'paid')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Affiliate</span>
+                      {getSortIcon('affiliate_system_users.email', 'paid')}
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Amount
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700"
+                    onClick={() => handleSort('amount', 'paid')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Amount</span>
+                      {getSortIcon('amount', 'paid')}
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Method
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700"
+                    onClick={() => handleSort('payment_method', 'paid')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Method</span>
+                      {getSortIcon('payment_method', 'paid')}
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Status
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700"
+                    onClick={() => handleSort('status', 'paid')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Status</span>
+                      {getSortIcon('status', 'paid')}
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Date
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700"
+                    onClick={() => handleSort('created_at', 'paid')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Date</span>
+                      {getSortIcon('created_at', 'paid')}
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                    Transaction ID
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700"
+                    onClick={() => handleSort('transaction_id', 'paid')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Transaction ID</span>
+                      {getSortIcon('transaction_id', 'paid')}
+                    </div>
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-700">
-                {completedPayouts.map((payout) => (
+                {(sortConfig?.table === 'paid' 
+                  ? sortData(completedPayouts, sortConfig.key, sortConfig.direction)
+                  : completedPayouts
+                ).map((payout) => (
                   <tr key={payout.id} className="hover:bg-gray-700">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
