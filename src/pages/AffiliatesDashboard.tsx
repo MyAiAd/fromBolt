@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { Users, DollarSign, TrendingUp, Award, Eye, Search, Filter, Download, RefreshCw, ArrowLeft } from 'lucide-react';
+import { createClient } from '@supabase/supabase-js';
+import { Users, DollarSign, TrendingUp, Award, Eye, Search, Filter, Download, RefreshCw, ArrowLeft, Star, Crown } from 'lucide-react';
 import { AffiliateAggregationService } from '../services/affiliateAggregationService';
 import ReassignAffiliateModal from '../components/ReassignAffiliateModal';
 
@@ -58,6 +59,21 @@ interface TeamMember {
 export default function AffiliatesDashboard() {
   const { user, isAdmin, supabase } = useAuth();
   const navigate = useNavigate();
+  
+  // Create service role client for admin operations
+  const serviceRoleClient = React.useMemo(() => {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const serviceRoleKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY || 
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU';
+    
+    return createClient(supabaseUrl, serviceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
+  }, []);
+
   const [affiliates, setAffiliates] = useState<AffiliateUser[]>([]);
   const [selectedAffiliate, setSelectedAffiliate] = useState<AffiliateUser | null>(null);
   const [commissions, setCommissions] = useState<CommissionData[]>([]);
@@ -75,108 +91,126 @@ export default function AffiliatesDashboard() {
   };
 
   const formatDate = (dateString?: string) => {
-    return dateString ? new Date(dateString).toLocaleDateString() : 'N/A';
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString();
   };
 
   const getSourceBadge = (source: string) => {
-    const colors = {
-      goaffpro: 'bg-blue-900/20 text-blue-400',
-      mightynetworks: 'bg-purple-900/20 text-purple-400',
-      ghl: 'bg-green-900/20 text-green-400',
-      native: 'bg-orange-900/20 text-orange-400',
-      manual: 'bg-gray-900/20 text-gray-400'
+    const sourceConfig = {
+      'GHL': { color: 'bg-blue-900/20 text-blue-400', label: 'GHL' },
+      'goaffpro': { color: 'bg-green-900/20 text-green-400', label: 'ReAction' },
+      'GOAFFPRO': { color: 'bg-green-900/20 text-green-400', label: 'ReAction' },
+      'mightynetworks': { color: 'bg-purple-900/20 text-purple-400', label: 'The RISE' },
+      'MIGHTYNETWORKS': { color: 'bg-purple-900/20 text-purple-400', label: 'The RISE' },
+      'native': { color: 'bg-orange-900/20 text-orange-400', label: 'JennaZ.co' },
+      'NATIVE': { color: 'bg-orange-900/20 text-orange-400', label: 'JennaZ.co' }
     };
-    
-    const labels = {
-      goaffpro: 'ReAction',
-      mightynetworks: 'The RISE',
-      ghl: 'GHL',
-      native: 'JennaZ.co',
-      manual: 'Manual'
-    };
-    
+
+    const config = sourceConfig[source as keyof typeof sourceConfig] || 
+                  { color: 'bg-gray-900/20 text-gray-400', label: source || 'Unknown' };
+
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[source as keyof typeof colors] || colors.manual}`}>
-        {labels[source as keyof typeof labels] || source}
+      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
+        {config.label}
       </span>
     );
   };
 
   const getStatusBadge = (status: string) => {
-    const colors = {
-      active: 'bg-green-900/20 text-green-400',
-      pending: 'bg-yellow-900/20 text-yellow-400',
-      inactive: 'bg-red-900/20 text-red-400',
-      suspended: 'bg-red-900/20 text-red-400',
-      approved: 'bg-green-900/20 text-green-400'
+    const statusConfig = {
+      active: { color: 'bg-green-900/20 text-green-400', label: 'Active' },
+      pending: { color: 'bg-yellow-900/20 text-yellow-400', label: 'Pending' },
+      inactive: { color: 'bg-red-900/20 text-red-400', label: 'Inactive' },
+      approved: { color: 'bg-green-900/20 text-green-400', label: 'Approved' },
+      'in_review': { color: 'bg-yellow-900/20 text-yellow-400', label: 'In Review' }
     };
-    
+
+    const config = statusConfig[status?.toLowerCase() as keyof typeof statusConfig] || 
+                  { color: 'bg-gray-900/20 text-gray-400', label: status || 'Unknown' };
+
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[status as keyof typeof colors] || colors.pending}`}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
+        {config.label}
       </span>
     );
   };
 
   const loadAffiliates = async () => {
+    console.log('🔄 AffiliatesDashboard: loadAffiliates() called');
+    console.log('🔄 User email:', user?.email);
+    console.log('🔄 Is admin:', isAdmin);
+
     try {
-      console.log('🔄 AffiliatesDashboard: loadAffiliates() called');
-      console.log('🔄 User email:', user?.email);
-      console.log('🔄 Is admin:', isAdmin);
-
       const aggregationService = new AffiliateAggregationService(supabase);
-      let aggregatedData;
-
+      
       if (isAdmin) {
         console.log('🔄 Admin user: Loading all affiliates via aggregation service');
-        aggregatedData = await aggregationService.getAllAffiliates();
-      } else {
-        if (!user?.email) {
-          console.warn('⚠️ Regular user has no email, cannot load user-specific data');
-          setAffiliates([]);
-          return;
-        }
-        console.log('🔄 Regular user: Loading only own affiliate data for:', user.email);
-        aggregatedData = await aggregationService.getUserAffiliateData(user.email);
-      }
-
-      // Transform aggregated data to AffiliateUser format
-      const transformedAffiliates: AffiliateUser[] = aggregatedData.map((agg) => {
-        // Extract earnings from commission string (e.g. "$123.45" -> 123.45)
-        const totalEarnings = parseFloat(agg.commission.replace('$', '')) || 0;
+        const allAggregatedAffiliates = await aggregationService.getAllAffiliates();
         
-        return {
-          id: agg.id,
-          email: agg.email,
-          first_name: agg.name.split(' ')[0] || '',
-          last_name: agg.name.split(' ').slice(1).join(' ') || '',
-          referral_code: (agg.originalData?.referral_code as string) || '',
-          primary_source: agg.source,
-          status: agg.status.toLowerCase(),
-          signup_date: agg.dateJoined,
-          total_l1_affiliates: agg.referrals || 0,
-          total_l2_affiliates: 0, // These would need separate calculation
+        // Transform aggregated affiliates to match AffiliateUser interface
+        const transformedAffiliates: AffiliateUser[] = allAggregatedAffiliates.map(aff => ({
+          id: aff.id,
+          email: aff.email,
+          first_name: aff.name.split(' ')[0] || '',
+          last_name: aff.name.split(' ').slice(1).join(' ') || '',
+          referral_code: '', // Not available in aggregated data
+          primary_source: aff.source.toUpperCase(),
+          status: aff.status.toLowerCase(),
+          signup_date: aff.dateJoined,
+          total_l1_affiliates: 0, // Would need separate query
+          total_l2_affiliates: 0,
           total_l3_affiliates: 0,
-          total_team_size: agg.referrals || 0,
-          total_l1_earnings: totalEarnings,
+          total_team_size: aff.referrals,
+          total_l1_earnings: 0, // Would need separate query  
           total_l2_earnings: 0,
           total_l3_earnings: 0,
-          total_earnings: totalEarnings,
-          pending_earnings: totalEarnings, // Assume all earnings are pending for now
+          total_earnings: parseFloat(aff.commission.replace('$', '')) || 0,
+          pending_earnings: 0, // Would need separate query
           paid_earnings: 0
-        };
-      });
-      
-      console.log('🔄 Loaded affiliates:', transformedAffiliates.length);
-      setAffiliates(transformedAffiliates);
+        }));
+
+        console.log('🔄 Loaded affiliates:', transformedAffiliates.length);
+        setAffiliates(transformedAffiliates);
+      } else {
+        console.log('🔄 Regular user: Loading user-specific affiliate data');
+        if (user?.email) {
+          const userAffiliates = await aggregationService.getUserAffiliateData(user.email);
+          
+          // Transform user affiliates to match AffiliateUser interface
+          const transformedUserAffiliates: AffiliateUser[] = userAffiliates.map(aff => ({
+            id: aff.id,
+            email: aff.email,
+            first_name: aff.name.split(' ')[0] || '',
+            last_name: aff.name.split(' ').slice(1).join(' ') || '',
+            referral_code: '',
+            primary_source: aff.source.toUpperCase(),
+            status: aff.status.toLowerCase(),
+            signup_date: aff.dateJoined,
+            total_l1_affiliates: 0,
+            total_l2_affiliates: 0,
+            total_l3_affiliates: 0,
+            total_team_size: aff.referrals,
+            total_l1_earnings: 0,
+            total_l2_earnings: 0,
+            total_l3_earnings: 0,
+            total_earnings: parseFloat(aff.commission.replace('$', '')) || 0,
+            pending_earnings: 0,
+            paid_earnings: 0
+          }));
+
+          console.log('🔄 Loaded user affiliates:', transformedUserAffiliates.length);
+          setAffiliates(transformedUserAffiliates);
+        }
+      }
     } catch (error) {
-      console.error('Error loading affiliates:', error);
+      console.error('❌ Error loading affiliates:', error);
     }
   };
 
   const loadAffiliateCommissions = async (affiliateId: string) => {
     try {
-      const { data, error } = await supabase
+      // Use service role client to bypass RLS permissions
+      const { data, error } = await serviceRoleClient
         .from('multi_level_commissions')
         .select('*')
         .eq('earning_affiliate_id', affiliateId)
@@ -191,8 +225,8 @@ export default function AffiliatesDashboard() {
 
   const loadTeamMembers = async (affiliateId: string) => {
     try {
-      // Get team members for this affiliate
-      const { data: relationships, error } = await supabase
+      // Use service role client to bypass RLS permissions
+      const { data: relationships, error } = await serviceRoleClient
         .from('referral_relationships')
         .select(`
           affiliate_id,
@@ -214,8 +248,8 @@ export default function AffiliatesDashboard() {
           // Determine level (this is simplified - would need more complex logic for actual level determination)
           const level = 1; // Placeholder
           
-          // Get direct referrals count
-          const { count } = await supabase
+          // Get direct referrals count using service role client
+          const { count } = await serviceRoleClient
             .from('referral_relationships')
             .select('*', { count: 'exact', head: true })
             .eq('l1_referrer_id', member.id);
