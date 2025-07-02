@@ -103,7 +103,7 @@ export class AffiliateAggregationService {
         }
 
         const aggregated = {
-          id: `goaffpro_${affiliate.id}`,
+          id: affiliate.id,
           name: displayName,
           email: affiliate.email,
           source: 'goaffpro' as const,
@@ -174,7 +174,7 @@ export class AffiliateAggregationService {
         }
 
         const aggregated = {
-          id: `mighty_${affiliate.id}`,
+          id: affiliate.id,
           name: displayName,
           email: affiliate.email,
           source: 'mightynetworks' as const,
@@ -257,7 +257,7 @@ export class AffiliateAggregationService {
         }
 
         const aggregated = {
-          id: `ghl_${affiliate.id}`,
+          id: affiliate.id,
           name: displayName,
           email: affiliate.email,
           source: 'ghl' as const, // Use 'ghl' as its own source instead of mapping to 'native'
@@ -332,7 +332,7 @@ export class AffiliateAggregationService {
       return (nativeData || [])
         .filter(user => user.affiliates && user.affiliates.length > 0)
         .map(user => ({
-          id: `native_${user.id}`,
+          id: user.id,
           name: user.full_name || user.email?.split('@')[0] || 'Unknown',
           email: user.email || '',
           source: 'native' as const,
@@ -516,7 +516,7 @@ export class AffiliateAggregationService {
         }
 
         return {
-          id: `goaffpro_${affiliate.id}`,
+          id: affiliate.id,
           name: displayName,
           email: affiliate.email,
           source: 'goaffpro' as const,
@@ -579,7 +579,7 @@ export class AffiliateAggregationService {
         }
 
         return {
-          id: `mighty_${affiliate.id}`,
+          id: affiliate.id,
           name: displayName,
           email: affiliate.email,
           source: 'mightynetworks' as const,
@@ -637,7 +637,7 @@ export class AffiliateAggregationService {
         }
 
         return {
-          id: `ghl_${affiliate.id}`,
+          id: affiliate.id,
           name: displayName,
           email: affiliate.email,
           source: 'ghl' as const,
@@ -695,7 +695,7 @@ export class AffiliateAggregationService {
         }
 
         return {
-          id: `native_${affiliate.id}`,
+          id: affiliate.id,
           name: displayName,
           email: affiliate.email,
           source: 'native' as const,

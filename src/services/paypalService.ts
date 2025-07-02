@@ -230,13 +230,11 @@ export class PayPalService {
     batchId: string
   ): Promise<void> {
     try {
-      // Extract the actual UUID from the aggregated ID
-      const actualUUID = this.extractUUIDFromAggregatedId(affiliateId);
-      
+      // affiliateId is now a clean UUID, no need to extract
       const { error } = await this.serviceRoleClient
         .from('payouts')
         .insert({
-          affiliate_id: actualUUID,
+          affiliate_id: affiliateId,
           amount: amount,
           commission_ids: [], // This would need to be populated with actual commission IDs
           payment_method: 'paypal',
@@ -307,12 +305,8 @@ export class PayPalService {
   }
 
   private extractUUIDFromAggregatedId(aggregatedId: string): string {
-    // Remove prefixes like 'goaffpro_', 'ghl_', 'mighty_', 'native_'
-    const parts = aggregatedId.split('_');
-    if (parts.length > 1) {
-      return parts.slice(1).join('_'); // Rejoin in case UUID had underscores
-    }
-    return aggregatedId; // Return as-is if no prefix found
+    // No longer needed - affiliateId is already a clean UUID
+    return aggregatedId;
   }
 
   async getPendingCommissions(affiliateId?: string): Promise<any[]> {
@@ -336,9 +330,8 @@ export class PayPalService {
         .is('paid_date', null);
 
       if (affiliateId) {
-        // Extract the actual UUID from the aggregated ID
-        const actualUUID = this.extractUUIDFromAggregatedId(affiliateId);
-        query = query.eq('earning_affiliate_id', actualUUID);
+        // affiliateId is now a clean UUID, no need to extract
+        query = query.eq('earning_affiliate_id', affiliateId);
       }
 
       const { data, error } = await query.order('order_date', { ascending: false });
@@ -370,9 +363,8 @@ export class PayPalService {
         `);
 
       if (affiliateId) {
-        // Extract the actual UUID from the aggregated ID
-        const actualUUID = this.extractUUIDFromAggregatedId(affiliateId);
-        query = query.eq('affiliate_id', actualUUID);
+        // affiliateId is now a clean UUID, no need to extract
+        query = query.eq('affiliate_id', affiliateId);
       }
 
       const { data, error } = await query.order('created_at', { ascending: false });
@@ -391,21 +383,70 @@ export class PayPalService {
 
   async getAffiliateInfo(affiliateId: string): Promise<any> {
     try {
-      // Extract the actual UUID from the aggregated ID
-      const actualUUID = this.extractUUIDFromAggregatedId(affiliateId);
+      // affiliateId is now a clean UUID, try to find it in different source tables
       
-      const { data, error } = await this.serviceRoleClient
+      // First try affiliate_system_users (GHL affiliates)
+      const { data: ghlData, error: ghlError } = await this.serviceRoleClient
         .from('affiliate_system_users')
-        .select('id, email, first_name, last_name')
-        .eq('id', actualUUID)
-        .single();
+        .select('id, email, first_name, last_name, primary_source')
+        .eq('id', affiliateId)
+        .maybeSingle();
 
-      if (error) {
-        console.error('Error fetching affiliate info:', error);
-        throw error;
+      if (ghlData && !ghlError) {
+        return ghlData;
       }
 
-      return data;
+      // Try goaffpro_affiliates (GoAffPro affiliates)
+      const { data: goaffproData, error: goaffproError } = await this.serviceRoleClient
+        .from('goaffpro_affiliates')
+        .select('id, email, first_name, last_name')
+        .eq('id', affiliateId)
+        .eq('data_source', 'goaffpro')
+        .maybeSingle();
+
+      if (goaffproData && !goaffproError) {
+        return goaffproData;
+      }
+
+      // Try mightynetworks_affiliates (MightyNetworks affiliates)
+      const { data: mightyData, error: mightyError } = await this.serviceRoleClient
+        .from('mightynetworks_affiliates')
+        .select('id, email, first_name, last_name, name')
+        .eq('id', affiliateId)
+        .eq('data_source', 'mightynetworks')
+        .maybeSingle();
+
+      if (mightyData && !mightyError) {
+        // MightyNetworks might use 'name' field instead of first_name/last_name
+        return {
+          id: mightyData.id,
+          email: mightyData.email,
+          first_name: mightyData.first_name || mightyData.name?.split(' ')[0] || '',
+          last_name: mightyData.last_name || mightyData.name?.split(' ').slice(1).join(' ') || ''
+        };
+      }
+
+      // Try users table (Native affiliates)
+      const { data: nativeData, error: nativeError } = await this.serviceRoleClient
+        .from('users')
+        .select('id, email, full_name')
+        .eq('id', affiliateId)
+        .maybeSingle();
+
+      if (nativeData && !nativeError) {
+        // Split full_name into first_name and last_name
+        const nameParts = (nativeData.full_name || '').split(' ');
+        return {
+          id: nativeData.id,
+          email: nativeData.email,
+          first_name: nameParts[0] || '',
+          last_name: nameParts.slice(1).join(' ') || ''
+        };
+      }
+
+      // If not found in any table, throw an error
+      console.error('Affiliate not found in any source table:', affiliateId);
+      throw new Error(`Affiliate with ID ${affiliateId} not found`);
     } catch (error) {
       console.error('Error getting affiliate info:', error);
       throw error;
