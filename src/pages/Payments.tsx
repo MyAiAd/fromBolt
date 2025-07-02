@@ -411,7 +411,7 @@ export default function Payments() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-400">Recent Payouts</p>
-                <p className="text-2xl font-bold">{payoutHistory.length}</p>
+                <p className="text-2xl font-bold">{completedPayouts.length}</p>
               </div>
               <CreditCard className="h-8 w-8 text-green-400" />
             </div>
@@ -574,7 +574,7 @@ export default function Payments() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-700">
-                  {pendingCommissions.map((commission) => (
+                  {unpaidCommissions.map((commission) => (
                     <tr key={commission.id} className="hover:bg-gray-700">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
                         {commission.id.slice(-8)}
@@ -593,11 +593,11 @@ export default function Payments() {
                 </tbody>
               </table>
               
-              {affiliateId && isAdmin && pendingCommissions.length > 0 && (
+              {affiliateId && isAdmin && unpaidCommissions.length > 0 && (
                 <div className="mt-6 flex justify-end">
                   <button
                     onClick={() => {
-                      const affiliate = pendingCommissions[0]?.affiliate_system_users;
+                      const affiliate = unpaidCommissions[0]?.affiliate_system_users;
                       if (affiliate) {
                         handleSinglePayout(affiliate.id, totalPendingAmount, affiliate.email);
                       }
@@ -646,7 +646,7 @@ export default function Payments() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-700">
-                {payoutHistory.map((payout) => (
+                {[...pendingPayouts, ...completedPayouts].map((payout) => (
                   <tr key={payout.id} className="hover:bg-gray-700">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
@@ -680,7 +680,7 @@ export default function Payments() {
               </tbody>
             </table>
             
-            {payoutHistory.length === 0 && (
+            {[...pendingPayouts, ...completedPayouts].length === 0 && (
               <div className="text-center py-12">
                 <CreditCard className="inline-block h-12 w-12 text-gray-600 mb-4" />
                 <p className="text-gray-400">No payment history found</p>
