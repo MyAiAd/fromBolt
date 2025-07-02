@@ -87,6 +87,11 @@ export default function AffiliatesDashboard() {
   const [sortColumn, setSortColumn] = useState<keyof AffiliateUser | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
+  // Debug effect to log state changes
+  React.useEffect(() => {
+    console.log('🔄 Sort state changed:', { sortColumn, sortDirection });
+  }, [sortColumn, sortDirection]);
+
   const formatCurrency = (amount: number) => {
     if (typeof amount !== 'number' || isNaN(amount)) return '$0.00';
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
@@ -137,23 +142,28 @@ export default function AffiliatesDashboard() {
     );
   };
 
-  const handleSort = (column: keyof AffiliateUser) => {
+  const handleSort = React.useCallback((column: keyof AffiliateUser) => {
+    console.log('🔄 Sorting by column:', column, 'Current sort:', sortColumn, sortDirection);
+    
     if (sortColumn === column) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+      const newDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+      console.log('🔄 Toggling direction to:', newDirection);
+      setSortDirection(newDirection);
     } else {
+      console.log('🔄 Setting new column:', column);
       setSortColumn(column);
       setSortDirection('asc');
     }
-  };
+  }, [sortColumn, sortDirection]);
 
-  const getSortIcon = (column: keyof AffiliateUser) => {
+  const getSortIcon = React.useCallback((column: keyof AffiliateUser) => {
     if (sortColumn !== column) {
       return <ChevronUp className="w-4 h-4 text-gray-500" />;
     }
     return sortDirection === 'asc' 
       ? <ChevronUp className="w-4 h-4 text-blue-400" />
       : <ChevronDown className="w-4 h-4 text-blue-400" />;
-  };
+  }, [sortColumn, sortDirection]);
 
   const sortedAffiliates = React.useMemo(() => {
     if (!sortColumn) return affiliates;
@@ -842,7 +852,12 @@ export default function AffiliatesDashboard() {
                   <tr>
                     <th 
                       className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
-                      onClick={() => handleSort('first_name')}
+                      onClick={(e) => {
+                        console.log('🖱️ Header clicked: first_name');
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleSort('first_name');
+                      }}
                     >
                       <div className="flex items-center space-x-1">
                         <span>Affiliate</span>
@@ -851,7 +866,12 @@ export default function AffiliatesDashboard() {
                     </th>
                     <th 
                       className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
-                      onClick={() => handleSort('primary_source')}
+                      onClick={(e) => {
+                        console.log('🖱️ Header clicked: primary_source');
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleSort('primary_source');
+                      }}
                     >
                       <div className="flex items-center space-x-1">
                         <span>Source</span>
@@ -860,7 +880,12 @@ export default function AffiliatesDashboard() {
                     </th>
                     <th 
                       className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
-                      onClick={() => handleSort('total_team_size')}
+                      onClick={(e) => {
+                        console.log('🖱️ Header clicked: total_team_size');
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleSort('total_team_size');
+                      }}
                     >
                       <div className="flex items-center space-x-1">
                         <span>Team Size</span>
@@ -869,7 +894,12 @@ export default function AffiliatesDashboard() {
                     </th>
                     <th 
                       className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
-                      onClick={() => handleSort('total_l1_affiliates')}
+                      onClick={(e) => {
+                        console.log('🖱️ Header clicked: total_l1_affiliates');
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleSort('total_l1_affiliates');
+                      }}
                     >
                       <div className="flex items-center space-x-1">
                         <span>L1 / L2 / L3</span>
@@ -878,7 +908,12 @@ export default function AffiliatesDashboard() {
                     </th>
                     <th 
                       className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
-                      onClick={() => handleSort('total_earnings')}
+                      onClick={(e) => {
+                        console.log('🖱️ Header clicked: total_earnings');
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleSort('total_earnings');
+                      }}
                     >
                       <div className="flex items-center space-x-1">
                         <span>Total Earnings</span>
@@ -887,7 +922,12 @@ export default function AffiliatesDashboard() {
                     </th>
                     <th 
                       className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
-                      onClick={() => handleSort('status')}
+                      onClick={(e) => {
+                        console.log('🖱️ Header clicked: status');
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleSort('status');
+                      }}
                     >
                       <div className="flex items-center space-x-1">
                         <span>Status</span>
