@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { createClient } from '@supabase/supabase-js';
-import { Users, DollarSign, TrendingUp, Award, Eye, Search, Filter, Download, RefreshCw, ArrowLeft, Star, Crown } from 'lucide-react';
+import { Users, DollarSign, TrendingUp, Award, Eye, Search, Filter, Download, RefreshCw, ArrowLeft, Star, Crown, ChevronUp, ChevronDown } from 'lucide-react';
 import { AffiliateAggregationService } from '../services/affiliateAggregationService';
 import ReassignAffiliateModal from '../components/ReassignAffiliateModal';
 
@@ -84,6 +84,8 @@ export default function AffiliatesDashboard() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [isReassignModalOpen, setIsReassignModalOpen] = useState(false);
   const [affiliateToReassign, setAffiliateToReassign] = useState<AffiliateUser | null>(null);
+  const [sortColumn, setSortColumn] = useState<keyof AffiliateUser | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   const formatCurrency = (amount: number) => {
     if (typeof amount !== 'number' || isNaN(amount)) return '$0.00';
@@ -134,6 +136,56 @@ export default function AffiliatesDashboard() {
       </span>
     );
   };
+
+  const handleSort = (column: keyof AffiliateUser) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const getSortIcon = (column: keyof AffiliateUser) => {
+    if (sortColumn !== column) {
+      return <ChevronUp className="w-4 h-4 text-gray-500" />;
+    }
+    return sortDirection === 'asc' 
+      ? <ChevronUp className="w-4 h-4 text-blue-400" />
+      : <ChevronDown className="w-4 h-4 text-blue-400" />;
+  };
+
+  const sortedAffiliates = React.useMemo(() => {
+    if (!sortColumn) return affiliates;
+
+    return [...affiliates].sort((a, b) => {
+      let aValue = a[sortColumn];
+      let bValue = b[sortColumn];
+
+      // Handle name sorting (combine first and last name)
+      if (sortColumn === 'first_name') {
+        aValue = `${a.first_name || ''} ${a.last_name || ''}`.trim() || a.email;
+        bValue = `${b.first_name || ''} ${b.last_name || ''}`.trim() || b.email;
+      }
+
+      // Handle string comparison
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        const comparison = aValue.toLowerCase().localeCompare(bValue.toLowerCase());
+        return sortDirection === 'asc' ? comparison : -comparison;
+      }
+
+      // Handle number comparison
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+
+      // Fallback to string comparison
+      const aStr = String(aValue || '');
+      const bStr = String(bValue || '');
+      const comparison = aStr.toLowerCase().localeCompare(bStr.toLowerCase());
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+  }, [affiliates, sortColumn, sortDirection]);
 
   const loadAffiliates = async () => {
     console.log('🔄 AffiliatesDashboard: loadAffiliates() called');
@@ -788,23 +840,59 @@ export default function AffiliatesDashboard() {
               <table className="min-w-full divide-y divide-gray-700">
                 <thead>
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Affiliate
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
+                      onClick={() => handleSort('first_name')}
+                    >
+                      <div className="flex items-center space-x-1">
+                        <span>Affiliate</span>
+                        {getSortIcon('first_name')}
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Source
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
+                      onClick={() => handleSort('primary_source')}
+                    >
+                      <div className="flex items-center space-x-1">
+                        <span>Source</span>
+                        {getSortIcon('primary_source')}
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Team Size
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
+                      onClick={() => handleSort('total_team_size')}
+                    >
+                      <div className="flex items-center space-x-1">
+                        <span>Team Size</span>
+                        {getSortIcon('total_team_size')}
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      L1 / L2 / L3
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
+                      onClick={() => handleSort('total_l1_affiliates')}
+                    >
+                      <div className="flex items-center space-x-1">
+                        <span>L1 / L2 / L3</span>
+                        {getSortIcon('total_l1_affiliates')}
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Total Earnings
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
+                      onClick={() => handleSort('total_earnings')}
+                    >
+                      <div className="flex items-center space-x-1">
+                        <span>Total Earnings</span>
+                        {getSortIcon('total_earnings')}
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                      Status
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-700 transition-colors"
+                      onClick={() => handleSort('status')}
+                    >
+                      <div className="flex items-center space-x-1">
+                        <span>Status</span>
+                        {getSortIcon('status')}
+                      </div>
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                       Actions
@@ -812,7 +900,7 @@ export default function AffiliatesDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-700">
-                  {affiliates.map((affiliate) => (
+                  {sortedAffiliates.map((affiliate) => (
                     <tr key={affiliate.id} className="hover:bg-gray-700">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
