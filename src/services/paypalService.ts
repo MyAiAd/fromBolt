@@ -1,4 +1,4 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient, createClient } from '@supabase/supabase-js';
 
 // PayPal API Configuration
 const PAYPAL_CONFIG = {
@@ -88,11 +88,24 @@ interface PayoutStatus {
 
 export class PayPalService {
   private supabase: SupabaseClient;
+  private serviceRoleClient: SupabaseClient;
   private accessToken: string | null = null;
   private tokenExpiry: number = 0;
 
   constructor(supabase: SupabaseClient) {
     this.supabase = supabase;
+    
+    // Create a service role client for payment operations that bypass RLS
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const serviceRoleKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY || 
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU';
+    
+    this.serviceRoleClient = createClient(supabaseUrl, serviceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
   }
 
   private async getAccessToken(): Promise<string> {
@@ -217,10 +230,13 @@ export class PayPalService {
     batchId: string
   ): Promise<void> {
     try {
-      const { error } = await this.supabase
+      // Extract the actual UUID from the aggregated ID
+      const actualUUID = this.extractUUIDFromAggregatedId(affiliateId);
+      
+      const { error } = await this.serviceRoleClient
         .from('payouts')
         .insert({
-          affiliate_id: affiliateId,
+          affiliate_id: actualUUID,
           amount: amount,
           commission_ids: [], // This would need to be populated with actual commission IDs
           payment_method: 'paypal',
@@ -258,7 +274,7 @@ export class PayPalService {
         updateData.completed_date = new Date(status.batch_header.time_completed).toISOString();
       }
 
-      const { error } = await this.supabase
+      const { error } = await this.serviceRoleClient
         .from('payouts')
         .update(updateData)
         .eq('transaction_id', payoutBatchId);
@@ -290,9 +306,18 @@ export class PayPalService {
     }
   }
 
+  private extractUUIDFromAggregatedId(aggregatedId: string): string {
+    // Remove prefixes like 'goaffpro_', 'ghl_', 'mighty_', 'native_'
+    const parts = aggregatedId.split('_');
+    if (parts.length > 1) {
+      return parts.slice(1).join('_'); // Rejoin in case UUID had underscores
+    }
+    return aggregatedId; // Return as-is if no prefix found
+  }
+
   async getPendingCommissions(affiliateId?: string): Promise<any[]> {
     try {
-      let query = this.supabase
+      let query = this.serviceRoleClient
         .from('multi_level_commissions')
         .select(`
           id,
@@ -311,7 +336,9 @@ export class PayPalService {
         .is('paid_date', null);
 
       if (affiliateId) {
-        query = query.eq('earning_affiliate_id', affiliateId);
+        // Extract the actual UUID from the aggregated ID
+        const actualUUID = this.extractUUIDFromAggregatedId(affiliateId);
+        query = query.eq('earning_affiliate_id', actualUUID);
       }
 
       const { data, error } = await query.order('order_date', { ascending: false });
@@ -330,7 +357,7 @@ export class PayPalService {
 
   async getPayoutHistory(affiliateId?: string): Promise<any[]> {
     try {
-      let query = this.supabase
+      let query = this.serviceRoleClient
         .from('payouts')
         .select(`
           *,
@@ -343,7 +370,9 @@ export class PayPalService {
         `);
 
       if (affiliateId) {
-        query = query.eq('affiliate_id', affiliateId);
+        // Extract the actual UUID from the aggregated ID
+        const actualUUID = this.extractUUIDFromAggregatedId(affiliateId);
+        query = query.eq('affiliate_id', actualUUID);
       }
 
       const { data, error } = await query.order('created_at', { ascending: false });
@@ -356,6 +385,29 @@ export class PayPalService {
       return data || [];
     } catch (error) {
       console.error('Error getting payout history:', error);
+      throw error;
+    }
+  }
+
+  async getAffiliateInfo(affiliateId: string): Promise<any> {
+    try {
+      // Extract the actual UUID from the aggregated ID
+      const actualUUID = this.extractUUIDFromAggregatedId(affiliateId);
+      
+      const { data, error } = await this.serviceRoleClient
+        .from('affiliate_system_users')
+        .select('id, email, first_name, last_name')
+        .eq('id', actualUUID)
+        .single();
+
+      if (error) {
+        console.error('Error fetching affiliate info:', error);
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error getting affiliate info:', error);
       throw error;
     }
   }

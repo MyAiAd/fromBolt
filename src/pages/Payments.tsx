@@ -78,6 +78,7 @@ export default function Payments() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedCommissions, setSelectedCommissions] = useState<Set<string>>(new Set());
   const [bulkPaymentMode, setBulkPaymentMode] = useState(false);
+  const [affiliateInfo, setAffiliateInfo] = useState<any>(null);
 
   const formatCurrency = (amount: number) => {
     if (typeof amount !== 'number' || isNaN(amount)) return '$0.00';
@@ -232,15 +233,33 @@ export default function Payments() {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      await Promise.all([
+      const promises = [
         loadPendingCommissions(),
         loadPayoutHistory()
-      ]);
+      ];
+      
+      // If viewing a specific affiliate, also load their info
+      if (affiliateId) {
+        promises.push(loadAffiliateInfo());
+      }
+      
+      await Promise.all(promises);
       setLoading(false);
     };
 
     loadData();
   }, [affiliateId]);
+
+  const loadAffiliateInfo = async () => {
+    if (!affiliateId) return;
+    
+    try {
+      const info = await paypalService.getAffiliateInfo(affiliateId);
+      setAffiliateInfo(info);
+    } catch (error) {
+      console.error('Error loading affiliate info:', error);
+    }
+  };
 
   if (loading) {
     return (
@@ -269,7 +288,7 @@ export default function Payments() {
     return sum + (summary?.totalPending || 0);
   }, 0);
 
-  const selectedAffiliate = affiliateId ? pendingCommissions[0]?.affiliate_system_users : null;
+  const selectedAffiliate = affiliateId ? (affiliateInfo || pendingCommissions[0]?.affiliate_system_users) : null;
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
