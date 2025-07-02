@@ -66,13 +66,19 @@ export class GHLTagBasedImportService {
       name: 'Reaction Affiliate',
       tags: ['reaction-affiliate'],
       sources: []
+    },
+    'bae-affiliate': {
+      name: 'Bitcoin is BAE',
+      tags: ['bae-affiliate'],
+      sources: []
     }
   };
 
   private readonly ALL_AFFILIATE_TAGS = [
     'rego-rise66',
     'jennaz-affiliate', 
-    'reaction-affiliate'
+    'reaction-affiliate',
+    'bae-affiliate'
   ];
 
   constructor(

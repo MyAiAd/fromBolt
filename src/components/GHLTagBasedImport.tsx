@@ -376,6 +376,7 @@ const GHLTagBasedImport: React.FC = () => {
           <span className="bg-white/20 px-3 py-1 rounded-full text-sm">rego-rise66</span>
           <span className="bg-white/20 px-3 py-1 rounded-full text-sm">jennaz-affiliate</span>
           <span className="bg-white/20 px-3 py-1 rounded-full text-sm">reaction-affiliate</span>
+          <span className="bg-white/20 px-3 py-1 rounded-full text-sm">bae-affiliate</span>
           <span className="bg-white/20 px-3 py-1 rounded-full text-sm">+ sources</span>
         </div>
       </div>
