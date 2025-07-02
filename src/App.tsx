@@ -28,6 +28,7 @@ const UserGuide = lazy(() => import('./pages/UserGuide'));
 const Team = lazy(() => import('./pages/Team'));
 const Leaderboard = lazy(() => import('./pages/Leaderboard'));
 const Chat = lazy(() => import('./pages/Chat'));
+const Payments = lazy(() => import('./pages/Payments'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 function App() {
@@ -183,6 +184,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Chat />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/payments" 
+            element={
+              <ProtectedRoute>
+                <Payments />
               </ProtectedRoute>
             } 
           />

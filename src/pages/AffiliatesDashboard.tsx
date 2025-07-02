@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 import { Users, DollarSign, TrendingUp, Award, Eye, Search, Filter, Download, RefreshCw, ArrowLeft } from 'lucide-react';
 import { AffiliateAggregationService } from '../services/affiliateAggregationService';
 import ReassignAffiliateModal from '../components/ReassignAffiliateModal';
@@ -56,6 +57,7 @@ interface TeamMember {
 
 export default function AffiliatesDashboard() {
   const { user, isAdmin, supabase } = useAuth();
+  const navigate = useNavigate();
   const [affiliates, setAffiliates] = useState<AffiliateUser[]>([]);
   const [selectedAffiliate, setSelectedAffiliate] = useState<AffiliateUser | null>(null);
   const [commissions, setCommissions] = useState<CommissionData[]>([]);
@@ -611,7 +613,15 @@ export default function AffiliatesDashboard() {
                 </div>
               </div>
             </div>
-            <div className="mt-5 flex lg:mt-0 lg:ml-4">
+            <div className="mt-5 flex lg:mt-0 lg:ml-4 space-x-3">
+              <button
+                type="button"
+                onClick={() => navigate(`/payments?affiliate=${selectedAffiliate.id}`)}
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              >
+                <DollarSign className="mr-2 h-5 w-5" />
+                Payments
+              </button>
               <button
                 type="button"
                 onClick={() => {

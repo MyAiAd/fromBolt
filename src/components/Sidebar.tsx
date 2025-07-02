@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import { LayoutDashboard, Users, BarChart3, Settings, Award, Layers, LogOut, Database, RefreshCw, HelpCircle, MessageCircle } from 'lucide-react';
+import { LayoutDashboard, Users, BarChart3, Settings, Award, Layers, LogOut, Database, RefreshCw, HelpCircle, MessageCircle, DollarSign } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment, useState } from 'react';
@@ -19,6 +19,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Data Import', href: '/affiliates', icon: Users },
     { name: 'Affiliate Management', href: '/affiliates-dashboard', icon: Users },
+    { name: 'Payments', href: '/payments', icon: DollarSign },
     { name: 'Campaigns', href: '/campaigns', icon: Layers },
     { name: 'Performance', href: '/performance', icon: BarChart3 },
     { name: 'AI Chat', href: '/chat', icon: MessageCircle },
