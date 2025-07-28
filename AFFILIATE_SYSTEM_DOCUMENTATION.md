@@ -27,7 +27,7 @@ Based on the provided commission table:
 
 ✅ **IMPLEMENTED & VERIFIED** - Commission levels are fully set up and operational.
 
-### Current Commission Plans (As Per Jennaz's Requirements)
+### Current Commission Plans (As Per M.R.S. Holdings Requirements)
 
 | Product Category | Level 1 | Level 2 | Level 3 | Status |
 |------------------|---------|---------|---------|--------|

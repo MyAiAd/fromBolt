@@ -109,8 +109,8 @@ export default function AffiliatesDashboard() {
       'GOAFFPRO': { color: 'bg-green-900/20 text-green-400', label: 'ReAction' },
       'mightynetworks': { color: 'bg-purple-900/20 text-purple-400', label: 'The RISE' },
       'MIGHTYNETWORKS': { color: 'bg-purple-900/20 text-purple-400', label: 'The RISE' },
-      'native': { color: 'bg-orange-900/20 text-orange-400', label: 'JennaZ.co' },
-      'NATIVE': { color: 'bg-orange-900/20 text-orange-400', label: 'JennaZ.co' }
+              'native': { color: 'bg-orange-900/20 text-orange-400', label: 'Google' },
+        'NATIVE': { color: 'bg-orange-900/20 text-orange-400', label: 'Google' }
     };
 
     const config = sourceConfig[source as keyof typeof sourceConfig] || 

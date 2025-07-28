@@ -8,7 +8,7 @@ Your app is showing `https://placeholder.supabase.co/auth/v1/user` error because
 ### Method 1: Vercel Dashboard (Recommended)
 
 1. **Go to Vercel Dashboard**: https://vercel.com/dashboard
-2. **Find your project**: `jenna-two` (or whatever your project is named)
+2. **Find your project**: `themilitarygiftshop` (or whatever your project is named)
 3. **Go to Settings** → **Environment Variables**
 4. **Add these variables**:
 
@@ -64,7 +64,7 @@ VITE_MIGHTY_NETWORKS_ZAPIER=Pw8Io8duTZqtSm0jQMYYv9KVPRQfJMf99Nrtc1ZyOGA
 
 1. **Redeploy on Vercel** (this is crucial!)
 2. **Test the password reset flow**:
-   - Go to https://jenna-two.vercel.app/forgot-password
+   - Go to https://themilitarygiftshop.myshopify.com/forgot-password
    - Enter your email
    - Check for reset email
    - Click the reset link

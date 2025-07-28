@@ -657,7 +657,7 @@ const Dashboard = () => {
             </button>
             <Link to="/training" className="btn btn-secondary flex items-center space-x-2">
               <Target className="w-4 h-4" />
-              <span>Learn Bitcoin Marketing</span>
+                              <span>Learn Facebook Marketing</span>
             </Link>
           </div>
         </div>

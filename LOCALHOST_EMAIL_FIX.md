@@ -1,7 +1,7 @@
 # 🚨 FIX: Password Reset Emails Still Use localhost:3000
 
 ## **CONFIRMED ISSUE:**
-Password reset emails are redirecting to `localhost:3000` instead of `https://jenna-two.vercel.app`
+Password reset emails are redirecting to `localhost:3000` instead of `https://themilitarygiftshop.myshopify.com`
 
 ## **ROOT CAUSE:**
 The `supabase/config.toml` changes we made are for **local development**. The **production Supabase** auth settings need to be updated **manually in the dashboard**.
@@ -20,7 +20,7 @@ The reset link was pointing to `/forgot-password?token=` (email request page) in
 ### **Step 2: Update Site URL**
 **Find**: "Site URL" field
 **Current**: `http://localhost:3000` or `http://127.0.0.1:3000`
-**Change to**: `https://jenna-two.vercel.app`
+**Change to**: `https://themilitarygiftshop.myshopify.com`
 
 ### **Step 3: Update Redirect URLs**
 **Find**: "Redirect URLs" section
@@ -31,10 +31,10 @@ The reset link was pointing to `/forgot-password?token=` (email request page) in
 
 **Add these production URLs:**
 ```
-https://jenna-two.vercel.app
-https://jenna-two.vercel.app/login
-https://jenna-two.vercel.app/reset-password
-https://jenna-two.vercel.app/dashboard
+https://themilitarygiftshop.myshopify.com
+https://themilitarygiftshop.myshopify.com/login
+https://themilitarygiftshop.myshopify.com/reset-password
+https://themilitarygiftshop.myshopify.com/dashboard
 ```
 
 ### **Step 4: Save Settings**
@@ -45,13 +45,13 @@ Click **"Save"** to apply changes
 ## **🧪 TEST THE FIX:**
 
 ### **Test Password Reset:**
-1. Go to `https://jenna-two.vercel.app/forgot-password`
+1. Go to `https://themilitarygiftshop.myshopify.com/forgot-password`
 2. Enter your email address
-3. Check email - the reset link should now point to `https://jenna-two.vercel.app`
+3. Check email - the reset link should now point to `https://themilitarygiftshop.myshopify.com`
 
 ### **Expected Email Link (UPDATED):**
 ```
-https://jenna-two.vercel.app/reset-password?access_token=...&refresh_token=...
+https://themilitarygiftshop.myshopify.com/reset-password?access_token=...&refresh_token=...
 ```
 **NOT:**
 ```
@@ -82,10 +82,10 @@ When you're in the Supabase Dashboard:
 
 3. **Redirect URLs Section:**
    ```
-   ✅ https://jenna-two.vercel.app
-   ✅ https://jenna-two.vercel.app/login  
-   ✅ https://jenna-two.vercel.app/reset-password  ← NEW: This is the key fix!
-   ✅ https://jenna-two.vercel.app/dashboard
+   ✅ https://themilitarygiftshop.myshopify.com
+✅ https://themilitarygiftshop.myshopify.com/login
+✅ https://themilitarygiftshop.myshopify.com/reset-password  ← NEW: This is the key fix!
+✅ https://themilitarygiftshop.myshopify.com/dashboard
    ❌ Remove any localhost entries
    ❌ Remove /forgot-password from redirect URLs (not needed)
    ```
@@ -98,13 +98,13 @@ After making the changes, test immediately:
 
 ```bash
 # Test in browser console:
-console.log('Site URL should be:', 'https://jenna-two.vercel.app');
+console.log('Site URL should be:', 'https://themilitarygiftshop.myshopify.com');
 ```
 
 Or check the email template preview in Supabase:
 - Go to Authentication → Email Templates
 - Preview the "Reset Password" template
-- The link should show: `https://jenna-two.vercel.app/reset-password?access_token=...`
+- The link should show: `https://themilitarygiftshop.myshopify.com/reset-password?access_token=...`
 
 ---
 

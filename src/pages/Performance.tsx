@@ -127,7 +127,7 @@ const Performance = () => {
               affiliates: affiliateStats.bySource.goaffpro
             },
             {
-              source: 'Bitcoin is BAE (Mighty Networks)',
+              source: 'Facebook (Mighty Networks)',
               visits: `${affiliateStats.bySource.mightynetworks * 40}`,
               conversion: `${affiliateStats.bySource.mightynetworks > 0 ? '2.8%' : '0%'}`,
               affiliates: affiliateStats.bySource.mightynetworks
@@ -145,7 +145,7 @@ const Performance = () => {
           const userSource = allAffiliates.length > 0 ? allAffiliates[0].source : '';
           const sourceMapping: { [key: string]: string } = {
             'goaffpro': 'ReAction (GoAffPro)',
-            'mightynetworks': 'Bitcoin is BAE (Mighty Networks)', 
+            'mightynetworks': 'Facebook (Mighty Networks)', 
             'native': 'JennaZ.co (Native)',
             'ghl': 'GHL Platform'
           };

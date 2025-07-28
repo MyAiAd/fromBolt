@@ -27,7 +27,7 @@ const UserGuide = () => {
           <div className="grid md:grid-cols-2 gap-6 mb-8">
             <div className="bg-green-50 border border-green-200 rounded-lg p-6">
               <h3 className="text-lg font-semibold text-green-800 mb-3">📊 Data Import Pages</h3>
-              <p className="text-green-700 mb-3 font-medium">JennaZ Data, ReAction Data, MightyNetworks Data</p>
+              <p className="text-green-700 mb-3 font-medium">Google Data, MVP Data, Facebook Data</p>
               <p className="text-green-600 mb-4"><strong>Click these when you want to analyze your business performance</strong></p>
               
               <h4 className="font-semibold text-green-700 mb-2">Use these pages when you need to:</h4>

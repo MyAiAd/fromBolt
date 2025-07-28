@@ -4,7 +4,7 @@
 
 ### ✅ **1. AUTH CONFIGURATION (FIXED IN CODE)**
 **Problem**: Password reset emails redirect to localhost
-**Status**: Fixed in `supabase/config.toml` - now points to `https://jenna-two.vercel.app`
+**Status**: Fixed in `supabase/config.toml` - now points to `https://themilitarygiftshop.myshopify.com`
 **Action Required**: Apply config to production Supabase
 
 ### ❌ **2. RLS INFINITE RECURSION (URGENT)**
@@ -27,12 +27,12 @@
 
 **Update these settings:**
 
-1. **Site URL**: `https://jenna-two.vercel.app`
+1. **Site URL**: `https://themilitarygiftshop.myshopify.com`
 2. **Redirect URLs**: Add all of these:
-   - `https://jenna-two.vercel.app`
-   - `https://jenna-two.vercel.app/login`
-   - `https://jenna-two.vercel.app/forgot-password`
-   - `https://jenna-two.vercel.app/dashboard`
+   - `https://themilitarygiftshop.myshopify.com`
+- `https://themilitarygiftshop.myshopify.com/login`
+- `https://themilitarygiftshop.myshopify.com/forgot-password`
+- `https://themilitarygiftshop.myshopify.com/dashboard`
 
 ### **Step 2: Fix RLS Infinite Recursion (CRITICAL)**
 
@@ -201,7 +201,7 @@ Check your Edge Functions for any localhost references:
 ## **🎯 EXPECTED RESULTS AFTER FIXES:**
 
 ### ✅ **Password Reset**
-- Password reset emails will redirect to `https://jenna-two.vercel.app/forgot-password`
+- Password reset emails will redirect to `https://themilitarygiftshop.myshopify.com/forgot-password`
 - Users can successfully reset passwords in production
 
 ### ✅ **Demo User Creation**

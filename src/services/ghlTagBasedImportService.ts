@@ -68,7 +68,7 @@ export class GHLTagBasedImportService {
       sources: []
     },
     'bae-affiliate': {
-      name: 'Bitcoin is BAE',
+              name: 'Facebook',
       tags: ['bae-affiliate'],
       sources: []
     }

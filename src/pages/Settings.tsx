@@ -1090,7 +1090,7 @@ const Settings = () => {
                     <div className="border border-gray-700 rounded-lg p-6">
                       <div className="flex items-center justify-between mb-4">
                         <div>
-                          <h4 className="text-lg font-medium text-white">Bitcoin is BAE Integration</h4>
+                          <h4 className="text-lg font-medium text-white">Facebook Integration</h4>
                           <p className="text-gray-400 text-sm">Real-time webhook integration via Zapier - captures new members and purchases automatically</p>
                         </div>
                         <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">

@@ -43,7 +43,7 @@ const MightyNetworksImport: React.FC = () => {
         <div>
           <h3 className="text-2xl font-bold text-white mb-2 flex items-center">
             <Zap className="w-6 h-6 text-jennaz-rose mr-3" />
-            Connect Bitcoin is BAE (Mighty Networks) via Zapier
+            Connect Facebook (Mighty Networks) via Zapier
           </h3>
           <p className="text-gray-400">Use Zapier's "Member Activity" trigger to automatically sync member data to your affiliate system.</p>
         </div>

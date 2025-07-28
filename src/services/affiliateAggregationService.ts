@@ -43,9 +43,9 @@ export class AffiliateAggregationService {
       affiliates.push(...ghlAffiliates);
 
       // Get native platform affiliates
-      console.log('📊 Fetching JennaZ.co affiliates...');
+      console.log('📊 Fetching Google affiliates...');
       const nativeAffiliates = await this.getNativeAffiliates();
-      console.log(`✅ Found ${nativeAffiliates.length} JennaZ.co affiliates`);
+      console.log(`✅ Found ${nativeAffiliates.length} Google affiliates`);
       affiliates.push(...nativeAffiliates);
 
       console.log(`🎉 Total aggregated affiliates: ${affiliates.length}`);
@@ -463,10 +463,10 @@ export class AffiliateAggregationService {
       }
 
       // Search in native platform affiliates
-      console.log('📊 Searching for user in JennaZ.co affiliates...');
+      console.log('📊 Searching for user in Google affiliates...');
       const nativeAffiliates = await this.getNativeAffiliateByEmail(userEmail);
       if (nativeAffiliates.length > 0) {
-        console.log(`✅ Found user in JennaZ.co affiliates`);
+        console.log(`✅ Found user in Google affiliates`);
         affiliates.push(...nativeAffiliates);
       }
 

@@ -24,9 +24,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     { name: 'Performance', href: '/performance', icon: BarChart3 },
     ...(isAdmin
       ? [
-          { name: 'ReAction', href: '/reaction-data', icon: Database },
-          { name: 'Bitcoin is BAE', href: '/mightynetworks-data', icon: Database },
-          { name: 'JennaZ', href: '/jennaz-data', icon: Database },
+          { name: 'MVP', href: '/reaction-data', icon: Database },
+          { name: 'Facebook', href: '/mightynetworks-data', icon: Database },
+          { name: 'Google', href: '/jennaz-data', icon: Database },
           { name: 'Data Sync', href: '/data-sync', icon: RefreshCw },
         ]
       : []),
@@ -107,12 +107,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
                 <div className="flex-shrink-0 flex items-center px-4">
                   <div className="flex items-center">
-                    <img 
-                      src="/JennaA-texta-logo-aqua.png" 
-                      alt="Jennaz Logo" 
-                      className="h-8 w-8 rounded-full object-cover"
-                    />
-                    <span className="ml-2 text-white font-serif text-xl">JennaZ</span>
+                                      <img 
+                    src="/JennaA-texta-logo-aqua.png" 
+                    alt="M.R.S. Holdings Logo" 
+                    className="h-8 w-8 rounded-full object-cover"
+                  />
+                  <span className="ml-2 text-white font-serif text-xl">M.R.S. Holdings</span>
                   </div>
                 </div>
                 <nav className="mt-5 px-2 space-y-1">
@@ -163,10 +163,10 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                 <div className="flex items-center">
                   <img 
                     src="/JennaA-texta-logo-aqua.png" 
-                    alt="Jennaz Logo" 
+                    alt="M.R.S. Holdings Logo" 
                     className="h-8 w-8 rounded-full object-cover"
                   />
-                  <span className="ml-2 text-white font-serif text-xl">JennaZ</span>
+                  <span className="ml-2 text-white font-serif text-xl">M.R.S. Holdings</span>
                 </div>
               </div>
               <div className="px-4">

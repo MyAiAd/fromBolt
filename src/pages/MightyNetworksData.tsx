@@ -159,7 +159,7 @@ const MightyNetworksData: React.FC = () => {
           : 'bg-purple-900/20 text-purple-400 border border-purple-500/30'
       }`}>
         {isTest ? <EyeOff className="w-3 h-3 mr-1" /> : <Eye className="w-3 h-3 mr-1" />}
-        {isTest ? 'Test' : 'Bitcoin is BAE'}
+                  {isTest ? 'Test' : 'Facebook'}
       </span>
     );
   };
@@ -263,7 +263,7 @@ const MightyNetworksData: React.FC = () => {
       {affiliates.length === 0 && (
         <div className="text-center py-12">
           <Users className="inline-block h-12 w-12 text-gray-600 mb-4" />
-          <p className="text-gray-400">No Bitcoin is BAE affiliates found</p>
+          <p className="text-gray-400">No Facebook affiliates found</p>
         </div>
       )}
     </div>
@@ -341,7 +341,7 @@ const MightyNetworksData: React.FC = () => {
       {referrals.length === 0 && (
         <div className="text-center py-12">
           <ShoppingCart className="inline-block h-12 w-12 text-gray-600 mb-4" />
-          <p className="text-gray-400">No Bitcoin is BAE referrals found</p>
+          <p className="text-gray-400">No Facebook referrals found</p>
         </div>
       )}
     </div>
@@ -418,7 +418,7 @@ const MightyNetworksData: React.FC = () => {
       {commissions.length === 0 && (
         <div className="text-center py-12">
           <Gift className="inline-block h-12 w-12 text-gray-600 mb-4" />
-          <p className="text-gray-400">No Bitcoin is BAE commissions found</p>
+          <p className="text-gray-400">No Facebook commissions found</p>
         </div>
       )}
     </div>
@@ -488,7 +488,7 @@ const MightyNetworksData: React.FC = () => {
       {payouts.length === 0 && (
         <div className="text-center py-12">
           <CreditCard className="inline-block h-12 w-12 text-gray-600 mb-4" />
-          <p className="text-gray-400">No Bitcoin is BAE payouts found</p>
+          <p className="text-gray-400">No Facebook payouts found</p>
         </div>
       )}
     </div>
@@ -513,7 +513,7 @@ const MightyNetworksData: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <RefreshCw className="w-8 h-8 text-purple-400 animate-spin" />
-        <span className="ml-2 text-gray-400">Loading Bitcoin is BAE data...</span>
+                    <span className="ml-2 text-gray-400">Loading Facebook data...</span>
       </div>
     );
   }
@@ -529,8 +529,8 @@ const MightyNetworksData: React.FC = () => {
           </h1>
           <p className="text-gray-400">
             {isAdmin 
-              ? 'View and manage all Bitcoin is BAE (Mighty Networks) affiliate data'
-              : 'View your Bitcoin is BAE (Mighty Networks) affiliate performance'
+                          ? 'View and manage all Facebook (Mighty Networks) affiliate data'
+            : 'View your Facebook (Mighty Networks) affiliate performance'
             }
           </p>
         </div>

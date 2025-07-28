@@ -44,7 +44,7 @@ const MOCK_GHL_CONTACTS = [
     lastActivity: '2024-01-22'
   },
   
-  // JennaZ Campaign affiliates
+  // Google Campaign affiliates
   {
     id: 'contact_3',
     email: 'lisa.martinez@company.com',
@@ -162,7 +162,7 @@ class MockGHLImportService extends ImprovedGHLImportService {
       mockContacts.push({
         id: `jennaz_${i}`,
         email: `jennaz_affiliate_${i}@email.com`,
-        firstName: `Jennaz${i}`,
+        firstName: `Google${i}`,
         lastName: 'Affiliate',
         phone: `+1-555-${String(i + 1000).padStart(4, '0')}`,
         source: 'affiliate signup',

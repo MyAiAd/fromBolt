@@ -2,7 +2,7 @@
 
 ## When To Use Which Page
 
-### 📊 **Data Import Pages** (JennaZ Data, ReAction Data, MightyNetworks Data)
+### 📊 **Data Import Pages** (Google Data, MVP Data, Facebook Data)
 **Click these when you want to analyze your business performance**
 
 #### Use these pages when you need to:
@@ -52,7 +52,7 @@
 ## 🎯 **Quick Decision Guide**
 
 ### "I want to see how my business is doing"
-→ **Go to Data Import Pages** (JennaZ, ReAction, MightyNetworks)
+→ **Go to Data Import Pages** (Google, MVP, Facebook)
 
 ### "My data looks wrong or outdated"  
 → **Go to Data Sync Management Page**

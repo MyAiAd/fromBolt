@@ -154,7 +154,7 @@ const JennaZData: React.FC = () => {
         if (paymentsData.error) console.error('Error loading payments:', paymentsData.error);
         else setPayments(paymentsData.data || []);
 
-        console.log(`✅ JennaZ Data loaded: ${transformedSystemUsers.length} GHL affiliates + ${affiliatesFromLegacy.data?.length || 0} legacy affiliates`);
+        console.log(`✅ Google Data loaded: ${transformedSystemUsers.length} GHL affiliates + ${affiliatesFromLegacy.data?.length || 0} legacy affiliates`);
 
       } else if (user?.email) {
         // Regular user: Load only their own data
@@ -206,7 +206,7 @@ const JennaZData: React.FC = () => {
         setRewards(rewardsData.data || []);
         setPayments(paymentsData.data || []);
 
-        console.log(`✅ JennaZ User Data loaded for ${user.email}: ${allAffiliates.length} affiliates`);
+        console.log(`✅ Google User Data loaded for ${user.email}: ${allAffiliates.length} affiliates`);
       } else {
         // No user or invalid user - clear data
         setAffiliates([]);
@@ -216,7 +216,7 @@ const JennaZData: React.FC = () => {
       }
 
     } catch (error) {
-      console.error('Error loading JennaZ data:', error);
+      console.error('Error loading Google data:', error);
     } finally {
       setIsLoading(false);
     }
@@ -255,7 +255,7 @@ const JennaZData: React.FC = () => {
         return (
           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-900/20 text-green-400 border border-green-500/30">
             <Eye className="w-3 h-3 mr-1" />
-            JennaZ.co
+            Google
           </span>
         );
     }
@@ -685,12 +685,12 @@ const JennaZData: React.FC = () => {
         <div>
           <h1 className="text-2xl font-serif font-semibold text-white flex items-center">
             <Zap className="mr-2 h-6 w-6 text-green-400" />
-            {isAdmin ? 'JennaZ Data (Admin)' : 'My JennaZ Data'}
+            {isAdmin ? 'Google Data (Admin)' : 'My Google Data'}
           </h1>
           <p className="text-gray-400">
             {isAdmin 
-              ? 'View and manage all JennaZ.co (Go High Level) affiliate data'
-              : 'View your JennaZ.co (Go High Level) affiliate performance'
+              ? 'View and manage all Google (Go High Level) affiliate data'
+              : 'View your Google (Go High Level) affiliate performance'
             }
           </p>
         </div>

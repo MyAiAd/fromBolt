@@ -35,8 +35,8 @@ The ResetPassword component now handles multiple token formats. Based on the "In
 ```
 
 **Requirements:**
-- Site URL must be: `https://jenna-two.vercel.app`
-- Redirect URLs must include: `https://jenna-two.vercel.app/reset-password`
+- Site URL must be: `https://themilitarygiftshop.myshopify.com`
+- Redirect URLs must include: `https://themilitarygiftshop.myshopify.com/reset-password`
 
 ## Recommended Next Steps
 

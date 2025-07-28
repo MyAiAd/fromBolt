@@ -45,7 +45,7 @@ const Affiliates = () => {
     pending: 0,
     inactive: 0,
     bySource: {
-      shopify: 0,  // Combined goaffpro 
+              shopify: 0,  // Combined MVP 
       mightynetworks: 0,
       ghl: 0  // Combined ghl + native
     }
@@ -642,7 +642,7 @@ const Affiliates = () => {
           <div className="card">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h4 className="text-lg font-medium text-white">ReAction Import</h4>
+                <h4 className="text-lg font-medium text-white">MVP Import</h4>
                 <p className="text-gray-400 text-sm">Import affiliate data from GoAffPro into your local database</p>
               </div>
               <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">

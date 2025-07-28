@@ -113,7 +113,7 @@ async function verifyGHLImport() {
     
     console.log('\n📱 Next Steps:');
     console.log('1. Access the web app at /jennaz-data to view imported GHL affiliates');
-    console.log('2. The UI is branded as "JennaZ" for GHL integration');
+console.log('2. The UI is branded as "Google" for GHL integration');
     console.log('3. You can now import orders and calculate commissions');
     console.log('4. Set up webhooks for real-time syncing (if needed)');
     

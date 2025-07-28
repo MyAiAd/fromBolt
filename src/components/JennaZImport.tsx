@@ -534,9 +534,9 @@ const JennaZImport: React.FC = () => {
   };
 
   const handleImportOrders = async () => {
-    console.log('Import JennaZ Orders clicked - User:', user);
+            console.log('Import Google Orders clicked - User:', user);
     
-    setImportStatus(prev => ({ ...prev, isImporting: true, currentOperation: 'Importing JennaZ orders...' }));
+          setImportStatus(prev => ({ ...prev, isImporting: true, currentOperation: 'Importing Google orders...' }));
     setErrorMessage('');
     
     try {
@@ -563,9 +563,9 @@ const JennaZImport: React.FC = () => {
   };
 
   const handleImportRewards = async () => {
-    console.log('Import JennaZ Rewards clicked - User:', user);
+            console.log('Import Google Rewards clicked - User:', user);
     
-    setImportStatus(prev => ({ ...prev, isImporting: true, currentOperation: 'Importing JennaZ rewards...' }));
+          setImportStatus(prev => ({ ...prev, isImporting: true, currentOperation: 'Importing Google rewards...' }));
     setErrorMessage('');
     
     try {
@@ -592,9 +592,9 @@ const JennaZImport: React.FC = () => {
   };
 
   const handleImportPayments = async () => {
-    console.log('Import JennaZ Payments clicked - User:', user);
+            console.log('Import Google Payments clicked - User:', user);
     
-    setImportStatus(prev => ({ ...prev, isImporting: true, currentOperation: 'Importing JennaZ payments...' }));
+          setImportStatus(prev => ({ ...prev, isImporting: true, currentOperation: 'Importing Google payments...' }));
     setErrorMessage('');
     
     try {
@@ -925,7 +925,7 @@ const JennaZImport: React.FC = () => {
   };
 
   const handleDeleteTestData = async () => {
-    if (!confirm('Are you sure you want to delete all JennaZ test data? This action cannot be undone.')) {
+    if (!confirm('Are you sure you want to delete all Google test data? This action cannot be undone.')) {
       return;
     }
 
@@ -955,7 +955,7 @@ const JennaZImport: React.FC = () => {
         throw new Error('Failed to delete some test data');
       }
 
-      console.log('JennaZ test data deleted successfully');
+      console.log('Google test data deleted successfully');
     } catch (error) {
       console.error('Error deleting test data:', error);
       setErrorMessage('Failed to delete test data');
@@ -1502,7 +1502,7 @@ Check console for detailed breakdown!`;
                 className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors"
               >
                 <Eye className="w-4 h-4 mr-2" />
-                View JennaZ Data
+                View Google Data
               </a>
               <a
                 href="/affiliates"
@@ -1547,7 +1547,7 @@ Check console for detailed breakdown!`;
                       {getStatusIcon(log.status)}
                       <div>
                         <div className="text-sm font-medium text-white">
-                          {log.import_type.replace('jennaz_', 'JennaZ ')}
+                          {log.import_type.replace('jennaz_', 'Google ')}
                         </div>
                         <div className="text-xs text-gray-400">
                           {new Date(log.created_at).toLocaleString()}
@@ -1580,7 +1580,7 @@ Check console for detailed breakdown!`;
         <div className="flex items-start space-x-3">
           <AlertCircle className="h-5 w-5 text-blue-400 mt-0.5" />
           <div>
-            <h3 className="text-sm font-medium text-blue-400 mb-1">JennaZ (GHL) Integration Status</h3>
+                            <h3 className="text-sm font-medium text-blue-400 mb-1">Google (GHL) Integration Status</h3>
             <div className="space-y-2">
               <p className="text-sm text-gray-300">
                 <span className="text-green-400">✅ Affiliates Import:</span> Fully implemented and working with GHL API v1.0

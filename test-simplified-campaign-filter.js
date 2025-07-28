@@ -10,8 +10,8 @@ const TEST_CONFIG = {
 // Campaign definitions
 const CAMPAIGN_TAGS = {
   'rego-rise66': 'The RISE Campaign',
-  'jennaz-affiliate': 'JennaZ Affiliate Campaign', 
-  'reaction-affiliate': 'ReAction Affiliate Campaign'
+  'jennaz-affiliate': 'Google Affiliate Campaign', 
+  'reaction-affiliate': 'Shopify Affiliate Campaign'
 };
 
 const CAMPAIGN_SOURCES = {

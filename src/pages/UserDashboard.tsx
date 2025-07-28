@@ -121,7 +121,7 @@ const UserDashboard = () => {
 
   const copyAffiliateCode = async () => {
     if (userData?.referral_code) {
-      const affiliateLink = `https://jennaz.co?ref=${userData.referral_code}`;
+      const affiliateLink = `https://themilitarygiftshop.myshopify.com?ref=${userData.referral_code}`;
       await navigator.clipboard.writeText(affiliateLink);
       // You might want to add a toast notification here
     }
@@ -161,13 +161,13 @@ const UserDashboard = () => {
   if (!userData) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-white mb-4">Welcome to JennaZ Affiliate!</h2>
+        <h2 className="text-2xl font-bold text-white mb-4">Welcome to M.R.S. Holdings Affiliate!</h2>
         <p className="text-gray-400 mb-6">Your affiliate profile is being set up. Please check back soon.</p>
         <div className="bg-rise-dark-light p-6 rounded-lg max-w-md mx-auto">
           <p className="text-sm text-gray-300">
             If you continue to see this message, please contact support at{' '}
-            <a href="mailto:support@jennaz.co" className="text-rise-gold hover:underline">
-              support@jennaz.co
+            <a href="mailto:support@themilitarygiftshop.com" className="text-rise-gold hover:underline">
+              support@themilitarygiftshop.com
             </a>
           </p>
         </div>

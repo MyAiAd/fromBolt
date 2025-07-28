@@ -58,9 +58,9 @@ const Campaigns = () => {
   // Campaign templates - structure with real data populated
   const campaignTemplates: Omit<Campaign, 'clicks' | 'commission' | 'leads' | 'customers'>[] = [
     {
-      id: 'reaction-affiliate',
-      name: 'Reaction Affiliate',
-      url: 'https://jennazwagil.com/reaction-production',
+              id: 'reaction-affiliate',
+        name: 'Shopify Affiliate',
+        url: 'https://themilitarygiftshop.myshopify.com',
       status: 'Live',
       commissionRate: '15% default commission',
       description: 'Rewards plan(1) • Payout(Net-15)'

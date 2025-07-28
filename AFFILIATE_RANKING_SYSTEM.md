@@ -1,7 +1,7 @@
-# JennaZ Affiliate Ranking System
+# M.R.S. Holdings Affiliate Ranking System
 
 ## Overview
-The JennaZ affiliate platform uses a sophisticated 8-tier ranking system that rewards affiliates based on their monthly referral volume performance. This document outlines how affiliate ranks and commissions are determined based on the total dollar value of referrals generated monthly.
+The M.R.S. Holdings affiliate platform uses a sophisticated 8-tier ranking system that rewards affiliates based on their monthly referral volume performance. This document outlines how affiliate ranks and commissions are determined based on the total dollar value of referrals generated monthly.
 
 ## 🏆 Affiliate Rank System
 

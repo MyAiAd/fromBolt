@@ -53,11 +53,11 @@ const Header = ({ setSidebarOpen }: HeaderProps) => {
             <div className="flex items-center">
               <img 
                 src="/JennaA-texta-logo-aqua.png" 
-                alt="Jennaz Logo" 
+                alt="M.R.S. Holdings Logo" 
                 className="h-6 w-6 rounded-full object-cover mr-3"
               />
               <h1 className="text-xl font-serif text-white">
-                <span className="hidden sm:inline">JennaZ - </span>Affiliate Dashboard
+                <span className="hidden sm:inline">M.R.S. Holdings - </span>Affiliate Dashboard
               </h1>
             </div>
           </div>
