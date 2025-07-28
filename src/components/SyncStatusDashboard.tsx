@@ -172,7 +172,7 @@ const SyncStatusDashboard: React.FC<SyncStatusProps> = ({ className = '' }) => {
           records_failed: 0
         });
 
-        alert(`✅ ${source === 'goaffpro' ? 'ReAction' : source.toUpperCase()} sync completed successfully!\n\n${result.message}`);
+        alert(`✅ ${source === 'goaffpro' ? 'Shopify' : source.toUpperCase()} sync completed successfully!\n\n${result.message}`);
         
         // Refresh logs after successful sync
         setTimeout(loadSyncLogs, 1000);
@@ -197,7 +197,7 @@ const SyncStatusDashboard: React.FC<SyncStatusProps> = ({ className = '' }) => {
           setTimeout(loadSyncLogs, 1000);
         }
       
-      alert(`❌ ${source === 'goaffpro' ? 'ReAction' : source.toUpperCase()} sync failed:\n\n${error instanceof Error ? error.message : 'Unknown error'}`);
+              alert(`❌ ${source === 'goaffpro' ? 'Shopify' : source.toUpperCase()} sync failed:\n\n${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsRefreshing(prev => ({ ...prev, [source]: false }));
     }
@@ -413,7 +413,7 @@ const SyncStatusDashboard: React.FC<SyncStatusProps> = ({ className = '' }) => {
   };
 
   const getDisplayName = (source: string) => {
-    return source === 'goaffpro' ? 'ReAction' : source.toUpperCase();
+    return source === 'goaffpro' ? 'Shopify' : source.toUpperCase();
   };
 
   if (loading) {
@@ -457,7 +457,7 @@ const SyncStatusDashboard: React.FC<SyncStatusProps> = ({ className = '' }) => {
               className="px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white text-sm rounded-md transition-colors flex items-center space-x-2"
             >
               {isRefreshing.goaffpro ? <RefreshCw className="w-4 h-4 animate-spin" /> : null}
-              <span>Sync ReAction</span>
+              <span>Sync Shopify</span>
             </button>
             <button
               onClick={() => triggerManualSync('ghl')}
@@ -465,7 +465,7 @@ const SyncStatusDashboard: React.FC<SyncStatusProps> = ({ className = '' }) => {
               className="px-3 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-800 disabled:cursor-not-allowed text-white text-sm rounded-md transition-colors flex items-center space-x-2"
             >
               {isRefreshing.ghl ? <RefreshCw className="w-4 h-4 animate-spin" /> : null}
-              <span>Sync GHL</span>
+              <span>Sync Google</span>
             </button>
           </div>
         </div>

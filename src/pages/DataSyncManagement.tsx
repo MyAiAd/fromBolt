@@ -28,7 +28,7 @@ const DataSyncManagement: React.FC = () => {
             <h1 className="text-3xl font-bold">Data Sync Management</h1>
           </div>
           <p className="text-gray-400">
-            Monitor and manage data synchronization from external platforms like ReAction and GHL.
+            Monitor and manage data synchronization from external platforms like Shopify and Google.
           </p>
         </div>
 
@@ -44,11 +44,11 @@ const DataSyncManagement: React.FC = () => {
             </h3>
             <div className="space-y-3 text-sm">
               <div className="flex justify-between items-center py-2 border-b border-gray-700">
-                <span className="text-gray-300">ReAction (GoAffPro)</span>
+                <span className="text-gray-300">Shopify (GoAffPro)</span>
                 <span className="text-blue-400 font-medium">Every 4 hours</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-gray-700">
-                <span className="text-gray-300">GHL Contacts</span>
+                <span className="text-gray-300">Google Contacts</span>
                 <span className="text-green-400 font-medium">Every 6 hours</span>
               </div>
               <div className="flex justify-between items-center py-2">
@@ -86,7 +86,7 @@ const DataSyncManagement: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-gray-700 rounded-lg p-4">
               <h4 className="font-medium mb-3 flex items-center">
-                ReAction API
+                Shopify API
                 {import.meta.env.VITE_GOAFFPRO_ACCESS_TOKEN && import.meta.env.VITE_GOAFFPRO_PUBLIC_TOKEN ? (
                   <span className="ml-2 w-2 h-2 bg-green-400 rounded-full"></span>
                 ) : (
@@ -131,7 +131,7 @@ const DataSyncManagement: React.FC = () => {
             </div>
             <div className="bg-gray-700 rounded-lg p-4">
               <h4 className="font-medium mb-3 flex items-center">
-                GHL API
+                Google API
                 {import.meta.env.VITE_GHL_API_KEY && import.meta.env.VITE_GHL_LOCATION_ID ? (
                   <span className="ml-2 w-2 h-2 bg-green-400 rounded-full"></span>
                 ) : (
