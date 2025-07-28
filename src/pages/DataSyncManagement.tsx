@@ -44,7 +44,7 @@ const DataSyncManagement: React.FC = () => {
             </h3>
             <div className="space-y-3 text-sm">
               <div className="flex justify-between items-center py-2 border-b border-gray-700">
-                <span className="text-gray-300">Shopify (GoAffPro)</span>
+                <span className="text-gray-300">Shopify</span>
                 <span className="text-blue-400 font-medium">Every 4 hours</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-gray-700">
