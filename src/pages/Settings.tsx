@@ -510,7 +510,7 @@ const Settings = () => {
                               {key === 'pushNotifications' && 'Receive push notifications in your browser'}
                               {key === 'marketingEmails' && 'Receive marketing and promotional emails'}
                               {key === 'weeklyReports' && 'Receive weekly performance reports'}
-                              {key === 'newAffiliateAlerts' && 'Get notified when new affiliates join'}
+                              {key === 'newAffiliateAlerts' && 'Get notified when new members join'}
                               {key === 'commissionAlerts' && 'Get notified of new commissions'}
                               {key === 'securityAlerts' && 'Receive security-related notifications'}
                             </p>
@@ -709,7 +709,7 @@ const Settings = () => {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-lg font-semibold text-rise-gold">Professional Plan</p>
-                          <p className="text-sm text-gray-400">$99/month • Unlimited affiliates • Advanced analytics</p>
+                          <p className="text-sm text-gray-400">$99/month • Unlimited members • Advanced analytics</p>
                         </div>
                         <button className="px-4 py-2 bg-rise-gold text-black rounded-md hover:bg-yellow-400 transition-colors">
                           Upgrade Plan
@@ -1068,7 +1068,7 @@ const Settings = () => {
                 <div>
                   <h3 className="text-lg font-medium text-white mb-4">Data Import & Integration</h3>
                   <p className="text-gray-400 mb-6">
-                    Import and integrate data from your affiliate platforms. Some platforms support bulk imports while others use real-time webhooks for automatic synchronization.
+                    Import and integrate data from your platforms. Some platforms support bulk imports while others use real-time webhooks for automatic synchronization.
                   </p>
                   
                   <div className="space-y-8">
@@ -1077,7 +1077,7 @@ const Settings = () => {
                       <div className="flex items-center justify-between mb-4">
                         <div>
                           <h4 className="text-lg font-medium text-white">Shopify Import</h4>
-                          <p className="text-gray-400 text-sm">Import data from your Shopify affiliate platform</p>
+                          <p className="text-gray-400 text-sm">Import data from your Shopify platform</p>
                         </div>
                         <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
                           <Database className="h-4 w-4 text-white" />
@@ -1217,7 +1217,7 @@ const Settings = () => {
                   type="text"
                   value={newRagDoc.tags}
                   onChange={(e) => setNewRagDoc({ ...newRagDoc, tags: e.target.value })}
-                  placeholder="affiliates, guide, faq"
+                  placeholder="members, guide, faq"
                   className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
               </div>
