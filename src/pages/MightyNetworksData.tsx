@@ -525,12 +525,12 @@ const MightyNetworksData: React.FC = () => {
         <div>
           <h1 className="text-2xl font-serif font-semibold text-white flex items-center">
             <Zap className="mr-2 h-6 w-6 text-purple-400" />
-            {isAdmin ? 'Mighty Networks Data (Admin)' : 'My Mighty Networks Data'}
+            {isAdmin ? 'Meta Data (Admin)' : 'My Meta Data'}
           </h1>
           <p className="text-gray-400">
-            {isAdmin 
-                          ? 'View and manage all Facebook (Mighty Networks) affiliate data'
-            : 'View your Facebook (Mighty Networks) affiliate performance'
+                        {isAdmin 
+              ? 'View and manage all Facebook (Meta) affiliate data'
+              : 'View your Facebook (Meta) affiliate performance'
             }
           </p>
         </div>

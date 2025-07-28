@@ -404,10 +404,10 @@ const Affiliates = () => {
       case 'goaffpro':
         return <span className="px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-400">SHP</span>;
       case 'mightynetworks':
-        return <span className="px-2 py-1 text-xs rounded-full bg-purple-500/20 text-purple-400">MN</span>;
+        return <span className="px-2 py-1 text-xs rounded-full bg-purple-500/20 text-purple-400">Meta</span>;
       case 'ghl':
       case 'native':
-        return <span className="px-2 py-1 text-xs rounded-full bg-yellow-500/20 text-yellow-400">GHL</span>;
+        return <span className="px-2 py-1 text-xs rounded-full bg-yellow-500/20 text-yellow-400">Google</span>;
       default:
         return <span className="px-2 py-1 text-xs rounded-full bg-gray-500/20 text-gray-400">Unknown</span>;
     }
@@ -575,14 +575,14 @@ const Affiliates = () => {
           <div className="border border-purple-400/30 bg-rise-dark-light rounded-xl p-6 hover:border-purple-400/50 transition-colors">
             <div className="flex items-center space-x-3 mb-2">
               <div className="h-5 w-5 rounded-full bg-purple-400"></div>
-              <span className="text-gray-300 font-medium text-lg">Mighty Networks</span>
+              <span className="text-gray-300 font-medium text-lg">Meta</span>
             </div>
             <span className="text-white font-bold text-3xl">{stats.bySource.mightynetworks}</span>
           </div>
           <div className="border border-yellow-400/30 bg-rise-dark-light rounded-xl p-6 hover:border-yellow-400/50 transition-colors">
             <div className="flex items-center space-x-3 mb-2">
               <div className="h-5 w-5 rounded-full bg-yellow-400"></div>
-              <span className="text-gray-300 font-medium text-lg">GHL</span>
+              <span className="text-gray-300 font-medium text-lg">Google</span>
             </div>
             <span className="text-white font-bold text-3xl">{stats.bySource.ghl}</span>
           </div>
@@ -1069,7 +1069,7 @@ const Affiliates = () => {
                           onChange={(e) => setDemoUserForm(prev => ({ ...prev, source: e.target.value as 'manual' | 'ghl' | 'goaffpro' }))}
                         >
                           <option value="manual">JennaZ.co (Manual)</option>
-                          <option value="ghl">JennaZ (Go High Level)</option>
+                          <option value="ghl">Google (Go High Level)</option>
                           <option value="goaffpro">ReAction (GoAffPro)</option>
                         </select>
                       </div>

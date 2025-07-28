@@ -481,12 +481,12 @@ const ReActionData: React.FC = () => {
         <div>
           <h1 className="text-2xl font-serif font-semibold text-white flex items-center">
             <Users className="mr-2 h-6 w-6 text-rise-gold" />
-            {isAdmin ? 'ReAction Data (Admin)' : 'My ReAction Data'}
+            {isAdmin ? 'Shopify Data (Admin)' : 'My Shopify Data'}
           </h1>
           <p className="text-gray-400">
             {isAdmin 
-              ? 'Raw data imported from ReAction platform - All affiliates'
-              : 'Your performance data from ReAction platform'
+              ? 'Raw data imported from Shopify platform - All customers'
+              : 'Your performance data from Shopify platform'
             }
           </p>
         </div>

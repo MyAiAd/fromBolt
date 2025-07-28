@@ -689,8 +689,8 @@ const JennaZData: React.FC = () => {
           </h1>
           <p className="text-gray-400">
             {isAdmin 
-              ? 'View and manage all Google (Go High Level) affiliate data'
-              : 'View your Google (Go High Level) affiliate performance'
+              ? 'View and manage all Google affiliate data'
+              : 'View your Google affiliate performance'
             }
           </p>
         </div>
