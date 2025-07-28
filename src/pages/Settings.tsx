@@ -1072,12 +1072,12 @@ const Settings = () => {
                   </p>
                   
                   <div className="space-y-8">
-                    {/* GoAffPro Import Section */}
+                    {/* Shopify Import Section */}
                     <div className="border border-gray-700 rounded-lg p-6">
                       <div className="flex items-center justify-between mb-4">
                         <div>
-                          <h4 className="text-lg font-medium text-white">ReAction Import</h4>
-                          <p className="text-gray-400 text-sm">Import data from your GoAffPro affiliate platform</p>
+                          <h4 className="text-lg font-medium text-white">Shopify Import</h4>
+                          <p className="text-gray-400 text-sm">Import data from your Shopify affiliate platform</p>
                         </div>
                         <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
                           <Database className="h-4 w-4 text-white" />
@@ -1104,8 +1104,8 @@ const Settings = () => {
                     <div className="border border-gray-700 rounded-lg p-6">
                       <div className="flex items-center justify-between mb-4">
                         <div>
-                          <h4 className="text-lg font-medium text-white">JennaZ Import</h4>
-                          <p className="text-gray-400 text-sm">Import data from your JennaZ.co (Go High Level) platform</p>
+                          <h4 className="text-lg font-medium text-white">MVP Studios Import</h4>
+                          <p className="text-gray-400 text-sm">Import data from your SampleSite.com (Go High Level) platform</p>
                         </div>
                         <div className="w-8 h-8 bg-yellow-600 rounded-lg flex items-center justify-center">
                           <Database className="h-4 w-4 text-white" />

@@ -67,16 +67,16 @@ const Campaigns = () => {
     },
     {
       id: 'jennaz-affiliate',
-      name: 'JennaZ.co Affiliate',
-      url: 'https://jennaz.co/rise',
+      name: 'Sample Campaign 1',
+      url: 'https://sample1.com/rise',
       status: 'Live',
       commissionRate: '20% default commission',
       description: 'No rewards plan • Payout(Net-15)'
     },
     {
       id: 'rise-campaign',
-      name: 'The RISE Campaign',
-      url: 'https://jennazwagil.com/rise',
+      name: 'Sample Campaign 2',
+      url: 'https://sample2.com/rise',
       status: 'Paused',
       commissionRate: 'No default commission setup',
       description: 'Custom campaign for The RISE community'
