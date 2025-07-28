@@ -108,8 +108,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                 <div className="flex-shrink-0 flex items-center px-4">
                   <div className="flex items-center">
                                       <img 
-                    src="/JennaA-texta-logo-aqua.png" 
-                    alt="M.R.S. Holdings Logo" 
+                    src="/mvp-logo.png" 
+                    alt="MVP Studios Logo" 
                     className="h-8 w-8 rounded-full object-cover"
                   />
                   <span className="ml-2 text-white font-serif text-xl">M.R.S. Holdings</span>
@@ -162,8 +162,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               <div className="flex items-center flex-shrink-0 px-4 mb-8">
                 <div className="flex items-center">
                   <img 
-                    src="/JennaA-texta-logo-aqua.png" 
-                    alt="M.R.S. Holdings Logo" 
+                    src="/mvp-logo.png" 
+                    alt="MVP Studios Logo" 
                     className="h-8 w-8 rounded-full object-cover"
                   />
                   <span className="ml-2 text-white font-serif text-xl">M.R.S. Holdings</span>

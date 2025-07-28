@@ -52,12 +52,12 @@ const Header = ({ setSidebarOpen }: HeaderProps) => {
           <div className="max-w-2xl w-full">
             <div className="flex items-center">
               <img 
-                src="/JennaA-texta-logo-aqua.png" 
-                alt="M.R.S. Holdings Logo" 
+                src="/mvp-logo.png" 
+                alt="MVP Studios Logo" 
                 className="h-6 w-6 rounded-full object-cover mr-3"
               />
               <h1 className="text-xl font-serif text-white">
-                <span className="hidden sm:inline">M.R.S. Holdings - </span>Affiliate Dashboard
+                <span className="hidden sm:inline">M.R.S. Holdings - </span>Dashboard
               </h1>
             </div>
           </div>

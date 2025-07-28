@@ -17,7 +17,7 @@ const AuthLayout = () => {
       
       <div className="relative sm:mx-auto sm:w-full sm:max-w-md">
         <Link to="/" className="flex justify-center mb-6">
-          <img src="/JennaA-texta-logo-aqua.png" alt="JennaZ Logo" className="h-12 w-auto" />
+          <img src="/mvp-logo.png" alt="MVP Studios Logo" className="h-12 w-auto" />
         </Link>
       </div>
 

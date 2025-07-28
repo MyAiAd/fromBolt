@@ -8,7 +8,7 @@ const LoadingScreen = () => {
         transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
       >
         <img 
-          src="/JennaA-texta-logo-aqua.png" 
+          src="/mvp-logo.png" 
           alt="Loading..." 
           className="h-16 w-16"
         />
