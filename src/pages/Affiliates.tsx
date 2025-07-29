@@ -643,7 +643,7 @@ const Affiliates = () => {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h4 className="text-lg font-medium text-white">MVP Import</h4>
-                <p className="text-gray-400 text-sm">Import affiliate data from GoAffPro into your local database</p>
+                <p className="text-gray-400 text-sm">Import affiliate data from Shopify into your local database</p>
               </div>
               <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
                 <Database className="h-4 w-4 text-white" />
@@ -1070,7 +1070,7 @@ const Affiliates = () => {
                         >
                           <option value="manual">JennaZ.co (Manual)</option>
                           <option value="ghl">Google (Go High Level)</option>
-                          <option value="goaffpro">ReAction (GoAffPro)</option>
+                          <option value="goaffpro">Shopify</option>
                         </select>
                       </div>
                     </div>

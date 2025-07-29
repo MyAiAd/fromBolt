@@ -121,7 +121,7 @@ const Performance = () => {
         if (isAdmin) {
           const sources: SourceData[] = [
             {
-              source: 'ReAction (GoAffPro)',
+              source: 'Shopify',
               visits: `${affiliateStats.bySource.goaffpro * 50}`,
               conversion: `${affiliateStats.bySource.goaffpro > 0 ? '3.2%' : '0%'}`,
               affiliates: affiliateStats.bySource.goaffpro
@@ -144,7 +144,7 @@ const Performance = () => {
         } else {
           const userSource = allAffiliates.length > 0 ? allAffiliates[0].source : '';
           const sourceMapping: { [key: string]: string } = {
-            'goaffpro': 'ReAction (GoAffPro)',
+            'goaffpro': 'Shopify',
             'mightynetworks': 'Facebook (Mighty Networks)', 
             'native': 'JennaZ.co (Native)',
             'ghl': 'GHL Platform'

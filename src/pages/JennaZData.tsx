@@ -270,7 +270,7 @@ const JennaZData: React.FC = () => {
               Affiliate
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-              JennaZ ID
+                              ID
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
               Status
@@ -363,7 +363,7 @@ const JennaZData: React.FC = () => {
       {affiliates.length === 0 && (
         <div className="text-center py-12">
           <Users className="inline-block h-12 w-12 text-gray-600 mb-4" />
-          <p className="text-gray-400">No JennaZ affiliates found</p>
+                        <p className="text-gray-400">No affiliates found</p>
         </div>
       )}
     </div>
