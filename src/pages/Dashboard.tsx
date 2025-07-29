@@ -442,8 +442,7 @@ const Dashboard = () => {
       <motion.div variants={itemVariants} className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
         <div>
           <h1 className="text-3xl font-serif font-semibold text-white mb-2">
-            Welcome Back, {getCapitalizedFirstName()}! 
-            <span className="ml-2">{getRankIcon(stats.rank)}</span>
+            Welcome Back, {getCapitalizedFirstName()}!
           </h1>
                           <p className="text-gray-400">Your journey with The Corps continues. Let's get after it!</p>
           <div className="flex items-center mt-2">
