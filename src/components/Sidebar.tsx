@@ -26,7 +26,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
       ? [
           { name: 'Shopify', href: '/reaction-data', icon: Database },
           { name: 'Facebook', href: '/mightynetworks-data', icon: Database },
-          { name: 'Google', href: '/jennaz-data', icon: Database },
+          { name: 'Google', href: '/google-data', icon: Database },
           { name: 'Data Sync', href: '/data-sync', icon: RefreshCw },
         ]
       : []),

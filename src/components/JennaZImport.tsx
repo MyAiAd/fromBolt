@@ -1498,7 +1498,7 @@ Check console for detailed breakdown!`;
             </div>
             <div className="flex space-x-3">
               <a
-                href="/jennaz-data"
+                href="/google-data"
                 className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors"
               >
                 <Eye className="w-4 h-4 mr-2" />

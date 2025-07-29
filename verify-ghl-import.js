@@ -112,7 +112,7 @@ async function verifyGHLImport() {
     console.log(`• The import service can now be used to sync updates from GHL`);
     
     console.log('\n📱 Next Steps:');
-    console.log('1. Access the web app at /jennaz-data to view imported GHL affiliates');
+    console.log('1. Access the web app at /google-data to view imported GHL affiliates');
 console.log('2. The UI is branded as "Google" for GHL integration');
     console.log('3. You can now import orders and calculate commissions');
     console.log('4. Set up webhooks for real-time syncing (if needed)');

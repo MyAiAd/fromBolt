@@ -8,7 +8,7 @@ console.log('📄 20250131000000_jennaz_ghl_integration.sql - Database migration
 
 console.log('\n✅ Navigation Setup:');
 console.log('🔗 Added "Google" menu item to sidebar (between Facebook and Settings)');
-console.log('🔗 Added /jennaz-data route to App.tsx');
+  console.log('🔗 Added /google-data route to App.tsx');
 console.log('🔗 Added JennaZ import section to Settings page');
 
 console.log('\n✅ Database Structure Created:');

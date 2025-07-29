@@ -132,7 +132,7 @@ function App() {
             } 
           />
           <Route 
-            path="/jennaz-data" 
+            path="/google-data" 
             element={
               <ProtectedRoute>
                 <JennaZData />
