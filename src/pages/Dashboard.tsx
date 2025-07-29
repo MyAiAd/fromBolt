@@ -445,7 +445,7 @@ const Dashboard = () => {
             Welcome Back, {getCapitalizedFirstName()}! 
             <span className="ml-2">{getRankIcon(stats.rank)}</span>
           </h1>
-          <p className="text-gray-400">Your journey with The RISE continues. Let's stack those sats together!</p>
+                          <p className="text-gray-400">Your journey with The Corps continues. Let's get after it!</p>
           <div className="flex items-center mt-2">
             <span className="text-sm text-gray-500">Current Rank:</span>
             <span className={`ml-2 font-semibold ${getRankColor(stats.rank)}`}>{stats.rank}</span>
